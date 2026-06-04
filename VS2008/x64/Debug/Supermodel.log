@@ -1,0 +1,225 @@
+﻿cl : コマンド ライン  warning D9035: オプション 'Gm' の使用は現在推奨されていません。今後のバージョンからは削除されます。
+  NewConfig.cpp
+  Format.cpp
+  ConfigBuilders.cpp
+  ByteSwap.cpp
+  SCSPDSP.cpp
+  SCSP.cpp
+  MpegAudio.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Sound\MPEG\MpegAudio.cpp(244,50): warning C4267: '=': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Sound\MPEG\MpegAudio.cpp(297,42): warning C4267: '=': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
+  ROMSet.cpp
+  tinyxml2.cpp
+  imgui_widgets.cpp
+  imgui_tables.cpp
+  imgui_impl_sdl2.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Pkgs\imgui\imgui_impl_sdl2.cpp(116,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  imgui_impl_opengl3.cpp
+  imgui_draw.cpp
+  imgui.cpp
+  WinOutputs.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\Windows\WinOutputs.cpp(248,13): warning C4244: '=': 'LPARAM' から 'UINT32' への変換です。データが失われる可能性があります。
+  FileSystemPath.cpp
+  DirectInputSystem.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\Windows\DirectInputSystem.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/Windows/DirectInputSystem.cpp')
+  
+  Thread.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Thread.cpp')
+  
+  SDLInputSystem.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/SDLInputSystem.cpp')
+  
+  コードを生成中...
+  コンパイル中...
+  Main.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\Windows\DirectInputSystem.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Main.cpp')
+  
+  Gui.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Gui.cpp')
+  
+  Crosshair.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Crosshair.cpp')
+  
+  Audio.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Audio.cpp')
+  
+  Outputs.cpp
+  Logger.cpp
+  TCPSend.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Network/TCPSend.cpp')
+  
+  TCPReceive.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Network/TCPReceive.cpp')
+  
+  SimNetBoard.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Network/SimNetBoard.cpp')
+  
+  NetBoard.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Network/NetBoard.cpp')
+  
+  TileGen.cpp
+  SoundBoard.cpp
+  RTC72421.cpp
+  Real3D.cpp
+  PCI.cpp
+  MPC10x.cpp
+  Model3.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Model3/Model3.cpp')
+  
+  JTAG.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Model3\JTAG.cpp(165,5): warning C4065: switch 文に 'default' はありますが 'case' ラベルがありません。
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Model3\JTAG.cpp(179,5): warning C4060: switch ステートメントに 'case' または 'default' ラベルがありません。
+  IRQ.cpp
+  DSB.cpp
+  コードを生成中...
+  コンパイル中...
+  WheelBoard.cpp
+  SkiBoard.cpp
+  JoystickBoard.cpp
+  DriveBoard.cpp
+  BillBoard.cpp
+  Crypto.cpp
+  93C46.cpp
+  53C810Disasm.cpp
+  53C810.cpp
+  MultiInputSource.cpp
+  InputTypes.cpp
+  InputSystem.cpp
+  InputSource.cpp
+  Inputs.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayRecorder.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,59): error C2065: 'ReplayEvent': 定義されていない識別子です。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,52): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,59):
+      'ReplayEvent' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,52): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,73): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,24): error C2065: 'ReplayEvent': 定義されていない識別子です。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,17): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,24):
+      'ReplayEvent' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,17): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,37): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,24): error C2065: 'ReplayEvent': 定義されていない識別子です。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,17): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,24):
+      'ReplayEvent' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,17): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,37): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\Inputs.cpp(509,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  Input.cpp
+  SuperAA.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Graphics\SuperAA.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  Shader.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Graphics\Shader.cpp(78,14): warning C4267: '=': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
+  Render2D.cpp
+  Vec.cpp
+  VBO.cpp
+  コードを生成中...
+  コンパイル中...
+  TextureBank.cpp
+  R3DShader.cpp
+  R3DScrollFog.cpp
+  R3DFrameBuffers.cpp
+  R3DFloat.cpp
+  PolyHeader.cpp
+  New3D.cpp
+  Model.cpp
+  Mat4.cpp
+  GLSLShader.cpp
+  TextureRefs.cpp
+  Models.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Graphics\Legacy3D\Models.cpp(1235,25): warning C4267: '=': 'size_t' から 'unsigned int' に変換しました。データが失われているかもしれません。
+  Legacy3D.cpp
+  Error.cpp
+  FBO.cpp
+  GameLoader.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Pkgs\unzip.h(51,10): error C1083: include ファイルを開けません。'zlib.h':No such file or directory
+  (compiling source file '../Src/GameLoader.cpp')
+  
+  Watch.cpp
+  SupermodelDebugger.cpp
+  Register.cpp
+  Label.cpp
+  コードを生成中...
+  コンパイル中...
+  DebuggerIO.cpp
+  Interrupt.cpp
+  Exception.cpp
+  Debugger.cpp
+  Z80Debug.cpp
+  PPCDebug.cpp
+  Musashi68KDebug.cpp
+  68KDebug.cpp
+  CPUDebug.cpp
+  ConsoleDebugger.cpp
+  CodeAnalyser.cpp
+  Breakpoint.cpp
+  AddressTable.cpp
+  Z80.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\CPU\Z80\Z80.cpp(2482,13): warning C4146: 符号付きの値を代入する変数は、符号付き型にキャストしなければなりません。
+  PPCDisasm.cpp
+  ppc.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\CPU\PowerPC\ppc_ops.c(37,9): warning C4068: 不明な pragma 'STDC'
+  (compiling source file '../Src/CPU/PowerPC/ppc.cpp')
+  
+  68K.cpp
+  BlockFile.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\BlockFile.cpp(66,15): warning C4267: 'return': 'size_t' から 'unsigned int' に変換しました。データが失われているかもしれません。
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\BlockFile.cpp(127,26): warning C4267: '引数': 'size_t' から 'uint32_t' に変換しました。データが失われているかもしれません。
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\BlockFile.cpp(128,29): warning C4267: '引数': 'size_t' から 'uint32_t' に変換しました。データが失われているかもしれません。
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\BlockFile.cpp(184,42): warning C4267: '引数': 'size_t' から 'uint32_t' に変換しました。データが失われているかもしれません。
+  コードを生成中...

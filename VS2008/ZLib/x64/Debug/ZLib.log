@@ -1,0 +1,62 @@
+﻿cl : コマンド ライン  warning D9035: オプション 'Gm' の使用は現在推奨されていません。今後のバージョンからは削除されます。
+  zutil.c
+  uncompr.c
+  trees.c
+  inftrees.c
+\Libraries\zlib-1.2.4\zutil.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\zutil.c':No such file or directory
+  inflate.c
+  (compiling source file '/Libraries/zlib-1.2.4/zutil.c')
+  
+\Libraries\zlib-1.2.4\uncompr.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\uncompr.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/uncompr.c')
+  
+\Libraries\zlib-1.2.4\trees.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\trees.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/trees.c')
+  
+\Libraries\zlib-1.2.4\inftrees.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\inftrees.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/inftrees.c')
+  
+\Libraries\zlib-1.2.4\inflate.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\inflate.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/inflate.c')
+  
+  inffast.c
+\Libraries\zlib-1.2.4\inffast.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\inffast.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/inffast.c')
+  
+  infback.c
+\Libraries\zlib-1.2.4\infback.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\infback.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/infback.c')
+  
+  gzwrite.c
+\Libraries\zlib-1.2.4\gzwrite.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\gzwrite.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/gzwrite.c')
+  
+  gzread.c
+\Libraries\zlib-1.2.4\gzread.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\gzread.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/gzread.c')
+  
+  gzlib.c
+\Libraries\zlib-1.2.4\gzlib.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\gzlib.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/gzlib.c')
+  
+  gzclose.c
+\Libraries\zlib-1.2.4\gzclose.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\gzclose.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/gzclose.c')
+  
+  deflate.c
+\Libraries\zlib-1.2.4\deflate.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\deflate.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/deflate.c')
+  
+  crc32.c
+\Libraries\zlib-1.2.4\crc32.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\crc32.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/crc32.c')
+  
+  compress.c
+\Libraries\zlib-1.2.4\compress.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\compress.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/compress.c')
+  
+  adler32.c
+\Libraries\zlib-1.2.4\adler32.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\zlib-1.2.4\adler32.c':No such file or directory
+  (compiling source file '/Libraries/zlib-1.2.4/adler32.c')
+  
+  コードを生成中...

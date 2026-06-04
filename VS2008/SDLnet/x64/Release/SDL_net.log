@@ -1,0 +1,18 @@
+﻿cl : コマンド ライン  warning D9002: 不明なオプション '/arch:SSE' を無視します。
+  SDLnet.c
+\Libraries\SDL2_net-2.2.0\SDLnet.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2_net-2.2.0\SDLnet.c':No such file or directory
+  (compiling source file '/Libraries/SDL2_net-2.2.0/SDLnet.c')
+  
+  SDLnetselect.c
+\Libraries\SDL2_net-2.2.0\SDLnetselect.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2_net-2.2.0\SDLnetselect.c':No such file or directory
+  (compiling source file '/Libraries/SDL2_net-2.2.0/SDLnetselect.c')
+  
+  SDLnetTCP.c
+\Libraries\SDL2_net-2.2.0\SDLnetTCP.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2_net-2.2.0\SDLnetTCP.c':No such file or directory
+  (compiling source file '/Libraries/SDL2_net-2.2.0/SDLnetTCP.c')
+  
+  SDLnetUDP.c
+\Libraries\SDL2_net-2.2.0\SDLnetUDP.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2_net-2.2.0\SDLnetUDP.c':No such file or directory
+  (compiling source file '/Libraries/SDL2_net-2.2.0/SDLnetUDP.c')
+  
+  コードを生成中...

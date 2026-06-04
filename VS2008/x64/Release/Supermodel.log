@@ -1,0 +1,126 @@
+﻿  SupermodelDebugger.cpp
+  GameLoader.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Pkgs\unzip.h(51,10): error C1083: include ファイルを開けません。'zlib.h':No such file or directory
+  (compiling source file '../Src/GameLoader.cpp')
+  
+  FBO.cpp
+  Render2D.cpp
+  Inputs.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayRecorder.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,59): error C2065: 'ReplayEvent': 定義されていない識別子です。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,52): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,59):
+      'ReplayEvent' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,52): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,73): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,24): error C2065: 'ReplayEvent': 定義されていない識別子です。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,17): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,24):
+      'ReplayEvent' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,17): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,37): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,24): error C2065: 'ReplayEvent': 定義されていない識別子です。
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,17): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,24):
+      'ReplayEvent' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,17): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,37): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
+  (compiling source file '../Src/Inputs/Inputs.cpp')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
+      'std::vector' の宣言を確認してください
+  
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\Inputs.cpp(509,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  InputSource.cpp
+  JTAG.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Model3\JTAG.cpp(165,5): warning C4065: switch 文に 'default' はありますが 'case' ラベルがありません。
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Model3\JTAG.cpp(179,5): warning C4060: switch ステートメントに 'case' または 'default' ラベルがありません。
+  Model3.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Model3/Model3.cpp')
+  
+  MPC10x.cpp
+  NetBoard.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Network/NetBoard.cpp')
+  
+  SimNetBoard.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Network/SimNetBoard.cpp')
+  
+  TCPReceive.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Network/TCPReceive.cpp')
+  
+  TCPSend.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/Network/TCPSend.cpp')
+  
+  Logger.cpp
+  Audio.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Audio.cpp')
+  
+  Crosshair.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Crosshair.cpp')
+  
+  Gui.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Gui.cpp')
+  
+  Main.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\Windows\DirectInputSystem.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Main.cpp')
+  
+  SDLInputSystem.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/SDLInputSystem.cpp')
+  
+  Thread.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/SDL/Thread.cpp')
+  
+  コンパイル中...
+  DirectInputSystem.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\Windows\DirectInputSystem.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+  (compiling source file '../Src/OSD/Windows/DirectInputSystem.cpp')
+  
+  imgui_impl_sdl2.cpp
+C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Pkgs\imgui\imgui_impl_sdl2.cpp(116,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
