@@ -14,6 +14,8 @@ bool HandshakeServer::Start(int port, int width, int height,
 {
     m_onPunchHole = onPunchHole;
     m_port = port;
+    m_width = width;
+    m_height = height;
     m_onConnected = onConn;
     m_onDisconnected = onDisconn;
 
@@ -27,7 +29,6 @@ bool HandshakeServer::Start(int port, int width, int height,
         return false;
     }
 
-    // タイムアウト設定
     int timeout = 1000;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
                (char *)&timeout, sizeof(timeout));
@@ -50,9 +51,6 @@ bool HandshakeServer::Start(int port, int width, int height,
     m_listenThread = CreateThread(nullptr, 0, ListenThreadProc, this, 0, nullptr);
     m_heartbeatThread = CreateThread(nullptr, 0, HeartbeatThreadProc, this, 0, nullptr);
 
-    // PunchHole受信用スレッド
-    m_punchThread4 = CreateThread(nullptr, 0, PunchHoleThreadProc4, this, 0, nullptr);
-    m_punchThread5 = CreateThread(nullptr, 0, PunchHoleThreadProc5, this, 0, nullptr);
     printf("[Handshake] Listening on port %d\n", port);
     return true;
 }
@@ -90,7 +88,6 @@ void HandshakeServer::ListenLoop()
             strncpy(clientIP, inet_ntoa(client.sin_addr), sizeof(clientIP) - 1);
             printf("[Handshake] HELLO from %s\n", clientIP);
 
-            // OKを返す
             char ok[32];
             snprintf(ok, sizeof(ok), "OK %d %d", m_width, m_height);
             sendto(TO_SOCKET(m_socket), ok, (int)strlen(ok), 0,
@@ -106,8 +103,7 @@ void HandshakeServer::ListenLoop()
         }
         else if (strcmp(buf, "HB") == 0)
         {
-            // ハートビート
-            printf("[Handshake] HB received\n"); 
+            printf("[Handshake] HB received\n");
             m_lastHeartbeat.store(GetTickCount());
         }
     }
@@ -158,62 +154,5 @@ void HandshakeServer::Stop()
         CloseHandle(m_heartbeatThread);
         m_heartbeatThread = nullptr;
     }
-    if (m_punchThread4)
-    {
-        WaitForSingleObject(m_punchThread4, 3000);
-        CloseHandle(m_punchThread4);
-        m_punchThread4 = nullptr;
-    }
-    if (m_punchThread5)
-    {
-        WaitForSingleObject(m_punchThread5, 3000);
-        CloseHandle(m_punchThread5);
-        m_punchThread5 = nullptr;
-    }
     printf("[Handshake] Stopped\n");
-}
-
-void HandshakeServer::PunchHoleLoop(int port)
-{
-    SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-    sockaddr_in addr = {};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons((u_short)port);
-    addr.sin_addr.s_addr = INADDR_ANY;
-    bind(sock, (sockaddr *)&addr, sizeof(addr));
-
-    char buf[16];
-    sockaddr_in client = {};
-    int clientLen = sizeof(client);
-
-    while (m_running.load())
-    {
-        int recv = recvfrom(sock, buf, sizeof(buf), 0,
-                            (sockaddr *)&client, &clientLen);
-        if (recv <= 0)
-            continue;
-
-        int clientPort = ntohs(client.sin_port);
-        char clientIP[32];
-        strncpy(clientIP, inet_ntoa(client.sin_addr), sizeof(clientIP) - 1);
-
-        printf("[PunchHole] port %d from %s:%d\n", port, clientIP, clientPort);
-
-        if (m_onPunchHole)
-            m_onPunchHole(clientIP, port == 5004 ? clientPort : 0,
-                          port == 5005 ? clientPort : 0);
-    }
-    closesocket(sock);
-}
-unsigned long __stdcall HandshakeServer::PunchHoleThreadProc4(void *param)
-{
-    static_cast<HandshakeServer *>(param)->PunchHoleLoop(5004);
-    return 0;
-}
-
-unsigned long __stdcall HandshakeServer::PunchHoleThreadProc5(void *param)
-{
-    static_cast<HandshakeServer *>(param)->PunchHoleLoop(5005);
-    return 0;
 }

@@ -99,8 +99,8 @@ bool NvencEncoder::CreateEncoder()
 
     // 低遅延CBR設定
     encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
-    encConfig.rcParams.averageBitRate = 2000000; // 4Mbps
-    encConfig.rcParams.maxBitRate = 2000000;
+    encConfig.rcParams.averageBitRate = 3000000; // 4Mbps
+    encConfig.rcParams.maxBitRate = 3000000;
     encConfig.rcParams.vbvBufferSize = 0;
     encConfig.rcParams.vbvInitialDelay = 0;
     encConfig.frameIntervalP = 1; // Bフレームなし
