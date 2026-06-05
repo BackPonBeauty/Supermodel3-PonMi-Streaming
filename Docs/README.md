@@ -1,112 +1,158 @@
-# Supermodel: A Sega Model 3 Arcade Emulator
-*Copyright 2003-2024 The Supermodel Team*
+# Supermodel3-PonMi-Streaming
 
-## Overview
+Sega Model 3エミュレータ [Supermodel3](https://www.supermodel3.com) をベースにした、**WANリモートプレイ対応ストリーミングフォーク**です。
 
-[Supermodel](https://supermodel3.com) emulates Sega's Model 3 arcade platform, allowing you to relive state-of-the-art 3D arcade gaming as it existed from 1996 through 1999. It uses OpenGL, [SDL2](https://libsdl.org), and can run on Windows, Linux, and macOS. It also supports network play on low-latency network connections. The source code is freely available under the terms of the [GNU General Public License](http://www.gnu.org/copyleft/gpl.html).
+最大4人のプレイヤーがインターネット越しにリンクプレイを楽しめます。
 
-<p align="center">
-  <img src="Docs/Images/Daytona2_1.gif" width="375" height="250" /> <img src="Docs/Images/LAMachin.gif" width="375" height="250" />
-  <img src="Docs/Images/StarWars.gif" width="375" height="250" /> <img src="Docs/Images/FVipers2.gif" width="375" height="250" />
-</p>
+---
 
-<img src="Docs/Images/Real3D_Logo.png" align="right" height="100"> Model 3 first made its debut in 1996 with Virtua Fighter 3 and Scud Race, and for the subsequent three years boasted the most powerful 3D hardware of any gaming platform. Developed by Real3D, then a Lockheed Martin company, and with a heritage rooted in advanced flight simulator technology, Model 3 featured capabilities that would not appear on PCs for several years. Using an on-board scene graph and geometry processor, it could store, transform, light, and rasterize tens of thousands of polygons per frame at a fluid 57.524 frames per second.
+## 特徴
 
-The aim of the Supermodel project is to develop an emulator that is both accurate and playable. As with virtually all arcade hardware, no public documentation for the Model 3 platform exists. What is known so far has been painstakingly reverse engineered from scratch.
+- **最大4リンク対応**（ローカルとWAN越しで最大4人）
+- **低遅延映像ストリーミング**（NVENC H.264エンコード）
+- **音声ストリーミング**（Opus 128kbps）
+- **XInputコントローラー入力のUDP転送**
+- **Firebaseによるマッチメイキング**（ホスト一覧の自動取得）
+- **UPnP自動ポート開放**対応
 
-## How To Get It
+---
 
-Windows builds are updated automatically and available on the official Supermodel [download page](https://supermodel3.com/Download.html). Linux and macOS users currently have to build from source.
+## 動作確認済みタイトル
 
-## Build Instructions
+- Spikeout Final Edition (spikeofe)
+<img width="962" height="572" alt="image" src="https://github.com/user-attachments/assets/687436f5-0c9f-4ae9-8fb1-97d1a261725d" />
+<img width="962" height="572" alt="image" src="https://github.com/user-attachments/assets/decdc046-8931-4693-8cb5-cee51f7e4f0e" />
 
-### Windows
+---
 
-The preferred method for building Supermodel is to use GCC and MSYS2. After installing [MSYS2](https://msys2.org), open the MSYS2 shell and install the required dependencies using the pacman package manager:
+## 関連リポジトリ
 
-- GCC (```mingw64/mingw-w64-x86_64-gcc```)
-- Make (```mingw64/mingw-w64-x86_64-make```)
-- SDL2 (```mingw64/mingw-w64-x86_64-SDL2```, ```mingw64/mingw-w64-x86_64-SDL2_net```)
+このプロジェクトを使用するには以下のアプリケーションが必要です。
 
-This can be done using the following commands:
+| アプリ | 説明 | リンク |
+|--------|------|--------|
+| **StreamReceiver** | クライアント側アプリ（映像受信・コントローラー送信） | [BackPonBeauty/StreamReceiver](https://github.com/BackPonBeauty/StreamReceiver)（現在非公開） |
+| **XinputReciever (ViGEmReceiver)** | ホスト側起動・管理アプリ | [BackPonBeauty/XinputReciever](https://github.com/BackPonBeauty/XinputReciever)（現在非公開） |
 
-```
-pacman -S mingw64/mingw-w64-x86_64-gcc
-pacman -S mingw64/mingw-w64-x86_64-make
-pacman -S mingw64/mingw-w64-x86_64-SDL2
-pacman -S mingw64/mingw-w64-x86_64-SDL2_net
-```
+> リリースにはffmpegバイナリが同梱されています。
+> ffmpegはLGPL/GPLライセンスです。ソースコードは https://ffmpeg.org で入手できます。
 
-At this point, you can continue using either the MSYS2 shell or Windows Command Prompt but ensure that both ```gcc``` and ```mingw32-make``` are in your path. In MSYS2, the location of these binaries will be ```/mingw64/bin``` and for Command Prompt, assuming MSYS2 was installed in the default location, add ```C:\msys64\mingw64\bin``` to your Windows ```PATH``` variable.
+---
+<img width="398" height="490" alt="名称未設定-2" src="https://github.com/user-attachments/assets/c4bba737-7d27-4692-befc-ee7fb3aeabe2" />
 
-To build Supermodel without network support, use:
+## 必要環境
 
-```
-mingw32-make -f Makefiles/Makefile.Win32
-```
+### ホスト側
 
-For network support:
+| 項目 | 要件 |
+|------|------|
+| OS | Windows 10/11 64bit |
+| GPU | NVIDIA RTX 20シリーズ以降（NVENC対応） |
+| ドライバー | CUDA 13.0以降対応版 |
+| その他 | [ViGEmBus](https://github.com/nefarius/ViGEm.Bus) ドライバー導入済み |
+| ルーター | UPnP対応（または手動ポート開放） |
+| 回線 | 上り 10Mbps以上推奨 |
 
-```
-mingw32-make -f Makefiles/Makefile.Win32 NET_BOARD=1
-```
+### クライアント側
 
-### Linux
+| 項目 | 要件 |
+|------|------|
+| OS | Windows 10/11 64bit |
+| ルーター | UPnP対応（または手動ポート開放） |
+| 回線 | 下り 5Mbps以上推奨 |
 
-Ensure SDL2 is installed. Most package managers ought to have this available. For example, on Ubuntu, it should be sufficient to run:
+---
 
-```
-sudo apt install libsdl2-dev
-sudo apt install libsdl2-net-dev
-```
+## ポート番号
 
-And then build Supermodel:
+| スロット | XInput | HS/HB | 映像 | 音声 |
+|---------|--------|-------|------|------|
+| P1 | 5000 | 5001 | 5002 | 5003 |
+| P2 | 5004 | 5005 | 5006 | 5007 |
+| P3 | 5008 | 5009 | 5010 | 5011 |
+| P4 | 5012 | 5013 | 5014 | 5015 |
 
-```
-make -f Makefiles/Makefile.UNIX
-```
+---
 
-For network support:
+## セットアップ（ホスト側）
 
-```
-make -f Makefiles/Makefile.UNIX NET_BOARD=1
-```
+### 1. ViGEmBus のインストール
 
-### macOS
+[ViGEmBus Releases](https://github.com/nefarius/ViGEm.Bus/releases) から最新版をダウンロードしてインストールしてください。
 
-Ensure Apple's Xcode Command Line Tools are installed:
-
-From a terminal:
-```
-xcode-select --install
-```
-
-Ensure SDL2 is installed.  Download the latest *.dmg files from both of the links below, and install per the READMEs in the .dmgs (i.e. in "/Library/Frameworks")
-
-* SDL2: https://github.com/libsdl-org/SDL/releases
-
-* SDL_net: https://github.com/libsdl-org/SDL_net/releases
-
-
-And then build Supermodel:
+### 2. フォルダ構成
 
 ```
-make -f Makefiles/Makefile.OSX
+XinputReciever/
+├── ViGEmReceiver.exe
+├── supermodel01/
+│   ├── supermodel-ponmi.exe
+│   ├── ponmi.ini
+│   ├── start.bat
+│   ├── start.vbs
+│   └── ROMs/ (シンボリックリンク推奨)
+├── supermodel02/
+│   └── ...
+├── supermodel03/
+│   └── ...
+└── supermodel04/
+    └── ...
 ```
 
-For network support:
+### 3. ViGEmReceiver の使い方
 
-```
-make -f Makefiles/Makefile.OSX NET_BOARD=1
-```
+1. `ViGEmReceiver.exe` を起動
+2. 外部IPが自動取得されます（必要なら手動修正）
+3. 各スロット（P1〜P4）をLocal/Remoteに設定
+4. **START** ボタンを押す
+5. Supermodelが自動起動し、Firebaseにホスト情報が登録されます
+6. 終了時は **STOP** ボタンを押してください
 
-### Note: running on macOS
-If you try and run a macOS binary that was downloaded from the internet and/or built on a different machine, you need to grant macOS permission to execute the binary (just 1-time):
+---
 
-* Open the folder containing the binary in Finder, and right (or ctrl) click on it:
+## セットアップ（クライアント側）
 
-* Click "Open" when the following dialogue box appears : "macOS cannot verify the developer of “supermodel-git-xxxx”. Are you sure you want to open it?"
+### StreamReceiver の種類
 
-* Close the terminal window that opens (after clicking open)
+| 版 | 配布場所 | 機能 |
+|----|---------|------|
+| Free版 | [GitHub Releases](https://github.com/BackPonBeauty/Supermodel3-PonMi-Streaming/releases) | 1600×900固定 |
+| Patron版 | [Patreon](https://www.patreon.com/) Bronze以上 | フルスクリーン対応 |
 
-Details: https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac
+### 接続方法
+
+<img width="494" height="512" alt="名称未設定-1" src="https://github.com/user-attachments/assets/78289230-71a1-4bd5-bd12-f4cc486fb9ee" />
+
+
+1. `StreamReceiver.exe` を起動
+2. ホスト一覧から接続先を選択
+3. 空きスロット（緑●）を選んで **接続** ボタンを押す
+4. 映像が表示されたらプレイ開始
+
+**キー操作：**
+- `Escape` : 切断してホスト選択画面に戻る
+- `F11` : フルスクリーン切り替え（Patron版）
+
+---
+
+## ライセンス
+
+このソフトウェアはGPLライセンスの下で配布されます。
+
+以下のライブラリを使用しています：
+
+- **Supermodel3** - GPL / https://www.supermodel3.com
+- **ffmpeg** - LGPL/GPL / https://ffmpeg.org
+- **Nefarius.ViGEm.Client** - MIT / https://github.com/nefarius/ViGEm.Client
+- **Mono.NAT** - MIT / https://github.com/lontivero/Open.NAT
+- **Firebase.Database.NET** - MIT / https://github.com/step-up-labs/firebase-database-dotnet
+
+---
+
+## 作者
+
+**背中ポン美 (BackPonBeauty)**
+
+- YouTube: [@BackPonBeauty](https://www.youtube.com/@BackPonBeauty)
+- GitHub: [BackPonBeauty](https://github.com/BackPonBeauty)
+- X: [@BackPonBeauty](https://x.com/BackPonBeauty)
