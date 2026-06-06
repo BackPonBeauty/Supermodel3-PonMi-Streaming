@@ -32,7 +32,7 @@ The following applications are required to use this project.
 
 | App | Description | Link |
 |-----|-------------|------|
-| **StreamReceiver** | Client application (video reception & controller input) | [BackPonBeauty/StreamReceiver](https://github.com/BackPonBeauty/StreamReceiver) (currently private) |
+| **StreamReceiver** | Client application (video reception & controller input) | [BackPonBeauty/StreamReceiver](https://github.com/BackPonBeauty/StreamReceiver)  |
 | **XinputReciever (ViGEmReceiver)** | Host management application | [BackPonBeauty/XinputReciever](https://github.com/BackPonBeauty/XinputReciever) (currently private) |
 
 > Releases include **ffmpeg** binaries.
