@@ -289,7 +289,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
          int &musicVol, int &sfxVol, int &balance, bool &vEmulateSound,
          bool &vEmulateDSB, bool &vFlipStereo, bool &vLegacySoundDSP,
          int &selectedInputType, int &selectedCrosshair, int &selectedStyle,
-         bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet)
+         bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet, bool &vStreaming)
 {
     // 基本スケールの計算
     float scale = io.DisplaySize.y / 600.0f;
@@ -335,7 +335,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
     // ウィンドウ全体の基本スケール
     ImGui::SetWindowFontScale(scale);
-    ImGui::TextColored(ImVec4(0.0f, 0.8f, 1.0f, 1.0f), "SEGA MODEL3 UI v2 (2026-06-01)");
+    ImGui::TextColored(ImVec4(0.0f, 0.8f, 1.0f, 1.0f), "SEGA MODEL3 UI v2");
     ImGui::Separator();
     // float headerBottomY = ImGui::GetCursorPosY();
 
@@ -515,7 +515,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
             uImageAreaRatioW = 0.75f;
     }
 
-     // 3. 右カラムの開始
+    // 3. 右カラムの開始
     ImGui::SameLine();
 
     ImGui::BeginGroup();
@@ -1034,6 +1034,10 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     {
                         saveSettings = true;
                     }
+                    if (ImGui::Checkbox("Streaming", &vStreaming))
+                    {
+                        saveSettings = true;
+                    }
 
                     ImGui::Spacing();
                     ImGui::Separator();
@@ -1391,7 +1395,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Text(title);
 
                     // --- 2. バージョンをセンター揃え ---
-                    const char *ver = "ver. 2026.06.01";
+                    const char *ver = "ver. 2026.06.06";
                     float verWidth = ImGui::CalcTextSize(ver).x;
                     ImGui::SetCursorPosX((windowWidth - verWidth) * 0.5f);
                     ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), ver);
@@ -1765,6 +1769,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
     // Network
     bool vNetwork = config["Network"].ValueAs<bool>();
     bool vSimulateNet = config["SimulateNet"].ValueAs<bool>();
+    bool vStreaming = config["Streaming"].ValueAsDefault<bool>(false);
 
     // Network 文字列（グローバル変数 bufPortIn, bufPortOut, bufAddressOut に初期化）
     strncpy(bufPortIn, config["PortIn"].ValueAs<std::string>().c_str(), sizeof(bufPortIn) - 1);
@@ -1835,7 +1840,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
                 {
                     fontSize = std::stof(val);
                 }
-                 else if (key == "ImageAreaRatioW")
+                else if (key == "ImageAreaRatioW")
                 {
                     uImageAreaRatioW = std::stof(val);
                 }
@@ -1940,7 +1945,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
             vNoWhiteFlash, vHideCMD, vDefaultScanline, vTrueHz, superSampling, selectedCRT, selectedUpscale, ppcFreq, WindowXPosition, WindowYPosition, Scanline, Barrel,
             musicVol, sfxVol, balance, vEmulateSound, vEmulateDSB, vFlipStereo,
             vLegacySoundDSP, selectedInputType, selectedCrosshair, selectedStyle,
-            vForceFeedback, vNetwork, vSimulateNet);
+            vForceFeedback, vNetwork, vSimulateNet, vStreaming);
         if (exit)
         {
             running = false;
@@ -2052,6 +2057,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         u["ForceFeedback"] = (vForceFeedback ? "1" : "0");
         u["Network"] = (vNetwork ? "1" : "0");
         u["SimulateNet"] = (vSimulateNet ? "1" : "0");
+        u["Streaming"] = (vStreaming ? "1" : "0");
         u["PortIn"] = bufPortIn;
         u["PortOut"] = bufPortOut;
         u["AddressOut"] = bufAddressOut;

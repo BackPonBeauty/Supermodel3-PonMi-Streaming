@@ -19,7 +19,7 @@ public:
 	SuperAA(int aaValue, CRTcolor CRTcolors, bool scanLine, int scanlineStrength, int totalXRes, int totalYRes, int barrelStrength, const char *gameTitle, bool wideScreen, bool overlay, const char *configFilePath);
 	~SuperAA();
 
-	void Init(int width, int height , int port); // width & height are real window dimensions
+	void Init(int width, int height, int port, bool streamingEnabled = false);
 	void Draw();					  // this is a no-op if AA is 1 and CRTcolors 0, since we'll be drawing straight on the back buffer anyway
 
 	GLuint GetTargetID();

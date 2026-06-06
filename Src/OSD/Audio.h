@@ -45,7 +45,7 @@ void SetAudioDestPort(int port);
  *
  * Initializes the audio system.
  */
-extern Result OpenAudio(const Util::Config::Node& config);
+extern Result OpenAudio(const Util::Config::Node& config, bool streamingEnabled);
 
 /*
  * OutputAudio(unsigned numSamples, *INT16 leftBuffer, *INT16 rightBuffer)

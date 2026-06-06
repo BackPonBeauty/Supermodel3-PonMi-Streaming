@@ -459,7 +459,7 @@ static void LogAudioInfo(SDL_AudioSpec *fmt)
 /// </summary>
 /// <param name="config"></param>
 /// <returns></returns>
-Result OpenAudio(const Util::Config::Node &config)
+Result OpenAudio(const Util::Config::Node &config, bool streamingEnabled = false)
 {
     s_config = &config;
     // Initialize SDL audio sub-system
@@ -570,8 +570,16 @@ Result OpenAudio(const Util::Config::Node &config)
     // Reset counters
     underRuns = 0;
     overRuns = 0;
-    int audioPort = config["AudioPort"].ValueAs<int>();
-    g_audioSenderReady = g_audioSender.Init("127.0.0.1", audioPort);
+    if (streamingEnabled)
+    {
+        int audioPort = config["AudioPort"].ValueAs<int>();
+        g_audioSenderReady = g_audioSender.Init("127.0.0.1", audioPort);
+    }
+    else
+    {
+        g_audioSenderReady = false;
+        printf("[AudioUDP] Disabled (Streaming=false)\n");
+    }
     // Start audio playing
     SDL_PauseAudio(0);
     return Result::OKAY;
@@ -739,9 +747,9 @@ void CloseAudio()
     audioBuffer = nullptr;
 }
 
-void SetAudioDestIP(const std::string& ip)
+void SetAudioDestIP(const std::string &ip)
 {
-    g_audioSender.SetDestIP(ip);  // すでにアドレスだけ変更する実装
+    g_audioSender.SetDestIP(ip); // すでにアドレスだけ変更する実装
     printf("[AudioUDP] IP changed to %s\n", ip.c_str());
 }
 

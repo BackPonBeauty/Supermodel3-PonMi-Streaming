@@ -315,12 +315,10 @@ SuperAA::~SuperAA()
 // =========================
 // Init
 // =========================
-void SuperAA::Init(int width, int height, int port)
+void SuperAA::Init(int width, int height, int port, bool streamingEnabled)
 {
     if ((m_aa > 1) || (m_crtcolors != CRTcolor::None))
     {
-
-        // 0以下のサイズを防ぐ
         if (width <= 0 || height <= 0)
             return;
         m_fbo.Destroy();
@@ -329,12 +327,19 @@ void SuperAA::Init(int width, int height, int port)
         m_width = width;
         m_height = height;
     }
-    m_streamingEnabled = m_nvencEncoder.Init(width, height, 60, port,
-                                             [](const uint8_t *data, int size)
-                                             {
-                                                 // とりあえずprintf確認
-                                                 // printf("[NVENC] Encoded frame: %d bytes\n", size);
-                                             });
+
+    if (streamingEnabled)
+    {
+        m_streamingEnabled = m_nvencEncoder.Init(width, height, 60, port,
+                                                 [](const uint8_t *data, int size)
+                                                 {
+                                                 });
+    }
+    else
+    {
+        m_streamingEnabled = false;
+        printf("[Streaming] NVENC/RTP disabled\n");
+    }
 }
 // m_fbo.Destroy();
 

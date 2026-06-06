@@ -22,6 +22,7 @@
 
 #include "TCPSend.h"
 #include "OSD/Logger.h"
+#include <ws2tcpip.h>
 
 #if defined(_DEBUG)
 #include <stdio.h>
@@ -30,42 +31,44 @@
 #define DPRINTF(a, ...)
 #endif
 
-TCPSend::TCPSend(std::string& ip, int port) :
-	m_ip(ip),
-	m_port(port),
-	m_socket(nullptr)
+TCPSend::TCPSend(std::string &ip, int port) : m_ip(ip),
+											  m_port(port),
+											  m_socket(nullptr)
 {
 	SDLNet_Init();
 }
 
 TCPSend::~TCPSend()
 {
-	if (m_socket) {
+	if (m_socket)
+	{
 		SDLNet_TCP_Close(m_socket);
 		m_socket = nullptr;
 	}
 
-	SDLNet_Quit();	// unload lib (winsock dll for windows)
+	SDLNet_Quit(); // unload lib (winsock dll for windows)
 }
 
-bool TCPSend::Send(const void * data, int length)
+bool TCPSend::Send(const void *data, int length)
 {
 	// If we failed bail out
-	if (!Connected()) {
+	if (!Connected())
+	{
 		DPRINTF("Not connected\n");
 		return false;
 	}
 
 	DPRINTF("Sending %i bytes\n", length);
 
-	int sent = SDLNet_TCP_Send(m_socket, &length, sizeof(int));		// pack the length at the start of transmission.
+	int sent = SDLNet_TCP_Send(m_socket, &length, sizeof(int)); // pack the length at the start of transmission.
 
 	if (!length)
-		return true;		// 0 sized packet will blow our connex
+		return true; // 0 sized packet will blow our connex
 
 	sent = SDLNet_TCP_Send(m_socket, data, length);
 
-	if (sent < length) {
+	if (sent < length)
+	{
 		SDLNet_TCP_Close(m_socket);
 		m_socket = nullptr;
 	}
@@ -83,9 +86,24 @@ bool TCPSend::Connect()
 	IPaddress ip;
 	int result = SDLNet_ResolveHost(&ip, m_ip.c_str(), m_port);
 
-	if (result == 0) {
+	if (result == 0)
+	{
 		m_socket = SDLNet_TCP_Open(&ip);
-	}
 
+		if (m_socket)
+		{
+#ifdef _WIN32
+
+			SOCKET sock = *(SOCKET *)m_socket;
+			int one = 1;
+			setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
+#else
+			int sock = *(int *)m_socket;
+			int one = 1;
+			setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+#endif
+			DPRINTF("TCP_NODELAY enabled on Sender side.\n");
+		}
+	}
 	return Connected();
 }

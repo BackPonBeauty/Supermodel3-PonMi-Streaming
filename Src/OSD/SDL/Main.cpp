@@ -1078,8 +1078,9 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
   PrintGLInfo(false, true, false);
 
   // Initialize audio system
+  bool streamingEnabled = s_runtime_config["Streaming"].ValueAsDefault<bool>(false);
   SetAudioType(game.audio);
-  if (Result::OKAY != OpenAudio(s_runtime_config))
+  if (Result::OKAY != OpenAudio(s_runtime_config, streamingEnabled))
     return 1;
 
   // Hide mouse if fullscreen, enable crosshairs for gun games
@@ -1112,29 +1113,33 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
   bool m_scanLine = s_runtime_config["DefaultScanline"].ValueAs<bool>();
   int videoPort = s_runtime_config["VideoPort"].ValueAs<int>();
   SuperAA *superAA = new SuperAA(aaValue, CRTcolors, m_scanLine, scanlineStrength, totalXRes, totalYRes, BarrelStrength, game.title.c_str(), m_wideScreen, m_Overlay, s_configFilePath.c_str());
-  superAA->Init(totalXRes, totalYRes, videoPort); // pass actual frame sizes here
+  superAA->Init(totalXRes, totalYRes, videoPort, streamingEnabled); // pass actual frame sizes here
 
   int handshakePort = s_runtime_config["HandshakePort"].ValueAs<int>();
 
   int audioPort = s_runtime_config["AudioPort"].ValueAs<int>();
+  printf("[Streaming] %s\n", streamingEnabled ? "true" : "false");
   // ↓ superAA生成の後に移動
-  g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), [superAA](const std::string &clientIP)
-                    {
-      superAA->GetEncoder().SetDestIP(clientIP);
-      SetAudioDestIP(clientIP); }, [superAA]()
-                    {
-                      printf("[Handshake] Disconnected\n");
-                      superAA->GetEncoder().SetDestIP("127.0.0.1");
-                      SetAudioDestIP("127.0.0.1"); }, [superAA, videoPort, audioPort](const std::string &ip, int vPort, int aPort)
-                    {
-      if (videoPort > 0) {
-          superAA->GetEncoder().SetDestPort(videoPort);
-          printf("[PunchHole] Video port set to %d\n", videoPort);
-      }
-      if (audioPort > 0) {
-          SetAudioDestPort(audioPort);
-          printf("[PunchHole] Audio port set to %d\n", audioPort);
-      } });
+  if (streamingEnabled)
+  {
+    g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), [superAA](const std::string &clientIP)
+                      {
+            superAA->GetEncoder().SetDestIP(clientIP);
+            SetAudioDestIP(clientIP); }, [superAA]()
+                      {
+            printf("[Handshake] Disconnected\n");
+            superAA->GetEncoder().SetDestIP("127.0.0.1");
+            SetAudioDestIP("127.0.0.1"); }, [superAA, videoPort, audioPort](const std::string &ip, int vPort, int aPort)
+                      {
+            if (videoPort > 0) {
+                superAA->GetEncoder().SetDestPort(videoPort);
+                printf("[PunchHole] Video port set to %d\n", videoPort);
+            }
+            if (audioPort > 0) {
+                SetAudioDestPort(audioPort);
+                printf("[PunchHole] Audio port set to %d\n", audioPort);
+            } });
+  }
 
   CRender2D *Render2D = new CRender2D(s_runtime_config);
   IRender3D *Render3D = s_runtime_config["New3DEngine"].ValueAs<bool>() ? ((IRender3D *)new New3D::CNew3D(s_runtime_config, Model3->GetGame().name)) : ((IRender3D *)new Legacy3D::CLegacy3D(s_runtime_config));
@@ -1797,7 +1802,10 @@ Util::Config::Node DefaultConfig()
   config.Set("PortIn", unsigned(1970), "Network");
   config.Set("PortOut", unsigned(1971), "Network");
   config.Set<std::string>("AddressOut", "127.0.0.1", "Network", "", "");
-
+  config.Set("Streaming", false, "Network");
+  config.Set("HandshakePort", 5001, "Network");
+  config.Set("VideoPort", 5002, "Network");
+  config.Set("AudioPort", 5003, "Network");
 #ifdef SUPERMODEL_WIN32
   config.Set<std::string>("Outputs", "none", "Misc", "", "", {"none", "win", "net"});
 #else

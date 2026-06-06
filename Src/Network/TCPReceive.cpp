@@ -31,6 +31,8 @@
 #define DPRINTF(a, ...)
 #endif
 
+#include <ws2tcpip.h> 
+
 TCPReceive::TCPReceive(int port) :
 	m_listenSocket(nullptr),
 	m_receiveSocket(nullptr),
@@ -124,29 +126,39 @@ std::vector<char>& TCPReceive::Receive()
 
 void TCPReceive::ListenFunc()
 {
-	while (m_running) {
+    while (m_running)
+    {
 
-		CThread::Sleep(16);
-		if (m_receiveSocket) continue;
+        if (m_receiveSocket)
+        {
+            CThread::Sleep(100); 
+            continue;
+        }
 
-		auto socket = SDLNet_TCP_Accept(m_listenSocket);
+        TCPsocket socket = SDLNet_TCP_Accept(m_listenSocket);
 
-		if (socket) {
+        if (socket)
+        {
 
-			// remove old socket if required from socket set
-			if (m_receiveSocket) {
-				SDLNet_DelSocket(m_socketSet, (SDLNet_GenericSocket)m_receiveSocket.load());
-			}
+#ifdef _WIN32
+            SOCKET sock = *(SOCKET *)socket;
+            int one = 1;
+            setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
+#else
+            int sock = *(int *)socket;
+            int one = 1;
+            setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+#endif
 
-			m_receiveSocket = socket;
-
-			SDLNet_AddSocket(m_socketSet, (SDLNet_GenericSocket)socket);
-
-			// add socket to socket set
-			DPRINTF("Accepted connection.\n");
-		}
-
-	}
+            m_receiveSocket = socket;
+            SDLNet_AddSocket(m_socketSet, (SDLNet_GenericSocket)socket);
+            DPRINTF("Accepted connection: Optimized with TCP_NODELAY\n");
+        }
+        else
+        {
+            CThread::Sleep(16);
+        }
+    }
 }
 
 bool TCPReceive::Connected()
