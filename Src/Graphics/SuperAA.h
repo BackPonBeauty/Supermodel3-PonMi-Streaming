@@ -6,7 +6,12 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+
+// NvencEncoder はストリーミング機能が有効な場合のみ使用
+// ENABLE_NVENC を定義してビルドする場合のみ有効
+#ifdef ENABLE_NVENC
 #include "NvencEncoder.h"
+#endif
 // This class just implements super sampling. Super sampling looks fantastic but is quite expensive.
 // 8x and beyond values can start to eat ridiculous amounts of memory / gpu time, for less and less noticable returns
 // 4x works and looks great
@@ -30,7 +35,9 @@ public:
 	GLint m_locMixStrength = -1;
 	GLint m_locTex1 = -1;				
 	GLint m_locUAspect = -1;
+#ifdef ENABLE_NVENC
 	NvencEncoder& GetEncoder() { return m_nvencEncoder; }		
+#endif
 
 	// ===== Toggle Methods (on/off) =====
 	void ToggleScanline();
@@ -60,7 +67,7 @@ public:
 	
 	void InitFrameRingBuffer(int width, int height);
 	void UpdateFrameRingBuffer();
-	
+	bool IsStreamingEnabled() const { return m_streamingEnabled; }
 private:
 	FBO m_fbo;
 	FBO m_fbo2;
@@ -95,6 +102,8 @@ private:
 	//GLint m_locOldFrameTex2;
 	//GLint m_locOldFrameTex3;
 	GLint m_locMixEnabled;	// uMixEnabled の location
+#ifdef ENABLE_NVENC
     NvencEncoder m_nvencEncoder;
+#endif
     bool m_streamingEnabled = false;
 };

@@ -2,6 +2,7 @@
 #include <winsock2.h>
 #include <cstdio>
 #include <cstring>
+#include <chrono>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -100,6 +101,16 @@ void HandshakeServer::ListenLoop()
                 if (m_onConnected)
                     m_onConnected(clientIP);
             }
+        }
+        else if (strncmp(buf, "PING", 4) == 0)
+        {
+            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count();
+            char pong[64];
+            snprintf(pong, sizeof(pong), "PONG %lld", now);
+            sendto(TO_SOCKET(m_socket), pong, (int)strlen(pong), 0,
+                   (sockaddr *)&client, clientLen);
         }
         else if (strcmp(buf, "HB") == 0)
         {

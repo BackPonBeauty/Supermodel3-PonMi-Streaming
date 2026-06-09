@@ -1,126 +1,304 @@
-﻿  SupermodelDebugger.cpp
-  GameLoader.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Pkgs\unzip.h(51,10): error C1083: include ファイルを開けません。'zlib.h':No such file or directory
-  (compiling source file '../Src/GameLoader.cpp')
+﻿  SuperAA.cpp
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Graphics\SuperAA.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Graphics\SuperAA.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/Graphics/SuperAA.cpp' をコンパイルしています)
   
-  FBO.cpp
-  Render2D.cpp
-  Inputs.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayRecorder.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,59): error C2065: 'ReplayEvent': 定義されていない識別子です。
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,52): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,59):
-      'ReplayEvent' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,52): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
-      'std::vector' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(18,73): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
-      'std::vector' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,24): error C2065: 'ReplayEvent': 定義されていない識別子です。
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,17): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,24):
-      'ReplayEvent' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,17): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
-      'std::vector' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(29,37): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
-      'std::vector' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,24): error C2065: 'ReplayEvent': 定義されていない識別子です。
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,17): error C2923: 'std::vector': 'ReplayEvent' は、パラメーター '_Ty' の有効な テンプレート 型引数ではありません
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,24):
-      'ReplayEvent' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,17): error C2976: 'std::vector': 引数 テンプレート が少なすぎます
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
-      'std::vector' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\ReplayPlayer.h(33,37): error C2955: 'std::vector': クラス テンプレート を使用するには テンプレート 引数リストが必要です
-  (compiling source file '../Src/Inputs/Inputs.cpp')
-      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector(442,7):
-      'std::vector' の宣言を確認してください
-  
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Inputs\Inputs.cpp(509,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-  InputSource.cpp
-  JTAG.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Model3\JTAG.cpp(165,5): warning C4065: switch 文に 'default' はありますが 'case' ラベルがありません。
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Model3\JTAG.cpp(179,5): warning C4060: switch ステートメントに 'case' または 'default' ラベルがありません。
-  Model3.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/Model3/Model3.cpp')
-  
-  MPC10x.cpp
-  NetBoard.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/Network/NetBoard.cpp')
-  
-  SimNetBoard.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/Network/SimNetBoard.cpp')
-  
-  TCPReceive.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/Network/TCPReceive.cpp')
-  
-  TCPSend.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/Network/TCPSend.cpp')
-  
-  Logger.cpp
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Graphics\SuperAA.cpp(27,236): warning C4305: '初期化中': 'double' から 'float' へ切り詰めます。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Graphics\SuperAA.cpp(333,30): error C2065: 'm_nvencEncoder': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Graphics\SuperAA.cpp(750,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Graphics\SuperAA.cpp(776,9): error C2065: 'm_nvencEncoder': 定義されていない識別子です。
   Audio.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/OSD/SDL/Audio.cpp')
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\OSD\SDL\Audio.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Network\UdpAudioSender.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/OSD/SDL/Audio.cpp' をコンパイルしています)
   
-  Crosshair.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/OSD/SDL/Crosshair.cpp')
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared\ws2def.h(606,9): warning C4005: 'INADDR_ANY': マクロが再定義されました。
+  (ソース ファイル '../Src/OSD/SDL/Audio.cpp' をコンパイルしています)
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDL_net.h(151,9):
+      'INADDR_ANY' の以前の定義を確認してください
   
-  Gui.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/OSD/SDL/Gui.cpp')
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared\ws2def.h(608,9): warning C4005: 'INADDR_BROADCAST': マクロが再定義されました。
+  (ソース ファイル '../Src/OSD/SDL/Audio.cpp' をコンパイルしています)
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDL_net.h(160,9):
+      'INADDR_BROADCAST' の以前の定義を確認してください
+  
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared\ws2def.h(609,9): warning C4005: 'INADDR_NONE': マクロが再定義されました。
+  (ソース ファイル '../Src/OSD/SDL/Audio.cpp' をコンパイルしています)
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDL_net.h(154,9):
+      'INADDR_NONE' の以前の定義を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Network\UdpAudioSender.h(6,10): error C1083: include ファイルを開けません。'opus/opus.h':No such file or directory
+  (ソース ファイル '../Src/OSD/SDL/Audio.cpp' をコンパイルしています)
   
   Main.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\Windows\DirectInputSystem.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/OSD/SDL/Main.cpp')
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\OSD\SDL\Main.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Graphics\SuperAA.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/OSD/SDL/Main.cpp' をコンパイルしています)
   
-  SDLInputSystem.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/OSD/SDL/SDLInputSystem.cpp')
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Inputs\ReplayRecorder.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/OSD/SDL/Main.cpp' をコンパイルしています)
   
-  Thread.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\SDL\SDLIncludes.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/OSD/SDL/Thread.cpp')
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Inputs\ReplayPlayer.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/OSD/SDL/Main.cpp' をコンパイルしています)
   
-  コンパイル中...
-  DirectInputSystem.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\OSD\Windows\DirectInputSystem.h(36,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
-  (compiling source file '../Src/OSD/Windows/DirectInputSystem.cpp')
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\UI\XinputReceiverDialog.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/OSD/SDL/Main.cpp' をコンパイルしています)
   
-  imgui_impl_sdl2.cpp
-C:\Users\vf2_c\Documents\GitHub\Supermodel3-PonMi\Src\Pkgs\imgui\imgui_impl_sdl2.cpp(116,10): error C1083: include ファイルを開けません。'SDL.h':No such file or directory
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\RemoteSlotManager.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/OSD/SDL/Main.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/OSD/SDL/Main.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.h(21,10): error C1083: include ファイルを開けません。'ViGEm/Client.h':No such file or directory
+  (ソース ファイル '../Src/OSD/SDL/Main.cpp' をコンパイルしています)
+  
+  ViGEmManager.cpp
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/Remote/ViGEmManager.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.h(21,10): error C1083: include ファイルを開けません。'ViGEm/Client.h':No such file or directory
+  (ソース ファイル '../Src/Remote/ViGEmManager.cpp' をコンパイルしています)
+  
+  XinputReceiver.cpp
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/Remote/XinputReceiver.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.h(42,9): warning C4161: #pragma pack(pop...): ポップがプッシュの回数を上回っています。
+  (ソース ファイル '../Src/Remote/XinputReceiver.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(21,22): error C2039: 'InitWinsock': 'XinputReceiver' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.h(47,7):
+      'XinputReceiver' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(39,21): error C2039: 'SlotToPort': 'XinputReceiver' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.h(47,7):
+      'XinputReceiver' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(59,22): error C2039: 'StartListening': 'XinputReceiver' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.h(47,7):
+      'XinputReceiver' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(61,10): error C3861: 'IsValidSlot': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(65,9): error C2065: 'm_slots': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(66,9): error C3861: 'StopListening': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(68,5): error C2065: 'm_slots': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(69,5): error C2065: 'm_slots': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(69,57): error C2248: 'XinputReceiver::ListenThread': private メンバー (クラス 'XinputReceiver' で宣言されている) にアクセスできません。
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.h(75,10):
+      'XinputReceiver::ListenThread' の宣言を確認してください
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.h(47,7):
+      'XinputReceiver' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(69,71): error C2355: 'this': 静的でないメンバー関数の内部または静的でないデータ メンバー初期化子においてのみ参照できます
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(114,23): error C2001: 文字列リテラル内の改行
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(115,9): error C2146: 構文エラー: ';' が、識別子 'm_slots' の前に必要です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(126,5): error C2065: 'addr': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(127,5): error C2065: 'addr': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(128,5): error C2065: 'addr': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(130,32): error C2065: 'addr': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(130,45): error C2065: 'addr': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(161,17): error C2044: continue ステートメントが loop 内にありません
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\XinputReceiver.cpp(162,17): error C2043: break ステートメントが loop または switch ステートメント内にありません
+  FirebaseMatchingCpp.cpp
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/Remote/FirebaseMatchingCpp.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(24,1): error C2447: '{': 対応する関数ヘッダーがありません (旧形式の仮引数リスト?)
+  (ソース ファイル '../Src/Remote/FirebaseMatchingCpp.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(32,1): error C2447: '{': 対応する関数ヘッダーがありません (旧形式の仮引数リスト?)
+  (ソース ファイル '../Src/Remote/FirebaseMatchingCpp.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(59,29): error C2062: 型 'bool' は不要です。
+  (ソース ファイル '../Src/Remote/FirebaseMatchingCpp.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(20,44): error C2530: 'FirebaseMatchingCpp::externalIp': 参照が初期化されずに宣言されています。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(38,27): error C2039: 'Initialize': 'FirebaseMatchingCpp' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(40,7):
+      'FirebaseMatchingCpp' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(40,5): error C2065: 'm_statusCb': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(41,9): error C2065: 'm_statusCb': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(41,21): error C3861: 'm_statusCb': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(43,10): error C3861: 'SignInAnonymously': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(45,13): error C2065: 'm_statusCb': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(45,36): error C2001: 文字列リテラル内の改行
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(46,9): error C2143: 構文エラー: ')' が 'return' の前にありません。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(45,25): error C3861: 'm_statusCb': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(46,9): error C2143: 構文エラー: ';' が 'return' の前にありません。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(49,5): error C2065: 'm_initialized': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(50,9): error C2065: 'm_statusCb': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(50,32): error C2001: 文字列リテラル内の改行
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(51,5): error C2143: 構文エラー: ')' が 'return' の前にありません。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(50,21): error C3861: 'm_statusCb': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(51,5): error C2143: 構文エラー: ';' が 'return' の前にありません。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(61,13): error C2065: 'API_KEY': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(74,32): error C2065: 'key': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(78,12): error C2065: 'key': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(90,27): error C2039: 'RegisterHost': 'FirebaseMatchingCpp' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(40,7):
+      'FirebaseMatchingCpp' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(94,5): error C2065: 'HostInfoCpp': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(94,17): error C2146: 構文エラー: ';' が、識別子 'info' の前に必要です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(94,17): error C2065: 'info': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(95,5): error C2065: 'info': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(95,22): error C3861: 'GetUnixTimestamp': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(96,5): error C2065: 'info': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(100,9): error C2065: 'SlotInfoCpp': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(100,21): error C2146: 構文エラー: ';' が、識別子 's' の前に必要です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(100,21): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(101,9): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(101,24): error C2065: 'SLOT_XINPUT_PORT': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(102,9): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(102,24): error C2065: 'SLOT_VIDEO_PORT': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(103,9): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(103,24): error C2065: 'SLOT_AUDIO_PORT': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(104,9): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(105,9): error C2065: 'info': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(105,28): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(109,61): error C2065: 'm_idToken': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(110,37): error C2065: 'info': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(110,24): error C3861: 'MakeHostJson': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(118,53): error C2065: 'm_idToken': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(118,24): error C3861: 'HttpPut': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(119,5): error C2065: 'm_currentHostId': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(121,9): error C2065: 'm_statusCb': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(121,21): error C3861: 'm_statusCb': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(151,27): error C3861: 'GetUnixTimestamp': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(152,34): error C2065: 'TIMEOUT_MINUTES': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(175,17): error C2065: 'braceOpen': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(177,50): error C2065: 'braceOpen': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(200,34): error C2039: 'GetExternalIp': 'FirebaseMatchingCpp' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(40,7):
+      'FirebaseMatchingCpp' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(242,27): error C2039: 'StartHeartbeat': 'FirebaseMatchingCpp' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(40,7):
+      'FirebaseMatchingCpp' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(244,5): error C3861: 'StopHeartbeat': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(245,5): error C2065: 'm_heartbeatRunning': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(246,5): error C2065: 'm_heartbeatThread': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(246,59): error C2248: 'FirebaseMatchingCpp::HeartbeatThread': private メンバー (クラス 'FirebaseMatchingCpp' で宣言されている) にアクセスできません。
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(104,10):
+      'FirebaseMatchingCpp::HeartbeatThread' の宣言を確認してください
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(40,7):
+      'FirebaseMatchingCpp' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(246,76): error C2355: 'this': 静的でないメンバー関数の内部または静的でないデータ メンバー初期化子においてのみ参照できます
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(270,24): error C3861: 'GetUnixTimestamp': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(445,32): error C2039: 'GetUnixTimestamp': 'FirebaseMatchingCpp' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(40,7):
+      'FirebaseMatchingCpp' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(462,34): error C2039: 'MakeHostJson': 'FirebaseMatchingCpp' のメンバーではありません
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.h(40,7):
+      'FirebaseMatchingCpp' の宣言を確認してください
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(462,47): error C4430: 型指定子がありません - int と仮定しました。メモ: C++ は int を既定値としてサポートしていません
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(462,64): error C2143: 構文エラー: ',' が '&' の前にありません。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(466,31): error C2065: 'info': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(467,37): error C2065: 'info': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(467,26): error C3861: 'EscapeJson': 識別子が見つかりませんでした
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(467,8): error C2593: '演算子 <<' があいまいです
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(476,39):
+      'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(std::basic_streambuf<char,std::char_traits<char>> *)' の可能性があります
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(444,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(const void *)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(426,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(long double)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(408,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(double)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(390,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(float)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(372,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(unsigned __int64)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(354,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(__int64)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(336,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(unsigned long)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(318,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(long)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(299,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(unsigned int)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(273,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(int)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(254,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(unsigned short)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(220,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(short)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(202,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(bool)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(196,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(std::ios_base &(__cdecl *)(std::ios_base &))'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(190,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(std::basic_ios<char,std::char_traits<char>> &(__cdecl *)(std::basic_ios<char,std::char_traits<char>> &))'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(185,39):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<(std::basic_ostream<char,std::char_traits<char>> &(__cdecl *)(std::basic_ostream<char,std::char_traits<char>> &))'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(471,20):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::operator <<<void>(std::nullptr_t)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\thread(298,26):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<char,std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,std::thread::id)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(684,32):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<char,std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(728,32):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<char,std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,char)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(764,31):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(809,31):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,char)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(926,31):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const signed char *)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(932,31):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,signed char)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(937,31):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const unsigned char *)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(943,31):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,unsigned char)'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\include\__msvc_ostream.hpp(1027,32):
+      または 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<char,std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const std::error_code &)'
+      C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(467,8):
+      引数リスト '(std::basic_ostream<char,std::char_traits<char>>, <error>)' を一致させようとしているとき
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(471,27): error C2065: 'info': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(471,22): error C2530: 'kv': 参照が初期化されずに宣言されています。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(471,22): error C3531: 'kv': 'auto' を含む型のシンボルには初期化子が必要です
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(471,25): error C2143: 構文エラー: ';' が ':' の前にありません。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(471,37): error C2143: 構文エラー: ';' が ')' の前にありません。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(475,9): error C4430: 型指定子がありません - int と仮定しました。メモ: C++ は int を既定値としてサポートしていません
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(475,26): error C2143: 構文エラー: ';' が '&' の前にありません。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(475,28): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(477,32): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(478,32): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(479,32): error C2065: 's': 定義されていない識別子です。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\FirebaseMatchingCpp.cpp(480,36): error C2065: 's': 定義されていない識別子です。
+  RemoteSlotManager.cpp
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\RemoteSlotManager.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\RemoteSlotManager.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/Remote/RemoteSlotManager.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/Remote/RemoteSlotManager.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.h(21,10): error C1083: include ファイルを開けません。'ViGEm/Client.h':No such file or directory
+  (ソース ファイル '../Src/Remote/RemoteSlotManager.cpp' をコンパイルしています)
+  
+  XinputReceiverDialog.cpp
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\UI\XinputReceiverDialog.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\UI\XinputReceiverDialog.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/UI/XinputReceiverDialog.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\RemoteSlotManager.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/UI/XinputReceiverDialog.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+  (ソース ファイル '../Src/UI/XinputReceiverDialog.cpp' をコンパイルしています)
+  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Src\Remote\ViGEmManager.h(21,10): error C1083: include ファイルを開けません。'ViGEm/Client.h':No such file or directory
+  (ソース ファイル '../Src/UI/XinputReceiverDialog.cpp' をコンパイルしています)
+  
