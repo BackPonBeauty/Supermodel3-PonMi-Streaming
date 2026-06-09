@@ -1,19 +1,29 @@
 # Supermodel3-PonMi-Streaming
 
-A **WAN remote play streaming fork** of the Sega Model 3 emulator [Supermodel3](https://www.supermodel3.com).
+A **built-in WAN streaming fork** of the Sega Model 3 emulator [Supermodel3](https://www.supermodel3.com).
 
-Up to 4 players can enjoy link play over the internet.
+Up to 4 players can enjoy link play over the internet — **no extra tools required**.
+
+---
+
+## What's New in v2.0.0
+
+- **XinputReciever is no longer required** — streaming is now built directly into the emulator
+- **Firebase-based automatic matchmaking** — hosts are discovered automatically, no manual IP entry needed
+- **UPnP automatic port forwarding** — no router configuration required in most cases
+- **Ping display** — latency to each host is shown in the host list
 
 ---
 
 ## Features
 
-- **Up to 4-link support** (mix of local and remote players over WAN, up to 4 players)
+- **Up to 4-player WAN link play** (mix of local and remote players)
 - **Low-latency video streaming** (NVENC H.264 encoding)
 - **Audio streaming** (Opus 128kbps)
 - **XInput controller input via UDP**
 - **Firebase-based matchmaking** (automatic host discovery)
-- **UPnP automatic port forwarding** support
+- **UPnP automatic port forwarding**
+- **Ping measurement** per host
 
 ---
 
@@ -28,19 +38,16 @@ Up to 4 players can enjoy link play over the internet.
 
 ## Related Repositories
 
-The following applications are required to use this project.
-
 | App | Description | Link |
 |-----|-------------|------|
-| **StreamReceiver** | Client application (video reception & controller input) | [BackPonBeauty/StreamReceiver](https://github.com/BackPonBeauty/StreamReceiver)  |
-| **XinputReciever (ViGEmReceiver)** | Host management application | [BackPonBeauty/XinputReciever](https://github.com/BackPonBeauty/XinputReciever) (currently private) |
+| **StreamReceiver** | Client application (video reception & controller input) | [BackPonBeauty/StreamReceiver](https://github.com/BackPonBeauty/StreamReceiver) |
 
-> Releases include **ffmpeg** binaries.
+> XinputReciever (ViGEmReceiver) is **no longer required** as of v2.0.0.
+
+> Releases include **ffmpeg** binaries.  
 > ffmpeg is licensed under LGPL/GPL. Source code is available at https://ffmpeg.org
 
 ---
-
-<img width="398" height="490" alt="名称未設定-2" src="https://github.com/user-attachments/assets/c4bba737-7d27-4692-befc-ee7fb3aeabe2" />
 
 ## Requirements
 
@@ -82,33 +89,19 @@ The following applications are required to use this project.
 
 Download and install the latest release from [ViGEmBus Releases](https://github.com/nefarius/ViGEm.Bus/releases).
 
-### 2. Folder Structure
+### 2. Configure Supermodel.ini
 
-```
-XinputReciever/
-├── ViGEmReceiver.exe
-├── supermodel01/
-│   ├── supermodel-ponmi.exe
-│   ├── ponmi.ini
-│   ├── start.bat
-│   ├── start.vbs
-│   └── ROMs/ (symlink recommended)
-├── supermodel02/
-│   └── ...
-├── supermodel03/
-│   └── ...
-└── supermodel04/
-    └── ...
+Set the following in `Supermodel.ini`:
+
+```ini
+Streaming = 1
+LinkPlay = 1   ; 1-4 (your player slot)
 ```
 
-### 3. Using ViGEmReceiver
+### 3. Launch
 
-1. Launch `ViGEmReceiver.exe`
-2. Your external IP is automatically detected (edit manually if needed)
-3. Set each slot (P1–P4) to Local or Remote
-4. Press the **START** button
-5. Supermodel instances launch automatically and host info is registered to Firebase
-6. Press **STOP** to shut down
+Just launch `supermodel-ponmi.exe` with your ROM.  
+Your host is automatically registered to Firebase and becomes discoverable by clients.
 
 ---
 
@@ -116,11 +109,11 @@ XinputReciever/
 
 ### How to Connect
 
-<img width="494" height="512" alt="名称未設定-1" src="https://github.com/user-attachments/assets/78289230-71a1-4bd5-bd12-f4cc486fb9ee" />
+<img width="962" height="572" alt="名称未設定-1" src="https://github.com/user-attachments/assets/1838e45e-f115-4baf-b011-d81bfd997b48" />
 
 1. Launch `StreamReceiver.exe`
-2. Select a host from the list
-3. Choose an available slot (green ●) and press **Connect**
+2. Select a host from the list (ping is displayed next to each host)
+3. Choose an available slot (●) and press **Connect**
 4. Play begins when video appears
 
 **Key Controls:**
@@ -131,7 +124,7 @@ XinputReciever/
 
 ## License
 
-This software is distributed under the GPL license.
+This software is distributed under the GPL v3 license.
 
 The following libraries are used:
 
@@ -140,6 +133,10 @@ The following libraries are used:
 - **Nefarius.ViGEm.Client** - MIT / https://github.com/nefarius/ViGEm.Client
 - **Mono.NAT** - MIT / https://github.com/lontivero/Open.NAT
 - **Firebase.Database.NET** - MIT / https://github.com/step-up-labs/firebase-database-dotnet
+- **miniupnpc** - BSD / https://miniupnp.tuxfamily.org
+- **NVIDIA Video Codec SDK (NVENC)** - NVIDIA Software License / https://developer.nvidia.com/nvidia-video-codec-sdk
+- **CUDA Toolkit** - NVIDIA Software License / https://developer.nvidia.com/cuda-toolkit
+- **Opus** - BSD / https://opus-codec.org
 
 ---
 
@@ -150,3 +147,5 @@ The following libraries are used:
 - YouTube: [@BackPonBeauty](https://www.youtube.com/@BackPonBeauty)
 - GitHub: [BackPonBeauty](https://github.com/BackPonBeauty)
 - X: [@BackPonBeauty](https://x.com/BackPonBeauty)
+- Discord: [discord.gg/mNjPJHTTen](https://discord.gg/mNjPJHTTen)
+- Patreon: [patreon.com/BackPonBeauty](https://patreon.com/Ponmi)
