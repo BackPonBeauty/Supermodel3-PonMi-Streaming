@@ -60,6 +60,8 @@ extern bool OutputAudio(unsigned numSamples, const float* leftFrontBuffer, const
  * Shuts down the audio system.
  */
 extern void CloseAudio();
+#include <vector>
 void SetAudioDestIP(const std::string& ip);
+void SetAudioDestIPs(const std::vector<std::string>& ips);
 
 #endif	// INCLUDED_AUDIO_H

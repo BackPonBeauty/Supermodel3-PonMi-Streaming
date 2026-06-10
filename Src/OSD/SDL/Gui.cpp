@@ -30,7 +30,7 @@
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN // 競合を防ぐための定数
+#define WIN32_LEAN_AND_MEAN // 競合を防ぐための定数 eeeeeekkkkk
 #endif
 #include <windows.h>
 #include <shlobj.h>  // ★これが無いと BROWSEINFO でエラーになります
@@ -41,7 +41,9 @@
 
 #ifdef _WIN32
 #include "../Src/OSD/Windows/DirectInputSystem.h"
+#include "../Src/Remote/RemoteSlotManager.h"
 #endif
+#include <RemoteSlotManager.h>
 
 static std::vector<std::string> resolutions;
 static int selectedResIndex = 0;
@@ -289,7 +291,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
          int &musicVol, int &sfxVol, int &balance, bool &vEmulateSound,
          bool &vEmulateDSB, bool &vFlipStereo, bool &vLegacySoundDSP,
          int &selectedInputType, int &selectedCrosshair, int &selectedStyle,
-         bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet, bool &vStreaming)
+         bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet, bool &vStreaming, RemoteSlotManager* pRemote)
 {
     // 基本スケールの計算
     float scale = io.DisplaySize.y / 600.0f;
@@ -1037,6 +1039,14 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     if (ImGui::Checkbox("Streaming", &vStreaming))
                     {
                         saveSettings = true;
+#ifdef SUPERMODEL_WIN32
+                        // Streaming ON → 仮想コントローラーを作成
+                        // Streaming OFF → 削除はしない（GUIからの削除は要求仕様外）
+                        if (vStreaming && pRemote != nullptr)
+                        {
+                            pRemote->AddVirtualController();
+                        }
+#endif
                     }
 
                     ImGui::Spacing();
@@ -1676,7 +1686,12 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 }
 
 // --- エントリポイント ---
+#ifdef SUPERMODEL_WIN32
+std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Node &config, RemoteSlotManager* pRemote)
+#else
 std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Node &config)
+#define pRemote nullptr
+#endif
 {
     if (!resLoaded)
     {
@@ -1945,7 +1960,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
             vNoWhiteFlash, vHideCMD, vDefaultScanline, vTrueHz, superSampling, selectedCRT, selectedUpscale, ppcFreq, WindowXPosition, WindowYPosition, Scanline, Barrel,
             musicVol, sfxVol, balance, vEmulateSound, vEmulateDSB, vFlipStereo,
             vLegacySoundDSP, selectedInputType, selectedCrosshair, selectedStyle,
-            vForceFeedback, vNetwork, vSimulateNet, vStreaming);
+            vForceFeedback, vNetwork, vSimulateNet, vStreaming, pRemote);
         if (exit)
         {
             running = false;
@@ -2058,6 +2073,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         u["Network"] = (vNetwork ? "1" : "0");
         u["SimulateNet"] = (vSimulateNet ? "1" : "0");
         u["Streaming"] = (vStreaming ? "1" : "0");
+        // linkplay は変更しない（Main.cpp側で管理）
         u["PortIn"] = bufPortIn;
         u["PortOut"] = bufPortOut;
         u["AddressOut"] = bufAddressOut;

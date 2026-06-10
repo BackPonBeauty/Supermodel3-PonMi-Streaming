@@ -57,6 +57,8 @@ ifeq ($(strip $(ENABLE_DEBUGGER)),1)
 	SUPERMODEL_BUILD_FLAGS += -DSUPERMODEL_DEBUGGER
 endif
 
+SUPERMODEL_BUILD_FLAGS += -DENABLE_NVENC
+
 # DEBUG will build a debug build but does *not* enable extra debug logging and
 # therefore does not modify SUPERMODEL_BUILD_FLAGS
 

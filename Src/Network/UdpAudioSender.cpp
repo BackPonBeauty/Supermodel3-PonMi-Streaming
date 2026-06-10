@@ -21,10 +21,11 @@ bool UdpAudioSender::Init(const char *destIP, int destPort)
              &bNewBehavior, sizeof(bNewBehavior),
              NULL, 0, &dwBytesReturned, NULL, NULL);
 
-    memset(&m_dest, 0, sizeof(m_dest));
-    m_dest.sin_family = AF_INET;
-    m_dest.sin_port = htons((u_short)destPort);
-    m_dest.sin_addr.s_addr = inet_addr(destIP);
+    m_destPort = destPort;
+    if (destIP && strlen(destIP) > 0)
+    {
+        SetDestIP(destIP);
+    }
 
     // Opusエンコーダー初期化
     int err;
@@ -101,8 +102,12 @@ void UdpAudioSender::SendWithTimestamp(const int16_t *pcm, int samples, int ch)
         pkt[3] = m_timestamp & 0xFF;
         memcpy(pkt.data() + 4, m_opusBuf.data(), encoded);
 
-        sendto(m_socket, (const char *)pkt.data(), (int)pkt.size(), 0,
-               (sockaddr *)&m_dest, sizeof(m_dest));
+        std::lock_guard<std::mutex> lock(m_destsMutex);
+        for (const auto &dest : m_dests)
+        {
+            sendto(m_socket, (const char *)pkt.data(), (int)pkt.size(), 0,
+                   (sockaddr *)&dest, sizeof(dest));
+        }
 
         m_timestamp += OPUS_FRAME_SIZE;
     }
@@ -110,9 +115,44 @@ void UdpAudioSender::SendWithTimestamp(const int16_t *pcm, int samples, int ch)
 
 void UdpAudioSender::SetDestIP(const std::string &ip)
 {
-    // エンコーダーは維持したままアドレスだけ変更
-    m_dest.sin_addr.s_addr = inet_addr(ip.c_str());
-    printf("[AudioUDP] ip changed to %s\n", ip.c_str());
+    std::vector<std::string> ips = { ip };
+    SetDestIPs(ips);
+}
+
+void UdpAudioSender::SetDestIPs(const std::vector<std::string> &ips)
+{
+    std::lock_guard<std::mutex> lock(m_destsMutex);
+    m_dests.clear();
+    for (const auto &ip : ips)
+    {
+        bool exists = false;
+        for (const auto &dest : m_dests)
+        {
+            if (inet_ntoa(dest.sin_addr) == ip) {
+                exists = true;
+                break;
+            }
+        }
+        if (exists) continue;
+
+        sockaddr_in dest = {};
+        dest.sin_family = AF_INET;
+        dest.sin_port = htons((u_short)m_destPort);
+        dest.sin_addr.s_addr = inet_addr(ip.c_str());
+        m_dests.push_back(dest);
+    }
+    printf("[AudioUDP] Destinations updated (%zu clients)\n", m_dests.size());
+}
+
+void UdpAudioSender::SetDestPort(int port)
+{
+    std::lock_guard<std::mutex> lock(m_destsMutex);
+    m_destPort = port;
+    for (auto &dest : m_dests)
+    {
+        dest.sin_port = htons((u_short)port);
+    }
+    printf("[AudioUDP] Port changed to %d\n", port);
 }
 
 void UdpAudioSender::Shutdown()
@@ -128,4 +168,6 @@ void UdpAudioSender::Shutdown()
         m_socket = INVALID_SOCKET;
         printf("[AudioUDP] Shutdown\n");
     }
+    std::lock_guard<std::mutex> lock(m_destsMutex);
+    m_dests.clear();
 }

@@ -1,4 +1,2 @@
 ﻿  SDL_windows_main.c
-\Libraries\SDL2-2.30.8\\src\main\windows\SDL_windows_main.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2-2.30.8\\src\main\windows\SDL_windows_main.c':No such file or directory
-  (compiling source file '/Libraries/SDL2-2.30.8//src/main/windows/SDL_windows_main.c')
-  
+  SDLmain.vcxproj -> C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\VS2008\x64\Release\SDL2main.lib

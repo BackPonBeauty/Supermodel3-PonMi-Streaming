@@ -362,6 +362,11 @@ void NvencEncoder::Shutdown()
 }
 void NvencEncoder::SetDestIP(const std::string& ip)
 {
-    m_rtpSender.SetDestIP(ip);  // Shutdown/Initしない
+    m_rtpSender.SetDestIP(ip);
     printf("[NVENC] IP changed to %s\n", ip.c_str());
+}
+
+void NvencEncoder::SetDestIPs(const std::vector<std::string>& ips)
+{
+    m_rtpSender.SetDestIPs(ips);
 }

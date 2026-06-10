@@ -92,6 +92,7 @@ static const char s_defaultConfigFileContents[] =
         "PortIn = 1970\n"
         "PortOut = 1971\n"
         "AddressOut = \"127.0.0.1\"\n"
+        "LinkPlay = 1\n"
         "Streaming = false\n"
         "HandshakePort = 5001\n"
         "VideoPort = 5002\n"

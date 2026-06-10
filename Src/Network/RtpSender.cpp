@@ -23,11 +23,11 @@ bool RtpSender::Init(const char *destIP, int destPort)
              &bNewBehavior, sizeof(bNewBehavior),
              NULL, 0, &dwBytesReturned, NULL, NULL);
 
-    memset(&m_dest, 0, sizeof(m_dest));
-    memset(&m_dest, 0, sizeof(m_dest));
-    m_dest.sin_family = AF_INET;
-    m_dest.sin_port = htons((u_short)destPort);
-    m_dest.sin_addr.s_addr = inet_addr(destIP);
+    m_destPort = destPort;
+    if (destIP && strlen(destIP) > 0)
+    {
+        SetDestIP(destIP);
+    }
 
     srand((unsigned)time(nullptr));
     m_ssrc = rand();
@@ -113,8 +113,12 @@ void RtpSender::SendRtpPacket(const uint8_t *data, int size, bool marker)
 
     memcpy(buf + 12, data, size);
 
-    sendto(m_socket, (char *)buf, size + 12, 0,
-           (sockaddr *)&m_dest, sizeof(m_dest));
+    std::lock_guard<std::mutex> lock(m_destsMutex);
+    for (const auto &dest : m_dests)
+    {
+        sendto(m_socket, (char *)buf, size + 12, 0,
+               (sockaddr *)&dest, sizeof(dest));
+    }
     m_seqNum++;
 }
 
@@ -127,4 +131,48 @@ void RtpSender::Shutdown()
         WSACleanup();
         printf("[RTP] Shutdown\n");
     }
+    std::lock_guard<std::mutex> lock(m_destsMutex);
+    m_dests.clear();
 }
+
+void RtpSender::SetDestPort(int port)
+{
+    std::lock_guard<std::mutex> lock(m_destsMutex);
+    m_destPort = port;
+    for (auto &dest : m_dests)
+    {
+        dest.sin_port = htons((u_short)port);
+    }
+    printf("[RTP] Destination Port changed to %d\n", port);
+}
+
+void RtpSender::SetDestIP(const std::string &ip)
+{
+    std::vector<std::string> ips = { ip };
+    SetDestIPs(ips);
+}
+
+void RtpSender::SetDestIPs(const std::vector<std::string> &ips)
+{
+    std::lock_guard<std::mutex> lock(m_destsMutex);
+    m_dests.clear();
+    for (const auto &ip : ips)
+    {
+        bool exists = false;
+        for (const auto &dest : m_dests)
+        {
+            if (inet_ntoa(dest.sin_addr) == ip) {
+                exists = true;
+                break;
+            }
+        }
+        if (exists) continue;
+
+        sockaddr_in dest = {};
+        dest.sin_family = AF_INET;
+        dest.sin_port = htons((u_short)m_destPort);
+        dest.sin_addr.s_addr = inet_addr(ip.c_str());
+        m_dests.push_back(dest);
+    }
+    printf("[RTP] Destinations updated (%zu clients)\n", m_dests.size());
+}

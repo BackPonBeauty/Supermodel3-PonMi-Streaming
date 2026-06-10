@@ -8,6 +8,7 @@
 #endif
 
 #include <string>
+#include <vector>
 #include <cstdint>
 #include <functional>
 #include <cuda.h>
@@ -34,6 +35,7 @@ public:
     bool Init(int width, int height, int fps, int port, OnEncodedCallback cb);
     void EncodeFrame(unsigned int glTextureID);
     void SetDestIP(const std::string &ip);
+    void SetDestIPs(const std::vector<std::string> &ips);
     void SetDestPort(int port) { m_rtpSender.SetDestPort(port); }
     void Shutdown();
     int GetWidth() const { return m_width; }

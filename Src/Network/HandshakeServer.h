@@ -1,30 +1,38 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <functional>
 #include <atomic>
+#include <mutex>
 
 class HandshakeServer
 {
 public:
-    using OnConnectedCallback = std::function<void(const std::string &clientIP)>;
-    using OnDisconnectedCallback = std::function<void()>;
-    using OnPunchHoleCallback = std::function<void(const std::string &ip, int videoPort, int audioPort)>;
+    struct ClientInfo {
+        std::string ip;
+        int port;
+        uint32_t lastHeartbeat;
+    };
+
+    // クライアントリストが変更された時のコールバック
+    using OnClientListChangedCallback = std::function<void(const std::vector<std::string> &clientIPs)>;
 
     HandshakeServer() = default;
     ~HandshakeServer() { Stop(); }
 
     bool Start(int port, int width, int height,
-               OnConnectedCallback onConn,
-               OnDisconnectedCallback onDisconn,
-               OnPunchHoleCallback onPunchHole);
+               OnClientListChangedCallback onListChanged);
 
     void Stop();
-    bool IsConnected() const { return m_connected.load(); }
-    void NotifyHeartbeat();
+    bool IsConnected() const;
+    void NotifyHeartbeat(const std::string &clientIP, int port);
+    void NotifyControllerInput(const std::string &clientIP, int port);
+
+    std::string GetControllerIP();
+    int GetControllerPort();
+    std::vector<std::string> GetClientIPs();
 
 private:
-    OnPunchHoleCallback m_onPunchHole;
-
     int m_width = 960;
     int m_height = 540;
 
@@ -37,9 +45,15 @@ private:
     void *m_listenThread = nullptr;
     void *m_heartbeatThread = nullptr;
     std::atomic<bool> m_running{false};
-    std::atomic<bool> m_connected{false};
-    std::atomic<uint32_t> m_lastHeartbeat{0};
-    OnConnectedCallback m_onConnected;
-    OnDisconnectedCallback m_onDisconnected;
+
+    std::vector<ClientInfo> m_clients;
+    mutable std::mutex m_clientsMutex;
+    std::atomic<uint32_t> m_controllerLastInputTime{0};
+
+    OnClientListChangedCallback m_onListChanged;
     int m_port = 5001;
 };
+
+extern HandshakeServer g_handshake;
+extern HandshakeServer g_handshakeP2;
+

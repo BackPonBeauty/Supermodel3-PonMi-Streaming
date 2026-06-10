@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <mutex>
 #include <winsock2.h>
 #include <opus/opus.h>
 
@@ -14,15 +15,15 @@ public:
     bool Init(const char *destIP, int destPort);
     void SendWithTimestamp(const int16_t *pcm, int samples, int ch);
     void SetDestIP(const std::string &ip);
+    void SetDestIPs(const std::vector<std::string> &ips);
     void Shutdown();
-    void SetDestPort(int port)
-    {
-        m_dest.sin_port = htons((u_short)port);
-    }
+    void SetDestPort(int port);
 
 private:
     SOCKET m_socket = INVALID_SOCKET;
-    sockaddr_in m_dest = {};
+    std::vector<sockaddr_in> m_dests;
+    std::mutex m_destsMutex;
+    int m_destPort = 0;
     uint32_t m_timestamp = 0;
 
     // Opusエンコーダー

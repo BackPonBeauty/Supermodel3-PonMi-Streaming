@@ -112,6 +112,15 @@
 #include <shellapi.h>
 #include "Network/HandshakeServer.h"
 
+// -------------------------------------------------------
+// XInput Remote Controller Manager (統合: VB.NET → C++)
+// -------------------------------------------------------
+#ifdef SUPERMODEL_WIN32
+#include "Remote/RemoteSlotManager.h"
+// 起動時ViGEm・XInput待ち受けを管理するシングルトン
+static RemoteSlotManager s_remoteSlotMgr;
+#endif
+
 /******************************************************************************
  Global Run-time Config
 ******************************************************************************/
@@ -149,7 +158,8 @@ bool replayRequested = false;
 bool replayStarted = false;
 std::string replayFile;
 static bool lastLoadStatePressed = false;
-static HandshakeServer g_handshake;
+HandshakeServer g_handshake;
+HandshakeServer g_handshakeP2;
 
 /*
  * Crosshair stuff
@@ -1118,27 +1128,67 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
   int handshakePort = s_runtime_config["HandshakePort"].ValueAs<int>();
 
   int audioPort = s_runtime_config["AudioPort"].ValueAs<int>();
+  
+  streamingEnabled = superAA->IsStreamingEnabled();
   printf("[Streaming] %s\n", streamingEnabled ? "true" : "false");
   // ↓ superAA生成の後に移動
   if (streamingEnabled)
   {
-    g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), [superAA](const std::string &clientIP)
-                      {
-            superAA->GetEncoder().SetDestIP(clientIP);
-            SetAudioDestIP(clientIP); }, [superAA]()
-                      {
-            printf("[Handshake] Disconnected\n");
-            superAA->GetEncoder().SetDestIP("127.0.0.1");
-            SetAudioDestIP("127.0.0.1"); }, [superAA, videoPort, audioPort](const std::string &ip, int vPort, int aPort)
-                      {
-            if (videoPort > 0) {
-                superAA->GetEncoder().SetDestPort(videoPort);
-                printf("[PunchHole] Video port set to %d\n", videoPort);
-            }
-            if (audioPort > 0) {
-                SetAudioDestPort(audioPort);
-                printf("[PunchHole] Audio port set to %d\n", audioPort);
-            } });
+    int linkplay = (int)s_runtime_config["LinkPlay"].ValueAsDefault<int64_t>(0);
+    int handshakePortP2 = handshakePort + 4; // P2用のハンドシェイクポート (通常 5005)
+
+    // 送信先IPを統合して更新する共通ラムダ
+    auto UpdateStreamingDestinations = [superAA]() {
+        std::vector<std::string> ips;
+        // P1 のクライアントIPを追加
+        for (const auto &ip : g_handshake.GetClientIPs())
+        {
+            if (std::find(ips.begin(), ips.end(), ip) == ips.end())
+                ips.push_back(ip);
+        }
+        // P2 のクライアントIPを追加
+        for (const auto &ip : g_handshakeP2.GetClientIPs())
+        {
+            if (std::find(ips.begin(), ips.end(), ip) == ips.end())
+                ips.push_back(ip);
+        }
+
+        superAA->GetEncoder().SetDestIPs(ips);
+        SetAudioDestIPs(ips);
+
+#ifdef SUPERMODEL_WIN32
+        size_t totalClients = g_handshake.GetClientIPs().size() + g_handshakeP2.GetClientIPs().size();
+        if (totalClients >= 3)
+        {
+            s_remoteSlotMgr.SetSlotOccupied();
+        }
+        else
+        {
+            s_remoteSlotMgr.SetSlotAvailable();
+        }
+#endif
+    };
+
+    if (linkplay == 0)
+    {
+        printf("[Main] LinkPlay=0 -> Launching BOTH P1 (port %d) and P2 (port %d) handshake servers\n", handshakePort, handshakePortP2);
+        g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(),
+                          [UpdateStreamingDestinations](const std::vector<std::string> &/*clientIPs*/) {
+                              UpdateStreamingDestinations();
+                          });
+        g_handshakeP2.Start(handshakePortP2, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(),
+                            [UpdateStreamingDestinations](const std::vector<std::string> &/*clientIPs*/) {
+                                UpdateStreamingDestinations();
+                            });
+    }
+    else
+    {
+        printf("[Main] LinkPlay=%d -> Launching single handshake server on port %d\n", linkplay, handshakePort);
+        g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(),
+                          [UpdateStreamingDestinations](const std::vector<std::string> &/*clientIPs*/) {
+                              UpdateStreamingDestinations();
+                          });
+    }
   }
 
   CRender2D *Render2D = new CRender2D(s_runtime_config);
@@ -2565,11 +2615,24 @@ int main(int argc, char **argv)
       RelaunchHidden(argc, argv);
     }
 
+    // --- GUI表示前: streaming=true ならViGEm初期化 + 仮想コントローラー作成 ---
+#ifdef SUPERMODEL_WIN32
+    {
+      bool streaming = fConfig2["Streaming"].ValueAsDefault<bool>(false);
+      if (streaming)
+      {
+        printf("[Main] Streaming=true: initializing ViGEm before GUI...\n");
+        s_remoteSlotMgr.InitViGEm();
+        s_remoteSlotMgr.AddVirtualController();
+      }
+    }
+    cmd_line.rom_files = RunGUI(s_configFilePath, fConfig2, &s_remoteSlotMgr);
+#else
     cmd_line.rom_files = RunGUI(s_configFilePath, fConfig2);
+#endif
 
     if (cmd_line.rom_files.empty())
     {
-
       return 0;
     }
   }
@@ -2705,6 +2768,32 @@ int main(int argc, char **argv)
     goto Exit;
   }
 
+  // --- Launch後: streaming=true かつ linkplay 設定があればXInput待ち受け開始 ---
+#ifdef SUPERMODEL_WIN32
+  {
+    bool streaming = s_runtime_config["Streaming"].ValueAsDefault<bool>(false);
+    int linkplay = (int)s_runtime_config["LinkPlay"].ValueAsDefault<int64_t>(0);
+    if (streaming && linkplay >= 0 && linkplay <= 4)
+    {
+      printf("[Main] Launch: streaming=true linkplay=%d -> StartListening\n", linkplay);
+      if (!s_remoteSlotMgr.IsViGEmReady())
+      {
+        s_remoteSlotMgr.InitViGEm();
+        s_remoteSlotMgr.AddVirtualController();
+      }
+      s_remoteSlotMgr.StartListening(linkplay);
+      std::string romPath = cmd_line.rom_files[0];
+      size_t sep = romPath.find_last_of("/\\");
+      if (sep != std::string::npos)
+        romPath = romPath.substr(sep + 1);
+      size_t dot = romPath.find_last_of('.');
+      if (dot != std::string::npos)
+        romPath = romPath.substr(0, dot);
+      s_remoteSlotMgr.StartFirebaseAsync(game.name);
+    }
+  }
+#endif
+
   // Create Crosshair
   s_crosshair = new CCrosshair(s_runtime_config);
   if (s_crosshair->Init() != Result::OKAY)
@@ -2817,6 +2906,10 @@ int main(int argc, char **argv)
   delete Model3;
 
 Exit:
+#ifdef SUPERMODEL_WIN32
+  // RemoteSlotManager をシャットダウン（ViGEm・UDP受信停止）
+  s_remoteSlotMgr.Shutdown();
+#endif
   delete Inputs;
   delete Outputs;
   delete s_crosshair;

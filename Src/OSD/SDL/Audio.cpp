@@ -749,8 +749,13 @@ void CloseAudio()
 
 void SetAudioDestIP(const std::string &ip)
 {
-    g_audioSender.SetDestIP(ip); // すでにアドレスだけ変更する実装
+    g_audioSender.SetDestIP(ip);
     printf("[AudioUDP] IP changed to %s\n", ip.c_str());
+}
+
+void SetAudioDestIPs(const std::vector<std::string> &ips)
+{
+    g_audioSender.SetDestIPs(ips);
 }
 
 void SetAudioDestPort(int port)

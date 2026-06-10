@@ -106,10 +106,11 @@ CUDA_INC_DIR = C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.1/include
 
 PLATFORM_INCLUDE_DIR = $(SDL2_INCLUDE_DIR)
 PLATFORM_LIB_DIR = $(SDL2_LIB_DIR)
-PLATFORM_LIBS = -ldxerr8 -ldinput8 -lglu32 -lole32 -loleaut32 -lopengl32 -lwbemuuid -lws2_32 -lz -lcuda -lcudart -lopus
+PLATFORM_LIBS = -ldxerr8 -ldinput8 -lglu32 -lole32 -loleaut32 -lopengl32 -lwbemuuid -lz -lcuda -lcudart -lopus -LLibraries/ViGEm/lib -lViGEmClient -lwinhttp -lminiupnpc -lws2_32 -liphlpapi
 PLATFORM_CXXFLAGS = $(SDL2_CFLAGS) -DSUPERMODEL_WIN32 \
     -I"$(CUDA_INC_DIR)" \
     -ISrc/Video \
+	-ILibraries/ViGEm/include \
     $(addprefix -I,$(sort $(PLATFORM_INCLUDE_DIR)))
 PLATFORM_LDFLAGS = -static -L$(sort $(PLATFORM_LIB_DIR)) \
     $(SDL2_LIBS) $(PLATFORM_LIBS)
@@ -124,6 +125,12 @@ PLATFORM_SRC_FILES = \
 	Src/OSD/Windows/DirectInputSystem.cpp \
 	Src/OSD/Windows/FileSystemPath.cpp \
 	Src/OSD/Windows/WinOutputs.cpp \
+	Src/Remote/ViGEmManager.cpp \
+	Src/Remote/XinputReceiver.cpp \
+	Src/Remote/FirebaseMatchingCpp.cpp \
+	Src/Remote/RemoteSlotManager.cpp \
+	Src/Remote/UPnPHelper.cpp \
+	Src/UI/XinputReceiverDialog.cpp \
 	Src/OSD/Windows/SupermodelResources.rc
 
 include Makefiles/Rules.inc

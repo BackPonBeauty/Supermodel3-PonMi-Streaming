@@ -2,22 +2,20 @@
 #include <winsock2.h>
 #include <cstdio>
 #include <cstring>
+#include <chrono>
+#include <algorithm>
 
 #pragma comment(lib, "ws2_32.lib")
 
 #define TO_SOCKET(p) (reinterpret_cast<SOCKET>(p))
 
 bool HandshakeServer::Start(int port, int width, int height,
-                            OnConnectedCallback onConn,
-                            OnDisconnectedCallback onDisconn,
-                            OnPunchHoleCallback onPunchHole)
+                             OnClientListChangedCallback onListChanged)
 {
-    m_onPunchHole = onPunchHole;
     m_port = port;
     m_width = width;
     m_height = height;
-    m_onConnected = onConn;
-    m_onDisconnected = onDisconn;
+    m_onListChanged = onListChanged;
 
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
@@ -81,30 +79,92 @@ void HandshakeServer::ListenLoop()
             continue;
 
         buf[received] = '\0';
+        std::string clientIP = inet_ntoa(client.sin_addr);
+        int clientPort = ntohs(client.sin_port);
 
         if (strcmp(buf, "HELLO") == 0)
         {
-            char clientIP[32];
-            strncpy(clientIP, inet_ntoa(client.sin_addr), sizeof(clientIP) - 1);
-            printf("[Handshake] HELLO from %s\n", clientIP);
+            printf("[Handshake] HELLO from %s:%d\n", clientIP.c_str(), clientPort);
 
-            char ok[32];
-            snprintf(ok, sizeof(ok), "OK %d %d", m_width, m_height);
-            sendto(TO_SOCKET(m_socket), ok, (int)strlen(ok), 0,
-                   (sockaddr *)&client, clientLen);
+            bool alreadyConnected = false;
+            bool allowed = false;
+            bool listChanged = false;
+            std::vector<std::string> currentIPs;
 
-            if (!m_connected.load())
             {
-                m_connected.store(true);
-                m_lastHeartbeat.store(GetTickCount());
-                if (m_onConnected)
-                    m_onConnected(clientIP);
+                std::lock_guard<std::mutex> lock(m_clientsMutex);
+                
+                // 同じIPアドレスの接続がすでにあれば、ポートとハートビートを更新して上書き許可する（再接続対策）
+                auto it = std::find_if(m_clients.begin(), m_clients.end(),
+                                       [&clientIP](const ClientInfo &c) { return c.ip == clientIP; });
+                if (it != m_clients.end())
+                {
+                    if (it->port != clientPort)
+                    {
+                        printf("[Handshake] Re-connection from %s (port updated from %d to %d)\n", clientIP.c_str(), it->port, clientPort);
+                        it->port = clientPort;
+                    }
+                    it->lastHeartbeat = GetTickCount();
+                    alreadyConnected = true;
+                    allowed = true;
+                }
+                else
+                {
+                    if (m_clients.size() < 3)
+                    {
+                        ClientInfo newClient;
+                        newClient.ip = clientIP;
+                        newClient.port = clientPort;
+                        newClient.lastHeartbeat = GetTickCount();
+                        m_clients.push_back(newClient);
+                        allowed = true;
+                        listChanged = true;
+
+                        if (m_clients.size() == 1)
+                        {
+                            m_controllerLastInputTime.store(GetTickCount());
+                        }
+                    }
+                }
+
+                for (const auto &c : m_clients)
+                    currentIPs.push_back(c.ip);
             }
+
+            if (allowed)
+            {
+                char ok[32];
+                snprintf(ok, sizeof(ok), "OK %d %d", m_width, m_height);
+                sendto(TO_SOCKET(m_socket), ok, (int)strlen(ok), 0,
+                       (sockaddr *)&client, clientLen);
+
+                if (listChanged && m_onListChanged)
+                {
+                    m_onListChanged(currentIPs);
+                }
+            }
+            else
+            {
+                printf("[Handshake] FULL. Rejecting %s:%d\n", clientIP.c_str(), clientPort);
+                const char *fullMsg = "FULL";
+                sendto(TO_SOCKET(m_socket), fullMsg, (int)strlen(fullMsg), 0,
+                       (sockaddr *)&client, clientLen);
+            }
+        }
+        else if (strncmp(buf, "PING", 4) == 0)
+        {
+            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count();
+            char pong[64];
+            snprintf(pong, sizeof(pong), "PONG %lld", now);
+            sendto(TO_SOCKET(m_socket), pong, (int)strlen(pong), 0,
+                   (sockaddr *)&client, clientLen);
         }
         else if (strcmp(buf, "HB") == 0)
         {
-            printf("[Handshake] HB received\n");
-            m_lastHeartbeat.store(GetTickCount());
+            printf("[Handshake] HB received from %s:%d\n", clientIP.c_str(), clientPort);
+            NotifyHeartbeat(clientIP, clientPort);
         }
     }
 }
@@ -114,24 +174,152 @@ void HandshakeServer::HeartbeatLoop()
     while (m_running.load())
     {
         Sleep(1000);
-        if (m_connected.load())
+        bool listChanged = false;
+        std::vector<std::string> currentIPs;
+
         {
+            std::lock_guard<std::mutex> lock(m_clientsMutex);
             uint32_t now = GetTickCount();
-            uint32_t last = m_lastHeartbeat.load();
-            if (now - last > 5000)
+
+            // 5秒タイムアウト判定
+            auto it = m_clients.begin();
+            while (it != m_clients.end())
             {
-                printf("[Handshake] Client disconnected (timeout)\n");
-                m_connected.store(false);
-                if (m_onDisconnected)
-                    m_onDisconnected();
+                if (now - it->lastHeartbeat > 5000)
+                {
+                    printf("[Handshake] Client %s disconnected (timeout)\n", it->ip.c_str());
+                    bool wasController = (it == m_clients.begin());
+                    it = m_clients.erase(it);
+                    listChanged = true;
+
+                    if (wasController && !m_clients.empty())
+                    {
+                        m_controllerLastInputTime.store(GetTickCount());
+                        printf("[Handshake] Control passed to next client: %s\n", m_clients[0].ip.c_str());
+                    }
+                }
+                else
+                {
+                    ++it;
+                }
             }
+
+            // コントローラー（先頭クライアント）の1分無操作判定
+            if (!m_clients.empty())
+            {
+                if (now - m_controllerLastInputTime.load() > 60000)
+                {
+                    printf("[Handshake] Controller client %s timed out (1 min inactivity). Kicking.\n", m_clients[0].ip.c_str());
+                    m_clients.erase(m_clients.begin());
+                    listChanged = true;
+
+                    if (!m_clients.empty())
+                    {
+                        m_controllerLastInputTime.store(GetTickCount());
+                        printf("[Handshake] Control passed to next client: %s\n", m_clients[0].ip.c_str());
+                    }
+                }
+            }
+
+            if (listChanged)
+            {
+                for (const auto &c : m_clients)
+                    currentIPs.push_back(c.ip);
+            }
+        }
+
+        if (listChanged && m_onListChanged)
+        {
+            m_onListChanged(currentIPs);
         }
     }
 }
 
-void HandshakeServer::NotifyHeartbeat()
+void HandshakeServer::NotifyHeartbeat(const std::string &clientIP, int port)
 {
-    m_lastHeartbeat.store(GetTickCount());
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+    
+    // 1. 完全一致 (IP & Port) を探す
+    auto it = std::find_if(m_clients.begin(), m_clients.end(),
+                           [&clientIP, port](const ClientInfo &c) { return c.ip == clientIP && c.port == port; });
+    if (it != m_clients.end())
+    {
+        it->lastHeartbeat = GetTickCount();
+        return;
+    }
+
+    // 2. フォールバック: 操作パケットやHBの送信元ポートが一時的にずれている場合、
+    // 同じIPアドレスを持つクライアントの中から、最もポート番号の差が小さいものを検索して更新する。
+    auto matchIt = m_clients.end();
+    int minDiff = 999999;
+    for (auto i = m_clients.begin(); i != m_clients.end(); ++i)
+    {
+        if (i->ip == clientIP)
+        {
+            int diff = std::abs(i->port - port);
+            if (diff < minDiff)
+            {
+                minDiff = diff;
+                matchIt = i;
+            }
+        }
+    }
+
+    if (matchIt != m_clients.end())
+    {
+        if (matchIt->port != port)
+        {
+            printf("[Handshake] HB Port changed from %d to %d for %s (updating)\n", matchIt->port, port, clientIP.c_str());
+            matchIt->port = port;
+        }
+        matchIt->lastHeartbeat = GetTickCount();
+    }
+}
+
+void HandshakeServer::NotifyControllerInput(const std::string &clientIP, int port)
+{
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+    if (m_clients.empty()) return;
+
+    // 1. コントローラーの IP と Port が完全一致
+    if (m_clients[0].ip == clientIP && m_clients[0].port == port)
+    {
+        m_controllerLastInputTime.store(GetTickCount());
+        return;
+    }
+
+    // 2. フォールバック: 操作パケットの送信元ポートが一時的にずれている場合でもIPが同じなら許容
+    if (m_clients[0].ip == clientIP)
+    {
+        m_controllerLastInputTime.store(GetTickCount());
+    }
+}
+
+bool HandshakeServer::IsConnected() const
+{
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+    return !m_clients.empty();
+}
+
+std::string HandshakeServer::GetControllerIP()
+{
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+    return m_clients.empty() ? "" : m_clients[0].ip;
+}
+
+int HandshakeServer::GetControllerPort()
+{
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+    return m_clients.empty() ? 0 : m_clients[0].port;
+}
+
+std::vector<std::string> HandshakeServer::GetClientIPs()
+{
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+    std::vector<std::string> ips;
+    for (const auto &c : m_clients)
+        ips.push_back(c.ip);
+    return ips;
 }
 
 void HandshakeServer::Stop()
@@ -154,5 +342,11 @@ void HandshakeServer::Stop()
         CloseHandle(m_heartbeatThread);
         m_heartbeatThread = nullptr;
     }
+
+    {
+        std::lock_guard<std::mutex> lock(m_clientsMutex);
+        m_clients.clear();
+    }
+
     printf("[Handshake] Stopped\n");
-}
+}

@@ -1,18 +1,17 @@
 ﻿cl : コマンド ライン  warning D9002: 不明なオプション '/arch:SSE' を無視します。
   SDLnet.c
-\Libraries\SDL2_net-2.2.0\SDLnet.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2_net-2.2.0\SDLnet.c':No such file or directory
-  (compiling source file '/Libraries/SDL2_net-2.2.0/SDLnet.c')
-  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnet.c(180,25): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnet.c(184,18): warning C4996: 'gethostbyname': Use getaddrinfo() or GetAddrInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnet.c(212,10): warning C4996: 'gethostbyaddr': Use getnameinfo() or GetNameInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnet.c(218,12): warning C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnet.c(284,45): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
   SDLnetselect.c
-\Libraries\SDL2_net-2.2.0\SDLnetselect.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2_net-2.2.0\SDLnetselect.c':No such file or directory
-  (compiling source file '/Libraries/SDL2_net-2.2.0/SDLnetselect.c')
-  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnetselect.c(139,30): warning C4244: '関数': 'SOCKET' から 'int' への変換です。データが失われる可能性があります。
   SDLnetTCP.c
-\Libraries\SDL2_net-2.2.0\SDLnetTCP.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2_net-2.2.0\SDLnetTCP.c':No such file or directory
-  (compiling source file '/Libraries/SDL2_net-2.2.0/SDLnetTCP.c')
-  
   SDLnetUDP.c
-\Libraries\SDL2_net-2.2.0\SDLnetUDP.c(1,1): error C1083: ソース ファイルを開けません。'..\..\Libraries\SDL2_net-2.2.0\SDLnetUDP.c':No such file or directory
-  (compiling source file '/Libraries/SDL2_net-2.2.0/SDLnetUDP.c')
-  
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnetUDP.c(203,34): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnetUDP.c(224,13): warning C4244: '関数': 'time_t' から 'unsigned int' への変換です。データが失われる可能性があります。
+C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\Libraries\SDL2_net-2.2.0\SDLnetUDP.c(424,29): warning C4244: '関数': 'SOCKET' から 'int' への変換です。データが失われる可能性があります。
   コードを生成中...
+     ライブラリ C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\VS2008\\x64\Release\SDL2_net.lib とオブジェクト C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\VS2008\\x64\Release\SDL2_net.exp を作成中
+  SDL_net.vcxproj -> C:\Users\vf2_c\.gemini\antigravity\scratch\Supermodel3-PonMi-Streaming\VS2008\x64\Release\SDL2_net.dll
