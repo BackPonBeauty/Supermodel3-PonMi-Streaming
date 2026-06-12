@@ -54,7 +54,7 @@ bool NvencEncoder::InitCuda()
         return false;
     }
 
-    // CUDA 13.1はcuCtxCreate_v4になったので古いAPIを明示的に使う
+    // CUDA 13.1 is now cuCtxCreate_v4, so explicitly use the older API
     CUctxCreateParams params = {};
     params.execAffinityParams = nullptr;
     res = cuCtxCreate(&m_cuContext, &params, 0, device);
@@ -84,7 +84,7 @@ bool NvencEncoder::CreateEncoder()
         return false;
     }
 
-    // プリセット設定取得
+    // Retrieve preset configurations
     NV_ENC_PRESET_CONFIG presetConfig = {};
     presetConfig.version = NV_ENC_PRESET_CONFIG_VER;
     presetConfig.presetCfg.version = NV_ENC_CONFIG_VER;
@@ -97,13 +97,13 @@ bool NvencEncoder::CreateEncoder()
 
     NV_ENC_CONFIG encConfig = presetConfig.presetCfg;
 
-    // 低遅延CBR設定
+    // Low-latency CBR configuration
     encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
     encConfig.rcParams.averageBitRate = 3000000; // 4Mbps
     encConfig.rcParams.maxBitRate = 3000000;
     encConfig.rcParams.vbvBufferSize = 0;
     encConfig.rcParams.vbvInitialDelay = 0;
-    encConfig.frameIntervalP = 1; // Bフレームなし
+    encConfig.frameIntervalP = 1; // No B-frames
     encConfig.gopLength = m_fps;
 
     encConfig.encodeCodecConfig.h264Config.idrPeriod = m_fps;
@@ -140,7 +140,7 @@ bool NvencEncoder::AllocateBuffers()
 {
     for (int i = 0; i < BUFFER_COUNT; i++)
     {
-        // 入力バッファ（CUDAメモリ）
+        // Input buffer (CUDA memory)
         NV_ENC_CREATE_INPUT_BUFFER inputBuf = {};
         inputBuf.version = NV_ENC_CREATE_INPUT_BUFFER_VER;
         inputBuf.width = m_width;
@@ -155,7 +155,7 @@ bool NvencEncoder::AllocateBuffers()
         }
         m_inputBuffers[i] = inputBuf.inputBuffer;
 
-        // 出力バッファ
+        // Output buffer
         NV_ENC_CREATE_BITSTREAM_BUFFER outputBuf = {};
         outputBuf.version = NV_ENC_CREATE_BITSTREAM_BUFFER_VER;
 
@@ -203,7 +203,7 @@ void NvencEncoder::EncodeFrame(unsigned int glTextureID)
 
     int idx = m_bufferIndex % BUFFER_COUNT;
 
-    // OpenGLテクスチャをCUDAに登録（初回 or テクスチャ変更時）
+    // Register OpenGL texture to CUDA (first time or on texture change)
     if (m_glTexID != glTextureID)
     {
         if (m_cuResource)
@@ -224,13 +224,13 @@ void NvencEncoder::EncodeFrame(unsigned int glTextureID)
         m_glTexID = glTextureID;
     }
 
-    // OpenGLテクスチャをCUDAにマップ
+    // Map OpenGL texture to CUDA
     cudaGraphicsMapResources(1, &m_cuResource, 0);
 
     cudaArray_t cuArray;
     cudaGraphicsSubResourceGetMappedArray(&cuArray, m_cuResource, 0, 0);
 
-    // NVENCの入力バッファにロック
+    // Lock NVENC input buffer
     NV_ENC_LOCK_INPUT_BUFFER lockParams = {};
     lockParams.version = NV_ENC_LOCK_INPUT_BUFFER_VER;
     lockParams.inputBuffer = m_inputBuffers[idx];
@@ -242,7 +242,7 @@ void NvencEncoder::EncodeFrame(unsigned int glTextureID)
         return;
     }
 
-    // CUDAArrayからNVENC入力バッファへGPU上でコピー
+    // Copy from CUDAArray to NVENC input buffer on GPU
     cudaMemcpy2DFromArray(
         lockParams.bufferDataPtr,  // dst
         lockParams.pitch,          // dst pitch
@@ -250,12 +250,12 @@ void NvencEncoder::EncodeFrame(unsigned int glTextureID)
         0, 0,                      // src offset
         m_width * 4,               // width bytes (RGBA)
         m_height,                  // height
-        cudaMemcpyDeviceToDevice); // GPU→GPU
+        cudaMemcpyDeviceToDevice); // GPU -> GPU
 
     m_nvenc.nvEncUnlockInputBuffer(m_encoder, m_inputBuffers[idx]);
     cudaGraphicsUnmapResources(1, &m_cuResource, 0);
 
-    // エンコード
+    // Encode
     NV_ENC_PIC_PARAMS picParams = {};
     picParams.version = NV_ENC_PIC_PARAMS_VER;
     picParams.inputBuffer = m_inputBuffers[idx];
@@ -265,11 +265,11 @@ void NvencEncoder::EncodeFrame(unsigned int glTextureID)
     picParams.inputHeight = m_height;
     picParams.pictureStruct = NV_ENC_PIC_STRUCT_FRAME;
 
-    // 最初の数フレームはIDRフレームを強制
+    // Force IDR frame for the first few frames
     if (m_bufferIndex < 3)
         picParams.encodePicFlags = NV_ENC_PIC_FLAG_FORCEIDR | NV_ENC_PIC_FLAG_OUTPUT_SPSPPS;
     else
-        picParams.encodePicFlags = NV_ENC_PIC_FLAG_OUTPUT_SPSPPS; // 毎フレームSPS/PPS付加
+        picParams.encodePicFlags = NV_ENC_PIC_FLAG_OUTPUT_SPSPPS; // Attach SPS/PPS to every frame
 
     m_nvenc.nvEncEncodePicture(m_encoder, &picParams);
 
@@ -292,7 +292,7 @@ void NvencEncoder::ProcessOutput(int idx)
         const uint8_t *data = (const uint8_t *)lockBitstream.bitstreamBufferPtr;
         int size = (int)lockBitstream.bitstreamSizeInBytes;
 
-        // 先頭NALタイプを表示
+        // Inspect only around the head to find leading NAL types
         int offset = 0;
         while (offset < size - 4)
         {
@@ -306,14 +306,14 @@ void NvencEncoder::ProcessOutput(int idx)
             else
                 offset++;
             if (offset > 100)
-                break; // 先頭付近だけ見る
+                break; // Inspect only near the head
         }
         if (m_callback)
             m_callback(
                 (const uint8_t *)lockBitstream.bitstreamBufferPtr,
                 (int)lockBitstream.bitstreamSizeInBytes);
 
-        // RTP送信
+        // RTP transmission
         if (m_rtpEnabled)
             m_rtpSender.Send(
                 (const uint8_t *)lockBitstream.bitstreamBufferPtr,
@@ -335,7 +335,7 @@ void NvencEncoder::Shutdown()
         m_cuResource = nullptr;
     }
 
-    // フラッシュ
+    // Flush
     NV_ENC_PIC_PARAMS flushParams = {};
     flushParams.version = NV_ENC_PIC_PARAMS_VER;
     flushParams.encodePicFlags = NV_ENC_PIC_FLAG_EOS;

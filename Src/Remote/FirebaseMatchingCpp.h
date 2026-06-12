@@ -1,14 +1,14 @@
 /**
  * FirebaseMatchingCpp.h
  *
- * Firebase Realtime Database REST API ラッパー（WinHTTP使用）
+ * Firebase Realtime Database REST API Wrapper (using WinHTTP)
  *
- * VB.NET の FirebaseMatching.vb と同等の機能を提供:
- *   - 匿名認証（Firebase Auth REST API）
- *   - ホスト情報の登録・更新
- *   - ハートビート（2分ごと）
- *   - 外部IPアドレス取得
- *   - 古いホストエントリのクリーンアップ
+ * Provides functions equivalent to FirebaseMatching.vb on the VB.NET side:
+ *   - Anonymous authentication (Firebase Auth REST API)
+ *   - Registration and updates of host information
+ *   - Heartbeat (every 2 minutes)
+ *   - External IP address retrieval
+ *   - Cleanup of stale host entries
  */
 #pragma once
 
@@ -24,7 +24,7 @@
 
 #pragma comment(lib, "winhttp.lib")
 
-// スロット情報（VB.NET の SlotInfo クラスと対応）
+// Slot info (corresponds to SlotInfo class in VB.NET)
 struct SlotInfoCpp
 {
     int  xinputPort;
@@ -33,13 +33,14 @@ struct SlotInfoCpp
     bool available;
 };
 
-// ホスト情報（VB.NET の HostInfo クラスと対応）
+// Host info (corresponds to HostInfo class in VB.NET)
 struct HostInfoCpp
 {
     long long                    timestamp;
     std::string                  ip;
-    std::string                  gametitle; // 起動中のROM名（例: spikeofe）
-    std::map<int, SlotInfoCpp>   slots; // key: スロット番号 1〜4
+    std::string                  gametitle; // Name of the running ROM (e.g., spikeofe)
+    std::string                  servername;
+    std::map<int, SlotInfoCpp>   slots; // key: slot number 1 to 4
 };
 
 using FirebaseStatusCallback = std::function<void(const std::string& message)>;
@@ -47,12 +48,12 @@ using FirebaseStatusCallback = std::function<void(const std::string& message)>;
 class FirebaseMatchingCpp
 {
 public:
-    // Firebase プロジェクト設定（VB.NET の FirebaseMatching.vb と一致）
+    // Firebase project settings (matching FirebaseMatching.vb in VB.NET)
     static constexpr const char* API_KEY     = "API_KEY";
     static constexpr const char* DB_URL      = "DB_URL";
     static constexpr const char* AUTH_DOMAIN = "AUTH_DOMAIN";
 
-    // ポート定義（VB.NET の SlotPorts と一致）
+    // Port definitions (matching SlotPorts in VB.NET)
     static constexpr int SLOT_XINPUT_PORT[5] = { 0, 5000, 5004, 5008, 5012 };
     static constexpr int SLOT_VIDEO_PORT[5]  = { 0, 5002, 5006, 5010, 5014 };
     static constexpr int SLOT_AUDIO_PORT[5]  = { 0, 5003, 5007, 5011, 5015 };
@@ -60,35 +61,36 @@ public:
     FirebaseMatchingCpp();
     ~FirebaseMatchingCpp();
 
-    // 匿名認証を行い、DBクライアントを初期化
+    // Perform anonymous authentication and initialize DB client
     bool Initialize(FirebaseStatusCallback statusCb = nullptr);
     void Shutdown();
 
-    // ホスト情報をFirebaseに登録（PUT=新規作成 / PATCH=スロット更新）
-    // キー = SanitizeKeyFromIp(externalIp) で自動決定
+    // Register host information to Firebase (PUT=create new / PATCH=update slot)
+    // Key is automatically determined by SanitizeKeyFromIp(externalIp)
     bool RegisterHost(const std::string& externalIp,
                       const bool availableSlots[5],
                       int linkplay,
-                      const std::string& gameTitle = "");
+                      const std::string& gameTitle = "",
+                      const std::string& serverName = "");
 
-    // ホスト登録を解除
+    // Unregister host
     bool UnregisterHost(const std::string& hostId);
     bool PatchSlotAvailable(const std::string& hostId, int linkplay, bool available);
 
-    // 古いホストエントリ（10分以上更新なし）を削除
+    // Clean up stale host entries (no updates for 10+ minutes)
     bool CleanupStaleHosts();
 
-    // 外部IPアドレスを取得（api.ipify.org使用）
+    // Get external IP address (uses api.ipify.org)
     static std::string GetExternalIp();
 
-    // ハートビート開始（2分ごとにタイムスタンプ更新）
+    // Start heartbeat (updates timestamp every 2 minutes)
     void StartHeartbeat(const std::string& hostId);
     void StopHeartbeat();
 
     bool IsInitialized() const { return m_initialized; }
 
 private:
-    // WinHTTP でHTTPリクエストを送信
+    // Send HTTP request using WinHTTP
     std::string HttpPost(const std::wstring& host, const std::wstring& path,
                          const std::string& jsonBody, bool useHttps = true);
     std::string HttpGet(const std::wstring& host, const std::wstring& path,
@@ -102,24 +104,24 @@ private:
     std::string HttpDelete(const std::wstring& host, const std::wstring& path,
                            const std::string& authToken = "", bool useHttps = true);
 
-    // IPアドレス→Firebaseキー変換（ドット等を '-' に置換）
+    // IP address -> Firebase key conversion (replaces dots etc. with '-')
     static std::string SanitizeKeyFromIp(const std::string& ip);
 
-    // Firebase Auth 匿名ログイン
+    // Firebase Auth anonymous sign-in
     bool SignInAnonymously();
 
-    // タイムスタンプ（Unix秒）を取得
+    // Get timestamp (Unix milliseconds)
     static long long GetUnixTimestamp();
 
-    // JSON ユーティリティ（軽量実装）
+    // JSON Utility (lightweight implementation)
     static std::string MakeHostJson(const HostInfoCpp& info);
     static std::string EscapeJson(const std::string& s);
 
     bool                  m_initialized = false;
-    std::string           m_idToken;     // Firebase IDトークン
+    std::string           m_idToken;     // Firebase ID token
     std::string           m_currentHostId;
 
-    // ハートビートスレッド
+    // Heartbeat thread
     std::thread           m_heartbeatThread;
     std::atomic<bool>     m_heartbeatRunning{ false };
 

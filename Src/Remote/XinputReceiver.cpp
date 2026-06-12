@@ -1,7 +1,7 @@
 /**
  * XinputReceiver.cpp
  *
- * UDP経由でリモートXInput状態を受信する実装
+ * Implementation of remote XInput state reception via UDP.
  */
 
 #ifdef SUPERMODEL_WIN32
@@ -16,12 +16,12 @@
 #define SIO_UDP_CONNRESET _WSAIOW(IOC_VENDOR, 12)
 #endif
 
-// スロット番号 → XInput UDPポート番号
-// VB.NET (Form1.vb) の SlotXInputPort と一致させること
+// Slot number -> XInput UDP port number
+// Must match SlotXInputPort in VB.NET (Form1.vb)
 static const int s_slotPorts[5] = {0, 5000, 5004, 5008, 5012};
 
 // ---------------------------------------------------------------------------
-// 静的メンバー: Winsock 初期化/クリーンアップ
+// Static Members: Winsock Initialization / Cleanup
 // ---------------------------------------------------------------------------
 bool XinputReceiver::InitWinsock()
 {
@@ -30,7 +30,7 @@ bool XinputReceiver::InitWinsock()
     if (result != 0)
     {
         char buf[64];
-        snprintf(buf, sizeof(buf), "WSAStartup 失敗: %d", result);
+        snprintf(buf, sizeof(buf), "WSAStartup failed: %d", result);
         return false;
     }
     return true;
@@ -49,26 +49,27 @@ int XinputReceiver::SlotToPort(int slot)
 }
 
 // ---------------------------------------------------------------------------
-// コンストラクタ / デストラクタ
+// Constructor / Destructor
 // ---------------------------------------------------------------------------
 XinputReceiver::XinputReceiver()
 {
 }
 
+// Destructor
 XinputReceiver::~XinputReceiver()
 {
     StopAll();
 }
 
 // ---------------------------------------------------------------------------
-// 受信開始
+// Start Listening
 // ---------------------------------------------------------------------------
 bool XinputReceiver::StartListening(int slot, int port, XInputCallback callback)
 {
     if (!IsValidSlot(slot))
         return false;
 
-    // 既に動いていれば停止
+    // Stop if already running
     if (m_slots[slot].running.load())
         StopListening(slot);
 
@@ -78,7 +79,7 @@ bool XinputReceiver::StartListening(int slot, int port, XInputCallback callback)
 }
 
 // ---------------------------------------------------------------------------
-// 受信停止
+// Stop Listening
 // ---------------------------------------------------------------------------
 void XinputReceiver::StopListening(int slot)
 {
@@ -87,7 +88,7 @@ void XinputReceiver::StopListening(int slot)
 
     m_slots[slot].running.store(false);
 
-    // ソケットをクローズしてスレッドを強制的に解除
+    // Close socket to force-release the thread
     if (m_slots[slot].sock != INVALID_SOCKET)
     {
         closesocket(m_slots[slot].sock);
@@ -112,20 +113,20 @@ bool XinputReceiver::IsListening(int slot) const
 }
 
 // ---------------------------------------------------------------------------
-// 受信スレッド本体
+// Receiver Thread Body
 // ---------------------------------------------------------------------------
 void XinputReceiver::ListenThread(int slot, int port, XInputCallback callback)
 {
-    // UDPソケット作成
+    // Create UDP socket
     SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock == INVALID_SOCKET)
     {
-        m_lastError = "socket() 失敗";
+        m_lastError = "socket() failed";
         m_slots[slot].running.store(false);
         return;
     }
 
-    // Windows特有のUDP接続リセットエラー(WSAECONNRESET)を防止
+    // Prevent WSAECONNRESET UDP reset error which is Windows-specific
     DWORD dwBytesReturned = 0;
     BOOL bNewBehavior = FALSE;
     WSAIoctl(sock, SIO_UDP_CONNRESET,
@@ -134,11 +135,11 @@ void XinputReceiver::ListenThread(int slot, int port, XInputCallback callback)
 
     m_slots[slot].sock = sock;
 
-    // タイムアウト設定（500ms）でスレッド停止チェックを行う
+    // Set timeout (500ms) to check thread termination state
     DWORD timeout = 500;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout));
 
-    // バインド
+    // Bind
     sockaddr_in addr = {};
     addr.sin_family = AF_INET;
     addr.sin_port = htons((u_short)port);
@@ -147,7 +148,7 @@ void XinputReceiver::ListenThread(int slot, int port, XInputCallback callback)
     if (bind(sock, (sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
     {
         char buf[64];
-        snprintf(buf, sizeof(buf), "bind() 失敗 port=%d err=%d", port, WSAGetLastError());
+        snprintf(buf, sizeof(buf), "bind() failed port=%d err=%d", port, WSAGetLastError());
         m_lastError = buf;
         closesocket(sock);
         m_slots[slot].sock = INVALID_SOCKET;
@@ -157,13 +158,13 @@ void XinputReceiver::ListenThread(int slot, int port, XInputCallback callback)
 
     printf("[XinputReceiver] slot%d UDP receive start  port=%d\n", slot, port);
 
-    // 受信ループ
+    // Receive loop
     while (m_slots[slot].running.load())
     {
         sockaddr_in fromAddr = {};
         int fromLen = sizeof(fromAddr);
 
-        // 受信バッファを大きめに確保
+        // Secure a larger receive buffer
         char recvBuf[64] = {};
         int received = recvfrom(sock, recvBuf, sizeof(recvBuf), 0,
                                 (sockaddr *)&fromAddr, &fromLen);
@@ -182,16 +183,16 @@ void XinputReceiver::ListenThread(int slot, int port, XInputCallback callback)
         {
             int err = WSAGetLastError();
             if (err == WSAETIMEDOUT || err == WSAEWOULDBLOCK || err == WSAECONNRESET)
-                continue; // タイムアウトや相手の切断(ICMPエラー)は無視して継続
+                continue; // Ignore timeout and peer disconnection (ICMP error) to continue
             if (err == WSAENOTSOCK || err == WSAEINTR)
-                break; // ソケットが閉じられた
+                break; // Socket closed
         }
     }
 
     closesocket(sock);
     m_slots[slot].sock = INVALID_SOCKET;
     m_slots[slot].running.store(false);
-    printf("[XinputReceiver] スロット%d UDP受信停止\n", slot);
+    printf("[XinputReceiver] slot%d UDP receive stopped\n", slot);
 }
 
 #endif // SUPERMODEL_WIN32

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-// 前方宣言（インクルード依存を最小化）
+// Forward declarations (minimizing include dependencies)
 #ifdef SUPERMODEL_WIN32
 class RemoteSlotManager;
 #endif

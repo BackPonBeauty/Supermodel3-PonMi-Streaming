@@ -14,7 +14,7 @@
 #include <cuda.h>
 #include <cuda_gl_interop.h>
 #include "nvEncodeAPI.h"
-#include "Network/RtpSender.h" // 追加
+#include "Network/RtpSender.h" // Added
 
 #ifdef CreateSemaphore
 #undef CreateSemaphore
@@ -70,7 +70,7 @@ private:
     HMODULE m_nvencDll = nullptr;
     OnEncodedCallback m_callback;
 
-    // RTP送信
+    // RTP transmission
     RtpSender m_rtpSender;
     bool m_rtpEnabled = false;
 };

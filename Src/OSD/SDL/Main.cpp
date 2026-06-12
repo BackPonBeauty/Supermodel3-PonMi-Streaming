@@ -113,11 +113,11 @@
 #include "Network/HandshakeServer.h"
 
 // -------------------------------------------------------
-// XInput Remote Controller Manager (統合: VB.NET → C++)
+// XInput Remote Controller Manager (Integration: VB.NET -> C++)
 // -------------------------------------------------------
 #ifdef SUPERMODEL_WIN32
 #include "Remote/RemoteSlotManager.h"
-// 起動時ViGEm・XInput待ち受けを管理するシングルトン
+// Singleton managing ViGEm & XInput listening on startup
 static RemoteSlotManager s_remoteSlotMgr;
 #endif
 
@@ -234,8 +234,8 @@ static Result SetGLGeometry(unsigned *xOffsetPtr, unsigned *yOffsetPtr, unsigned
 
 void RelaunchHidden(int argc, char **argv)
 {
-  // すでに「隠しモード」で起動しているかチェック（無限ループ防止）
-  // 引数に "--hidden" がなければ、隠し状態で自分を再起動する
+  // Check if already started in "hidden mode" (prevent infinite loop)
+  // If "--hidden" is not in arguments, relaunch self in a hidden state
   bool isHidden = false;
   for (int i = 0; i < argc; i++)
   {
@@ -246,11 +246,11 @@ void RelaunchHidden(int argc, char **argv)
   if (!isHidden)
   {
     std::string cmdLine = "--hidden";
-    // 自分のパスを取得
+    // Retrieve own executable path
     char szPath[MAX_PATH];
     GetModuleFileNameA(NULL, szPath, MAX_PATH);
 
-    // CREATE_NO_WINDOW フラグを立てて、新しい自分を起動aaa
+    // Start a new instance of self with the CREATE_NO_WINDOW flag
     STARTUPINFOA si = {sizeof(si)};
     PROCESS_INFORMATION pi;
     if (CreateProcessA(szPath, (LPSTR)cmdLine.c_str(), NULL, NULL, FALSE,
@@ -259,7 +259,7 @@ void RelaunchHidden(int argc, char **argv)
 
       CloseHandle(pi.hProcess);
       CloseHandle(pi.hThread);
-      exit(0); // 親（コンソールあり）は即座に終了
+      exit(0); // The parent (with console window) terminates immediately
     }
   }
 }
@@ -1131,22 +1131,22 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
   
   streamingEnabled = superAA->IsStreamingEnabled();
   printf("[Streaming] %s\n", streamingEnabled ? "true" : "false");
-  // ↓ superAA生成の後に移動
+  // Moved after superAA creation
   if (streamingEnabled)
   {
     int linkplay = (int)s_runtime_config["LinkPlay"].ValueAsDefault<int64_t>(0);
-    int handshakePortP2 = handshakePort + 4; // P2用のハンドシェイクポート (通常 5005)
+    int handshakePortP2 = handshakePort + 4; // Handshake port for P2 (usually 5005)
 
-    // 送信先IPを統合して更新する共通ラムダ
+    // Common lambda to integrate and update destination IPs
     auto UpdateStreamingDestinations = [superAA]() {
         std::vector<std::string> ips;
-        // P1 のクライアントIPを追加
+        // Add client IP for P1
         for (const auto &ip : g_handshake.GetClientIPs())
         {
             if (std::find(ips.begin(), ips.end(), ip) == ips.end())
                 ips.push_back(ip);
         }
-        // P2 のクライアントIPを追加
+        // Add client IP for P2
         for (const auto &ip : g_handshakeP2.GetClientIPs())
         {
             if (std::find(ips.begin(), ips.end(), ip) == ips.end())
@@ -1627,7 +1627,7 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
 
       char *argv[] = {
           (char *)"supermodel3",
-          (char *)"--aaaaa", // ← 例：ランチャー起動フラグ
+          (char *)"--aaaaa", // ← e.g. Launcher startup flag
           nullptr};
 
       RelaunchHidden(2, argv);
@@ -2202,7 +2202,7 @@ struct ParsedCommandLine
   bool print_inputs = false;
   bool disable_debugger = false;
   bool enter_debugger = false;
-  // ★ 追加
+  // Added
   bool record = false;
   std::string record_file;
   std::string replay_play_file;
@@ -2615,7 +2615,7 @@ int main(int argc, char **argv)
       RelaunchHidden(argc, argv);
     }
 
-    // --- GUI表示前: streaming=true ならViGEm初期化 + 仮想コントローラー作成 ---
+    // --- Before GUI display: If streaming=true, initialize ViGEm + create virtual controller ---
 #ifdef SUPERMODEL_WIN32
     {
       bool streaming = fConfig2["Streaming"].ValueAsDefault<bool>(false);
@@ -2650,22 +2650,22 @@ int main(int argc, char **argv)
   for (int i = 0; i < argc; i++)
     InfoLog("  argv[%d] = %s", i, argv[i]);
 
-  // ★ 時限起動制限（エクスパイア設定）
+  // Time-limited execution limit (expiration setting)
   {
-    // 現在時刻を取得
+    // Retrieve current system time
     auto now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
     struct tm *parts = std::localtime(&now_c);
 
-    // YYYYMMDD 形式で数値を生成 (例: 20260205)
+    // Generate numerical value in YYYYMMDD format (e.g., 20260205)
     int current_date = (parts->tm_year + 1900) * 10000 + (parts->tm_mon + 1) * 100 + parts->tm_mday;
 
-    // 2026年2月5日以降なら終了
+    // Terminate if on or after February 5, 2026
     if (current_date >= 21260205)
     {
       printf("This version has expired. Please update to the latest version.");
-      // 必要であればダイアログを表示するなどの処理
-      return 0; // プログラムを終了
+      // Add dialog display or other processes if necessary
+      return 0; // Terminate program
     }
     else
     {
@@ -2687,7 +2687,7 @@ int main(int argc, char **argv)
     PrintGLInfo(true, false, false);
     return 0;
   }
-  // ★ 録画開始トリガー
+  // Recording start trigger
   if (cmd_line.record)
   {
     ReplayRecorder::Start(cmd_line.record_file.c_str());
@@ -2768,7 +2768,7 @@ int main(int argc, char **argv)
     goto Exit;
   }
 
-  // --- Launch後: streaming=true かつ linkplay 設定があればXInput待ち受け開始 ---
+  // --- After Launch: If streaming=true and linkplay is configured, start XInput listening ---
 #ifdef SUPERMODEL_WIN32
   {
     bool streaming = s_runtime_config["Streaming"].ValueAsDefault<bool>(false);
@@ -2789,7 +2789,8 @@ int main(int argc, char **argv)
       size_t dot = romPath.find_last_of('.');
       if (dot != std::string::npos)
         romPath = romPath.substr(0, dot);
-      s_remoteSlotMgr.StartFirebaseAsync(game.name);
+      std::string serverName = s_runtime_config["ServerName"].ValueAsDefault<std::string>("");
+      s_remoteSlotMgr.StartFirebaseAsync(game.name, serverName);
     }
   }
 #endif
@@ -2907,7 +2908,7 @@ int main(int argc, char **argv)
 
 Exit:
 #ifdef SUPERMODEL_WIN32
-  // RemoteSlotManager をシャットダウン（ViGEm・UDP受信停止）
+  // Shutdown RemoteSlotManager (stops ViGEm & UDP reception)
   s_remoteSlotMgr.Shutdown();
 #endif
   delete Inputs;

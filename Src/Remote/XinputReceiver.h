@@ -1,24 +1,24 @@
 /**
  * XinputReceiver.h
  *
- * UDP経由でリモートのXInput状態を受信し、ViGEmコントローラーに転送する
+ * Receives remote XInput state via UDP and forwards it to the ViGEm controller.
  *
- * ポート割り当て（VB.NET側と一致）:
- *   スロット1: XInput=5000
- *   スロット2: XInput=5004
- *   スロット3: XInput=5008
- *   スロット4: XInput=5012
+ * Port assignment (matching the VB.NET side):
+ *   Slot 1: XInput=5000
+ *   Slot 2: XInput=5004
+ *   Slot 3: XInput=5008
+ *   Slot 4: XInput=5012
  */
 #pragma once
 
 #ifdef SUPERMODEL_WIN32
 
-// winsock.h と winsock2.h の二重インクルード競合を防止
+// Prevent double-inclusion conflict between winsock.h and winsock2.h
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #ifndef _WINSOCKAPI_
-#define _WINSOCKAPI_   // winsock.h の自動インクルードを抑制
+#define _WINSOCKAPI_   // Suppress automatic inclusion of winsock.h
 #endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -29,21 +29,21 @@
 #include <array>
 #include <string>
 
-// XInput 状態パケット（UDPで送受信する構造体、VB.NET側と一致させること）
+// XInput state packet (structure sent/received via UDP, must match the VB.NET side)
 #pragma pack(push, 1)
 struct XInputPacket
 {
-    WORD  wButtons;       // ボタンビットフィールド (XINPUT_GAMEPAD_* 定数)
-    BYTE  bLeftTrigger;   // 左トリガー 0〜255
-    BYTE  bRightTrigger;  // 右トリガー 0〜255
-    SHORT sThumbLX;       // 左スティック X軸 -32768〜32767
-    SHORT sThumbLY;       // 左スティック Y軸
-    SHORT sThumbRX;       // 右スティック X軸
-    SHORT sThumbRY;       // 右スティック Y軸
+    WORD  wButtons;       // Button bitfield (XINPUT_GAMEPAD_* constants)
+    BYTE  bLeftTrigger;   // Left trigger 0 to 255
+    BYTE  bRightTrigger;  // Right trigger 0 to 255
+    SHORT sThumbLX;       // Left stick X-axis -32768 to 32767
+    SHORT sThumbLY;       // Left stick Y-axis
+    SHORT sThumbRX;       // Right stick X-axis
+    SHORT sThumbRY;       // Right stick Y-axis
 };
 #pragma pack(pop)
 
-// 受信コールバック: slot=1〜4, packet=受信データ, fromIP=送信元IP, fromPort=送信元ポート
+// Receive callback: slot=1 to 4, packet=received data, fromIP=source IP, fromPort=source port
 using XInputCallback = std::function<void(int slot, const XInputPacket& packet, const std::string& fromIP, int fromPort)>;
 
 class XinputReceiver
@@ -52,21 +52,21 @@ public:
     XinputReceiver();
     ~XinputReceiver();
 
-    // Winsock初期化（プログラム全体で1回）
+    // Winsock initialization (once for the whole program)
     static bool InitWinsock();
     static void CleanupWinsock();
 
-    // 指定スロットのUDP受信を開始
+    // Start UDP receiving for the specified slot
     bool StartListening(int slot, int port, XInputCallback callback);
-    // 指定スロットのUDP受信を停止
+    // Stop UDP receiving for the specified slot
     void StopListening(int slot);
-    // 全スロットを停止
+    // Stop all slots
     void StopAll();
 
     bool IsListening(int slot) const;
     std::string GetLastError() const { return m_lastError; }
 
-    // スロット番号からポート番号を取得
+    // Get port number from slot number
     static int SlotToPort(int slot);
 
 private:
@@ -79,7 +79,7 @@ private:
 
     void ListenThread(int slot, int port, XInputCallback callback);
 
-    std::array<SlotState, 5> m_slots; // インデックス 1〜4 を使用
+    std::array<SlotState, 5> m_slots; // Indexes 1 to 4 are used
     std::string              m_lastError;
 
     bool IsValidSlot(int slot) const { return slot >= 1 && slot <= 4; }

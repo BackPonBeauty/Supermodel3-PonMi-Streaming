@@ -1,7 +1,7 @@
 /**
  * XinputReceiverDialog.cpp
  *
- * Win32 ダイアログ実装 - XInput リモートコントローラー管理UI
+ * Win32 Dialog Implementation - XInput Remote Controller Management UI
  */
 
 #ifdef SUPERMODEL_WIN32
@@ -15,21 +15,21 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
 
-// グローバルインスタンス
+// Global instance
 XinputReceiverDialog* g_xinputDialog = nullptr;
 
-// ウィンドウサイズ
+// Window size
 static constexpr int DLG_W = 400;
 static constexpr int DLG_H = 320;
 
-// スロットごとの色
+// Colors per slot
 static COLORREF s_colorLocal   = RGB(40, 100, 40);
 static COLORREF s_colorRemote  = RGB(40, 80, 160);
 static COLORREF s_colorPhysical= RGB(60, 60, 60);
 static COLORREF s_colorConnected = RGB(20, 130, 20);
 
 // ---------------------------------------------------------------------------
-// コンストラクタ / デストラクタ
+// Constructor / Destructor
 // ---------------------------------------------------------------------------
 XinputReceiverDialog::XinputReceiverDialog()
 {
@@ -43,7 +43,7 @@ XinputReceiverDialog::~XinputReceiverDialog()
 }
 
 // ---------------------------------------------------------------------------
-// 非同期起動（別スレッドでウィンドウを作成）
+// Asynchronous Startup (creates window in a separate thread)
 // ---------------------------------------------------------------------------
 bool XinputReceiverDialog::StartAsync()
 {
@@ -65,22 +65,22 @@ void XinputReceiverDialog::Stop()
 }
 
 // ---------------------------------------------------------------------------
-// ウィンドウスレッド
+// Window Thread
 // ---------------------------------------------------------------------------
 void XinputReceiverDialog::WindowThread()
 {
-    // ウィンドウクラス登録
+    // Register window class
     WNDCLASSEXW wc = {};
     wc.cbSize        = sizeof(WNDCLASSEXW);
     wc.lpfnWndProc   = WndProc;
     wc.hInstance     = GetModuleHandle(nullptr);
     wc.hCursor       = LoadCursor(nullptr, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30)); // ダークテーマ
+    wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30)); // Dark theme
     wc.lpszClassName = L"XinputReceiverDlg";
     wc.hIcon         = LoadIcon(nullptr, IDI_APPLICATION);
     RegisterClassExW(&wc);
 
-    // ウィンドウ作成
+    // Create window
     m_hwnd = CreateWindowExW(
         WS_EX_APPWINDOW | WS_EX_TOPMOST,
         L"XinputReceiverDlg",
@@ -95,16 +95,16 @@ void XinputReceiverDialog::WindowThread()
         return;
     }
 
-    // コントロール作成
+    // Create controls
     CreateControls(m_hwnd);
 
     ShowWindow(m_hwnd, SW_SHOW);
     UpdateWindow(m_hwnd);
 
-    // RemoteSlotManager 初期化
+    // RemoteSlotManager initialization
     auto slotCb = [this](int slot, const SlotState& state)
     {
-        // UIスレッドに通知（PostMessage で安全に）
+        // Notify UI thread (safely using PostMessage)
         if (m_hwnd)
             PostMessage(m_hwnd, WM_UPDATE_SLOT, (WPARAM)slot, 0);
     };
@@ -117,11 +117,11 @@ void XinputReceiverDialog::WindowThread()
 
     m_slotManager.Initialize(slotCb, statusCb);
 
-    // ホストIDと外部IP表示
+    // Display Host ID and External IP
     std::string hostIdText = "Host ID: " + m_slotManager.GetHostId();
     SetWindowTextA(m_lblHostId, hostIdText.c_str());
 
-    // メッセージループ
+    // Message loop
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -133,7 +133,7 @@ void XinputReceiverDialog::WindowThread()
 }
 
 // ---------------------------------------------------------------------------
-// コントロール作成
+// Create Controls
 // ---------------------------------------------------------------------------
 void XinputReceiverDialog::CreateControls(HWND hwnd)
 {
@@ -142,26 +142,26 @@ void XinputReceiverDialog::CreateControls(HWND hwnd)
                               CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                               DEFAULT_PITCH, L"Segoe UI");
 
-    // ─── ヘッダー ───────────────────────────────────────
+    // ─── Header ───────────────────────────────────────
     HWND hTitle = CreateWindowExW(0, L"STATIC", L"XInput Remote Receiver",
         WS_CHILD | WS_VISIBLE | SS_CENTER,
         0, 8, DLG_W, 24, hwnd, nullptr, nullptr, nullptr);
     SendMessage(hTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
     SetWindowLongPtr(hTitle, GWL_ID, 200);
 
-    // ─── スロット行（P1〜P4）───────────────────────────
+    // ─── Slot Rows (P1 to P4) ───────────────────────────
     const wchar_t* slotNames[] = { L"", L"P1", L"P2", L"P3", L"P4" };
     for (int slot = 1; slot <= 4; slot++)
     {
         int y = 40 + (slot - 1) * 52;
 
-        // スロット名ラベル
+        // Slot name label
         HWND hName = CreateWindowExW(0, L"STATIC", slotNames[slot],
             WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE,
             10, y, 30, 36, hwnd, nullptr, nullptr, nullptr);
         SendMessage(hName, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-        // LOCAL/REMOTE ボタン
+        // LOCAL/REMOTE button
         m_btnSlot[slot] = CreateWindowExW(0, L"BUTTON", L"LOCAL",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             44, y + 4, 90, 28,
@@ -169,7 +169,7 @@ void XinputReceiverDialog::CreateControls(HWND hwnd)
             GetModuleHandle(nullptr), nullptr);
         SendMessage(m_btnSlot[slot], WM_SETFONT, (WPARAM)hFont, TRUE);
 
-        // 状態ラベル
+        // Status label
         m_lblSlot[slot] = CreateWindowExW(0, L"STATIC", L"",
             WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE,
             144, y + 4, 240, 28, hwnd,
@@ -178,7 +178,7 @@ void XinputReceiverDialog::CreateControls(HWND hwnd)
         SendMessage(m_lblSlot[slot], WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
-    // ─── 情報パネル ──────────────────────────────────────
+    // ─── Info Panel ──────────────────────────────────────
     int infoY = 256;
 
     m_lblHostId = CreateWindowExW(0, L"STATIC", L"Host ID: -",
@@ -187,14 +187,14 @@ void XinputReceiverDialog::CreateControls(HWND hwnd)
         (HMENU)(UINT_PTR)IDC_LBL_HOSTID, nullptr, nullptr);
     SendMessage(m_lblHostId, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-    m_lblIp = CreateWindowExW(0, L"STATIC", L"外部IP: 取得中...",
+    m_lblIp = CreateWindowExW(0, L"STATIC", L"External IP: Fetching...",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
         210, infoY, 180, 18, hwnd,
         (HMENU)(UINT_PTR)IDC_LBL_IP, nullptr, nullptr);
     SendMessage(m_lblIp, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-    // ステータスバー
-    m_lblStatus = CreateWindowExW(0, L"STATIC", L"初期化中...",
+    // StatusBar
+    m_lblStatus = CreateWindowExW(0, L"STATIC", L"Initializing...",
         WS_CHILD | WS_VISIBLE | SS_LEFT | SS_SUNKEN,
         0, DLG_H - 42, DLG_W, 20, hwnd,
         (HMENU)(UINT_PTR)IDC_LBL_STATUS, nullptr, nullptr);
@@ -202,7 +202,7 @@ void XinputReceiverDialog::CreateControls(HWND hwnd)
 }
 
 // ---------------------------------------------------------------------------
-// スロットUI更新
+// Update Slot UI
 // ---------------------------------------------------------------------------
 void XinputReceiverDialog::UpdateSlotUI(int slot)
 {
@@ -210,7 +210,7 @@ void XinputReceiverDialog::UpdateSlotUI(int slot)
 
     const SlotState& state = m_slotManager.GetSlotState(slot);
 
-    // ボタンテキスト
+    // Button text
     if (state.isPhysical)
     {
         SetWindowTextA(m_btnSlot[slot], "LOCAL");
@@ -227,14 +227,14 @@ void XinputReceiverDialog::UpdateSlotUI(int slot)
         EnableWindow(m_btnSlot[slot], TRUE);
     }
 
-    // 状態ラベル
+    // Status label
     SetWindowTextA(m_lblSlot[slot], state.label.c_str());
 
-    // 外部IP が取得できていたら更新
+    // Update if external IP is obtained
     const std::string& ip = m_slotManager.GetExternalIp();
     if (!ip.empty())
     {
-        std::string ipText = "外部IP: " + ip;
+        std::string ipText = "External IP: " + ip;
         SetWindowTextA(m_lblIp, ipText.c_str());
     }
 }
@@ -251,7 +251,7 @@ void XinputReceiverDialog::OnSlotButtonClicked(int slot)
 }
 
 // ---------------------------------------------------------------------------
-// Win32 ウィンドウプロシージャ
+// Win32 Window Procedure
 // ---------------------------------------------------------------------------
 LRESULT CALLBACK XinputReceiverDialog::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -297,7 +297,7 @@ LRESULT XinputReceiverDialog::HandleMessage(HWND hwnd, UINT msg, WPARAM wp, LPAR
 
     case WM_CTLCOLORSTATIC:
     {
-        // ダークテーマ: 静的コントロールの背景・文字色
+        // Dark theme: Background and text color for static controls
         HDC hdc = (HDC)wp;
         SetBkColor(hdc, RGB(30, 30, 30));
         SetTextColor(hdc, RGB(220, 220, 220));
@@ -323,7 +323,7 @@ LRESULT XinputReceiverDialog::HandleMessage(HWND hwnd, UINT msg, WPARAM wp, LPAR
     }
 
     case WM_CLOSE:
-        // ウィンドウを閉じてもエミュレーターは継続
+        // Closing window keeps the emulator running
         DestroyWindow(hwnd);
         return 0;
 

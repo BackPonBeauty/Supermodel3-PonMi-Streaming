@@ -1,4 +1,4 @@
-#include "SDLIncludes.h"
+﻿#include "SDLIncludes.h"
 #include <GL/glew.h>
 #include <cstring>
 #include <iostream>
@@ -19,24 +19,24 @@
 #include "../Src/Inputs/Inputs.h"
 #include "Main.h"
 #include "Font01.h"
-#include <ctime>   // time, localtime, strftime 用
-#include <fstream> // ofstream 用
+#include <ctime>   // for time, localtime, strftime
+#include <fstream> // for ofstream
 #include <SDL.h>
 #include <windows.h>
 #include <shellapi.h>
 
-// ★画像読み込みライブラリの追加
+// Add image loading library
 #include "../Src/Graphics/stb_image.h"
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN // 競合を防ぐための定数 eeeeeekkkkk
+#define WIN32_LEAN_AND_MEAN // Constant to prevent conflicts eeeeeekkkkk
 #endif
 #include <windows.h>
-#include <shlobj.h>  // ★これが無いと BROWSEINFO でエラーになります
-#include <objbase.h> // CoTaskMemFree 用
+#include <shlobj.h>  // Required to prevent errors with BROWSEINFO
+#include <objbase.h> // for CoTaskMemFree
 #else
-#include <stdio.h> // Linux用 popen 用
+#include <stdio.h> // for Linux popen
 #endif
 
 #ifdef _WIN32
@@ -50,7 +50,7 @@ static int selectedResIndex = 0;
 static bool resLoaded = false;
 static bool showPreviewWindow = false;
 static int previewW = 0, previewH = 0;
-static SDL_Window *g_PreviewWindow = nullptr; // プレビュー用の新しい窓
+static SDL_Window *g_PreviewWindow = nullptr; // New window for preview
 static int previewPosX = 0;
 static int previewPosY = 0;
 static char bufPosX[16] = "0";
@@ -60,7 +60,7 @@ static char bufPortOut[64] = "";
 static char bufAddressOut[256] = "";
 static bool scrollToSelected = true;
 
-// ★画像管理用のグローバル変数
+// Global variables for image management
 static GLuint g_GameTexture = 0;
 static std::string g_LoadedImageName = "";
 static int g_ImgWidth = 0;
@@ -83,7 +83,7 @@ static void SaveSupermodelConfig(const std::string &path, std::map<std::string, 
     std::string line;
     std::map<std::string, bool> updatedFlags;
 
-    // 1. 既存のファイルを一行ずつ読み込んで、一致するキーがあれば書き換える
+    // 1. Read the existing file line by line and update if a matching key is found
     if (ifs.is_open())
     {
         while (std::getline(ifs, line))
@@ -91,10 +91,10 @@ static void SaveSupermodelConfig(const std::string &path, std::map<std::string, 
             bool matched = false;
             for (auto const &[key, val] : updates)
             {
-                // "Key =" または "Key=" で始まる行を探す
+                // Find lines starting with "Key =" or "Key="
                 if (line.compare(0, key.length(), key) == 0)
                 {
-                    // キーの直後が '=' またはスペースであることを確認
+                    // Verify that '=' or a space immediately follows the key
                     size_t nextCharPos = key.length();
                     while (nextCharPos < line.length() && line[nextCharPos] == ' ')
                         nextCharPos++;
@@ -109,12 +109,12 @@ static void SaveSupermodelConfig(const std::string &path, std::map<std::string, 
                 }
             }
             if (!matched)
-                newLines.push_back(line); // 一致しなかった行（コメント等）はそのまま保持
+                newLines.push_back(line); // Keep unmatched lines (comments, etc.) as they are
         }
         ifs.close();
     }
 
-    // 2. 元ファイルになかった新規項目があれば末尾に追加
+    // 2. Append any new items not present in the original file to the end
     for (auto const &[key, val] : updates)
     {
         if (!updatedFlags[key])
@@ -123,7 +123,7 @@ static void SaveSupermodelConfig(const std::string &path, std::map<std::string, 
         }
     }
 
-    // 3. ファイルに上書き保存
+    // 3. Overwrite and save to file
     std::ofstream ofs(path, std::ios::trunc);
     if (ofs.is_open())
     {
@@ -135,7 +135,7 @@ static void SaveSupermodelConfig(const std::string &path, std::map<std::string, 
     }
 }
 
-// ★テクスチャ読み込み関数（端折らず実装）
+// Texture loading function
 static bool LoadTextureFromFile(const char *filename, GLuint *out_texture)
 {
     int width, height, channels;
@@ -170,8 +170,8 @@ static bool LoadTextureFromFile(const char *filename, GLuint *out_texture, int *
     stbi_image_free(data);
 
     *out_texture = tex;
-    *out_width = width;   // ★幅を保存
-    *out_height = height; // ★高さを保存
+    *out_width = width;   // Save width
+    *out_height = height; // Save height
     return true;
 }
 
@@ -179,10 +179,10 @@ void ClosePreviewWindow()
 {
     if (g_PreviewWindow)
     {
-        // 閉じる瞬間の座標を取得
+        // Get coordinates at the moment of closing
         SDL_GetWindowPosition(g_PreviewWindow, &previewPosX, &previewPosY);
 
-        // テキストボックス表示用に文字列へ変換
+        // Convert to string for textbox display
         snprintf(bufPosX, sizeof(bufPosX), "%d", previewPosX);
         snprintf(bufPosY, sizeof(bufPosY), "%d", previewPosY);
 
@@ -191,7 +191,7 @@ void ClosePreviewWindow()
     }
 }
 
-// --- 起動ロジック ---
+// --- Startup Logic ---
 static std::string GetRomPath(int selectedGame, const std::map<std::string, Game> &games, Util::Config::Node &config)
 {
     if (selectedGame >= 0)
@@ -230,7 +230,7 @@ static bool CheckRomExists(
 
     std::string romDir;
 
-    // ★ Dir の存在チェック（Hasが無いので例外で判定）
+    // Check if Dir exists (determined by exception since Has is missing)
     try
     {
         romDir = s_Dir;
@@ -277,7 +277,7 @@ static bool CheckRomExists(
     return false;
 }
 
-// --- GUIレイアウト (修正点: 関数定義を正しく追加) ---
+// --- GUI Layout (Note: function definitions correctly added) ---
 // static void GUI(const ImGuiIO &io, Util::Config::Node &config, const std::map<std::string, Game> &games, int &selectedGameIndex, bool &exit, bool &exitLaunch, bool &saveSettings, SDL_Window *window , int &selectedResIndex)
 void GUI(ImGuiIO &io, Util::Config::Node &config,
          const std::map<std::string, Game> &games, int &selectedGameIndex,
@@ -293,7 +293,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
          int &selectedInputType, int &selectedCrosshair, int &selectedStyle,
          bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet, bool &vStreaming, RemoteSlotManager* pRemote)
 {
-    // 基本スケールの計算
+    // Calculate base scale
     float scale = io.DisplaySize.y / 600.0f;
     if (scale < 0.5f)
         scale = 0.5f;
@@ -308,7 +308,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
             }
             else
             {
-                selectedGameIndex = (int)games.size() - 1; // 一番下へループ
+                selectedGameIndex = (int)games.size() - 1; // Loop to the bottom
             }
             scrollToSelected = true;
         }
@@ -320,31 +320,31 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
             }
             else
             {
-                selectedGameIndex = 0; // 一番上へループ
+                selectedGameIndex = 0; // Loop to the top
             }
             scrollToSelected = true;
         }
     }
 
-    // Japan Blue (サムライブルー) 系の配色
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.00f, 0.20f, 0.45f, 1.0f));        // 通常：深い紺色 (Japan Blue)
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.00f, 0.35f, 0.70f, 1.0f)); // ホバー：鮮やかな青
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.00f, 0.15f, 0.35f, 1.0f));  // クリック：さらに深い紺色
+    // Japan Blue color scheme
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.00f, 0.20f, 0.45f, 1.0f));        // Normal: Deep Navy Blue (Japan Blue)
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.00f, 0.35f, 0.70f, 1.0f)); // Hover: Bright Blue
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.00f, 0.15f, 0.35f, 1.0f));  // Active: Deeper Navy Blue
 
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(io.DisplaySize);
     ImGui::Begin("LauncherCanvas", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-    // ウィンドウ全体の基本スケール
+    // Base scale of the entire window
     ImGui::SetWindowFontScale(scale);
     ImGui::TextColored(ImVec4(0.0f, 0.8f, 1.0f, 1.0f), "SEGA MODEL3 UI v2");
     ImGui::Separator();
     // float headerBottomY = ImGui::GetCursorPosY();
 
-    // 高さの計算
+    // Calculate height
     float footerHeight = 32.0f * scale;
 
-    // 左カラムの幅をウィンドウの50%に自動計算（追従）
+    // Automatically calculate left column width to 50% of window
 
     float totalLeftHeight = 720.0f * scale;
     float totalLeftwidth = 1280.0f * scale;
@@ -355,13 +355,13 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
     float upperContentHeight = ImGui::GetContentRegionAvail().y - currentImageHeight - footerHeight;
     // float listAreaHeight = upperContentHeight - currentImageHeight - ImGui::GetStyle().ItemSpacing.y;
     float optionsHeight = upperContentHeight - ImGui::GetStyle().ItemSpacing.y + currentImageHeight;
-    ImGui::BeginGroup(); // ★ここから左側のセット
+    ImGui::BeginGroup(); // Set on the left side from here
     {
         if (ImGui::BeginChild("ImageArea", ImVec2(currentImageWidth, currentImageHeight), true))
         {
-            ImGui::SetWindowFontScale(scale); // スケール再適用
+            ImGui::SetWindowFontScale(scale); // Re-apply scale
 
-            // ★画像表示ロジックの埋め込み
+            // Embed image display logic
             if (selectedGameIndex >= 0)
             {
                 int idx = 0;
@@ -395,15 +395,15 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                 float availW = ImGui::GetContentRegionAvail().x;
                 float availH = ImGui::GetContentRegionAvail().y;
 
-                // --- アスペクト比維持の計算 ---
+                // --- Aspect ratio maintenance calculation ---
                 float ratioW = availW / (float)g_ImgWidth;
                 float ratioH = availH / (float)g_ImgHeight;
-                float ratio = (ratioW < ratioH) ? ratioW : ratioH; // 小さい方の倍率を採用
+                float ratio = (ratioW < ratioH) ? ratioW : ratioH; // Use the smaller ratio
 
                 float drawW = (float)g_ImgWidth * ratio;
                 float drawH = (float)g_ImgHeight * ratio;
 
-                // 中央寄せにするためのオフセット計算
+                // Offset calculation for centering
                 float offsetX = (availW - drawW) * 0.5f;
                 float offsetY = (availH - drawH) * 0.5f;
                 ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX() + offsetX, ImGui::GetCursorPosY() + offsetY));
@@ -419,17 +419,17 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(currentImageWidth, 0));
         ImGui::Button("##splitter", ImVec2(currentImageWidth, 8.0f * scale));
 
-        // マウスが重なったらカーソル変更
+        // Change cursor on mouse hover
         if (ImGui::IsItemHovered())
             ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
 
-        // ドラッグ処理
+        // Drag processing
         if (ImGui::IsItemActive())
         {
             float deltaRatio = ImGui::GetIO().MouseDelta.y / totalLeftHeight;
             uImageAreaRatioH += deltaRatio;
 
-            // 最小・最大サイズで制限をかける（これ大事！）
+            // Limit within minimum and maximum sizes (important!)
             if (uImageAreaRatioH < 0.25f)
                 uImageAreaRatioH = 0.25f;
             if (uImageAreaRatioH > 0.75f)
@@ -437,7 +437,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
         }
         ImGui::PopStyleVar();
 
-        // --- 左側: ゲームリスト ---
+        // --- Left: Game List ---
         if (ImGui::BeginChild("GameList", ImVec2(currentImageWidth, ImGui::GetContentRegionAvail().y - footerHeight), true))
         {
             ImGui::SetWindowFontScale(scale);
@@ -474,13 +474,13 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     }
                     if (isSelected && scrollToSelected)
                     {
-                        ImGui::SetScrollHereY(0.5f); // 0.5f は画面の真ん中に持ってくる指定（0.0fなら一番上、1.0fなら一番下）
-                        scrollToSelected = false;    // 一度実行したらフラグを下ろす
+                        ImGui::SetScrollHereY(0.5f); // 0.5f brings it to the middle of the screen (0.0f top, 1.0f bottom)
+                        scrollToSelected = false;    // Lower flag once executed
                     }
 
                     ImGui::TableSetColumnIndex(1);
                     ImGui::SetWindowFontScale(scale);
-                    // 改行を防ぐため TextUnformatted を使用
+                    // Use TextUnformatted to prevent line break
                     std::string romName = game.name;
                     romName.erase(std::remove(romName.begin(), romName.end(), '\n'), romName.end());
                     romName.erase(std::remove(romName.begin(), romName.end(), '\r'), romName.end());
@@ -497,65 +497,65 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
     }
     ImGui::EndGroup();
 
-    // 2. ★左右分割スプリッター
-    ImGui::SameLine(0, 0); // 隙間をゼロにして横に並べる
+    // 2. Left-Right Splitter
+    ImGui::SameLine(0, 0); // Align horizontally with zero gap
 
     ImGui::InvisibleButton("##h_splitter", ImVec2(8.0f * scale, optionsHeight));
     // ImGui::SetWindowFontScale(scale);
     if (ImGui::IsItemHovered())
-        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW); // 左右矢印
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW); // Left-Right arrows
 
     if (ImGui::IsItemActive())
     {
         float deltaRatio = ImGui::GetIO().MouseDelta.x / totalLeftwidth;
         uImageAreaRatioW += deltaRatio;
 
-        // 最小・最大サイズで制限をかける（これ大事！）
+        // Limit within minimum and maximum sizes (important!)
         if (uImageAreaRatioW < 0.25f)
             uImageAreaRatioW = 0.25f;
         if (uImageAreaRatioW > 0.75f)
             uImageAreaRatioW = 0.75f;
     }
 
-    // 3. 右カラムの開始
+    // 3. Start of the Right Column
     ImGui::SameLine();
 
     ImGui::BeginGroup();
     {
-        // 右下: オプション
+        // Bottom-Right: Options
         if (ImGui::BeginChild("RightOptions", ImVec2(0, optionsHeight), true))
         {
-            ImGui::SetWindowFontScale(scale); // スケール再適用
+            ImGui::SetWindowFontScale(scale); // Re-apply scale
             if (ImGui::BeginTabBar("Tabs"))
             {
                 if (ImGui::BeginTabItem("Video"))
                 {
                     ImGui::Text("Video Settings");
 
-                    // メインGUIの右側カラムの下部付近
+                    // Lower part of the main GUI's right column
                     ImGui::Spacing();
                     ImGui::Separator();
                     // ImGui::Text("Last Preview Position:");
 
-                    // --- new3D / Legacy ラジオボタン ---
+                    // --- new3D / Legacy Radio Button ---
                     ImGui::Text("Graphics Engine");
-                    // static int engineSelection = 0; // 0: new3D, 1: Legacy (実際はconfigから読み込む)
+                    // static int engineSelection = 0; // 0: new3D, 1: Legacy (actually read from config)
                     if (ImGui::RadioButton("new3D", &engineSelection, 0))
-                    { /* config更新 */
+                    { /* Update config */
                     }
                     ImGui::SameLine();
                     if (ImGui::RadioButton("Legacy", &engineSelection, 1))
-                    { /* config更新 */
+                    { /* Update config */
                     }
 
                     ImGui::Spacing();
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // --- 2列のチェックボックスレイアウト ---
-                    ImGui::Columns(3, "VideoSettingsColumns", false); // 2列作成、境界線なし
+                    // --- 2-column checkbox layout ---
+                    ImGui::Columns(3, "VideoSettingsColumns", false); // Create columns, no borders
 
-                    // --- 1列目 ---
+                    // --- Column 1 ---
                     {
                         if (ImGui::Checkbox("Vsync", &vVsync))
                         {
@@ -587,9 +587,9 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         }
                     }
 
-                    ImGui::NextColumn(); // 2列目へ移動
+                    ImGui::NextColumn(); // Move to column 2
 
-                    // --- 2列目 ---
+                    // --- Column 2 ---
                     {
                         if (ImGui::Checkbox("FullScreen", &vFullScreen))
                         {
@@ -664,23 +664,23 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         if (sscanf(resolutions[selectedResIndex].c_str(), "%dx%d", &w, &h) == 2)
                         {
 
-                            // 1. メインウィンドウが現在いるディスプレイのインデックスを取得
-                            // window は RunGUI 内で定義されたメインウィンドウのポインタです
+                            // 1. Get index of the display where the main window currently is
+                            // window is a pointer to the main window defined in RunGUI
                             int displayIndex = SDL_GetWindowDisplayIndex(window);
                             if (displayIndex < 0)
-                                displayIndex = 0; // エラー時は 0番 を参照
+                                displayIndex = 0; // Reference display 0 on error
 
-                            // 2. そのディスプレイの領域（座標とサイズ）を取得
+                            // 2. Get the display bounds (coordinates and size)
                             SDL_Rect rect;
                             if (SDL_GetDisplayBounds(displayIndex, &rect) == 0)
                             {
 
-                                // 3. そのディスプレイ内での中央位置を計算
-                                // rect.x, rect.y がそのモニターの左上の開始地点
+                                // 3. Calculate center position within the display
+                                // rect.x, rect.y are the top-left start coordinates of the monitor
                                 int posX = rect.x + (rect.w - w) / 2;
                                 int posY = rect.y + (rect.h - h) / 2;
 
-                                // 4. SDLで新しいウィンドウを生成
+                                // 4. Create new window using SDL
                                 g_PreviewWindow = SDL_CreateWindow(
                                     "Resolution Preview",
                                     posX, posY, w, h,
@@ -689,12 +689,12 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         }
                     }
 
-                    float availableWidth = ImGui::GetContentRegionAvail().x - (150.0f * scale); // ラベル分を引いた残り
-                    float inputWidth = (availableWidth * 0.5f);                                 // 間隔を引いて半分に
+                    float availableWidth = ImGui::GetContentRegionAvail().x - (150.0f * scale); // Remaining width after subtracting label
+                    float inputWidth = (availableWidth * 0.5f);                                 // Split in half
 
                     ImGui::SameLine(150.0f * scale);
 
-                    // --- X座標 ---
+                    // --- X Coordinate ---
                     ImGui::PushItemWidth(inputWidth);
                     if (ImGui::InputText("##PosX", bufPosX, sizeof(bufPosX)))
                     {
@@ -704,7 +704,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
                     ImGui::SameLine();
 
-                    // --- Y座標 ---
+                    // --- Y Coordinate ---
                     ImGui::PushItemWidth(inputWidth);
                     if (ImGui::InputText("##PosY", bufPosY, sizeof(bufPosY)))
                     {
@@ -715,7 +715,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Text("Resolution");
                     ImGui::SameLine(150.0f * scale);
                     ImGui::PushItemWidth(-1);
-                    // 現在の選択値を文字列で表示するための処理
+                    // Process to display current selection value as string
                     const char *previewValue = resolutions.empty() ? "" : resolutions[selectedResIndex].c_str();
 
                     if (ImGui::BeginCombo("##Resolution", resolutions[selectedResIndex].c_str()))
@@ -729,36 +729,36 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                                 selectedResIndex = i;
                                 /*
 
-                                // --- ここでiniに保存する値をパース（例：1920x1080 -> X=1920, Y=1080） ---
+                                // --- Parse values to save to ini (e.g. 1920x1080 -> X=1920, Y=1080) ---
                                 int w, h;
                                 if (sscanf(resolutions[i].c_str(), "%dx%d", &w, &h) == 2)
                                 {
                                     XResolution = w;
                                     YResolution = h;
-                                    saveSettings = true; // 保存フラグを立てる
+                                    saveSettings = true; // Set save flag
                                 }
                                     */
                             }
 
-                            // 初期フォーカス
+                            // Initial focus
                             if (isSelected)
                                 ImGui::SetItemDefaultFocus();
                         }
                         ImGui::EndCombo();
                     }
 
-                    // --- SuperSampling スライダー (1～8) ---
-                    // static int superSampling = 1; // 実際はconfigから読み込む
+                    // --- SuperSampling Slider (1-8) ---
+                    // static int superSampling = 1; // actually read from config
                     ImGui::Text("Super Sampling");
                     ImGui::SameLine(150.0f * scale);
-                    ImGui::PushItemWidth(-1); // 右端までスライダーを広げる
+                    ImGui::PushItemWidth(-1); // Expand slider to right edge
                     if (ImGui::SliderInt("##SS", &superSampling, 1, 8))
                     {
                         saveSettings = true;
                     }
                     ImGui::PopItemWidth();
 
-                    // --- CRTColor ドロップダウン ---
+                    // --- CRTColor Dropdown ---
                     const char *crtItems[] = {
                         "0=none",
                         "1=ARI/D93 (recommended for all JP developed games)",
@@ -767,22 +767,22 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         "4=BT601_525/D65 (recommended for all US developed games)",
                         "5=BT601_625/D65 (recommended for all EUR/AUS developed games)"};
 
-                    // static は消して、引数で渡ってきた selectedCRT を使う
+                    // Use selectedCRT passed as argument
                     ImGui::Text("CRT Color");
                     ImGui::SameLine(150.0f * scale);
                     ImGui::PushItemWidth(-1);
 
-                    // 現在選択されている番号の「文字列」をプレビューに表示
+                    // Display current selection string in preview
                     if (ImGui::BeginCombo("##CRTColor", crtItems[selectedCRT]))
                     {
                         ImGui::SetWindowFontScale(scale);
                         for (int n = 0; n < IM_ARRAYSIZE(crtItems); n++)
                         {
-                            // 今のループ回数(n)が、選択中の番号(selectedCRT)と一致するか
+                            // Check if loop count matches selectedCRT
                             bool is_selected = (selectedCRT == n);
                             if (ImGui::Selectable(crtItems[n], is_selected))
                             {
-                                // 選んだら、その番号(n)を selectedCRT に代入
+                                // Assign selected index on choice
                                 selectedCRT = n;
                                 saveSettings = true;
                             }
@@ -793,7 +793,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     }
                     ImGui::PopItemWidth();
 
-                    // --- UpscaleMode ドロップダウン (1～3) ---
+                    // --- UpscaleMode Dropdown (1-3) ---
                     const char *upscaleItems[] = {"0=none/sharp pixels", "1=biquintic", "2=bilinear", "3=bicubic"};
                     // static int selectedUpscale = 0;
                     ImGui::Text("Upscale Mode");
@@ -816,13 +816,13 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         ImGui::EndCombo();
                     }
                     ImGui::PopItemWidth();
-                    // static int ppcFreq = 57; // デフォルト値（configから読み込む変数に置き換えてください）
+                    // static int ppcFreq = 57; // Default value
                     ImGui::Text("PPC Frequency");
                     ImGui::SameLine(150.0f * scale);
                     ImGui::PushItemWidth(-1);
                     if (ImGui::SliderInt("##PPCFreq", &ppcFreq, 0, 200))
                     {
-                        // config.Set("PowerPCFrequency", (int64_t)ppcFreq); // 必要に応じてconfigへ
+                        // config.Set("PowerPCFrequency", (int64_t)ppcFreq); // Save to config if needed
                         saveSettings = true;
                     }
                     ImGui::PopItemWidth();
@@ -832,7 +832,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::PushItemWidth(-1);
                     if (ImGui::SliderInt("##Scanline", &Scanline, 1, 100))
                     {
-                        // config.Set("PowerPCFrequency", (int64_t)ppcFreq); // 必要に応じてconfigへ
+                        // config.Set("PowerPCFrequency", (int64_t)ppcFreq); // Save to config if needed
                         saveSettings = true;
                     }
                     ImGui::PopItemWidth();
@@ -842,13 +842,13 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::PushItemWidth(-1);
                     if (ImGui::SliderInt("##Barrel", &Barrel, 0, 100))
                     {
-                        // config.Set("PowerPCFrequency", (int64_t)ppcFreq); // 必要に応じてconfigへ
+                        // config.Set("PowerPCFrequency", (int64_t)ppcFreq); // Save to config if needed
                         saveSettings = true;
                     }
                     ImGui::PopItemWidth();
                     ImGui::EndTabItem();
                 }
-                // --- Audio タブ ---
+                // --- Audio Tab ---
                 if (ImGui::BeginTabItem("Sound"))
                 {
                     ImGui::SetWindowFontScale(scale);
@@ -856,12 +856,12 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // スライダー項目
+                    // Slider items
                     // static int musicVol = 100;
                     // static int sfxVol = 100;
                     // static int balance = 0;
 
-                    float labelWidth = 140.0f * scale; // ラベルの幅を揃える
+                    float labelWidth = 140.0f * scale; // Align label widths
 
                     // Music
                     ImGui::Text("Music");
@@ -897,8 +897,8 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // --- チェックボックス項目 ---
-                    // 実際には config["EmulateSound"].ValueAs<bool>() 等と連動させると良いです
+                    // --- Checkbox items ---
+                    // Link with EmulateSound config
                     // static bool vEmulateSound = true;
                     // static bool vEmulateDSB = true;
                     // static bool vFlipStereo = false;
@@ -924,18 +924,18 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::EndTabItem();
                 }
 
-                // --- Control タブ ---
+                // --- Control Tab ---
                 if (ImGui::BeginTabItem("Control"))
                 {
                     ImGui::SetWindowFontScale(scale);
                     ImGui::Text("Control Settings");
                     ImGui::Separator();
                     ImGui::Spacing();
-                    float labelWidth = 150.0f * scale; // 他のタブと統一
+                    float labelWidth = 150.0f * scale; // Align label widths
 
                     // --- Input Type ---
                     const char *inputTypes[] = {"Xinput", "Dinput", "Rawinput"};
-                    // static int selectedInputType = 0; // config連動を想定
+                    // static int selectedInputType = 0; // Link with config
                     ImGui::Text("Input Type");
                     ImGui::SameLine(labelWidth);
                     ImGui::PushItemWidth(-1);
@@ -1002,7 +1002,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // --- Config ボタン ---
+                    // --- Config Button ---
                     if (ImGui::Button("CONFIG", ImVec2(-1, 40.0f * scale)))
                     {
                         ShellExecuteA(NULL, "open", "Supermodel.exe", "-config-inputs", NULL, SW_SHOWNORMAL);
@@ -1015,16 +1015,16 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::EndTabItem();
                 }
 
-                // --- Network タブ ---
+                // --- Network Tab ---
                 if (ImGui::BeginTabItem("Network"))
                 {
                     ImGui::SetWindowFontScale(scale);
                     ImGui::Text("Network Setting");
                     ImGui::Separator();
                     ImGui::Spacing();
-                    float labelWidth = 150.0f * scale; // 他のタブと統一
+                    float labelWidth = 150.0f * scale; // Align label widths
 
-                    // --- チェックボックス項目 ---
+                    // --- Checkbox items ---
                     // static bool vNetwork = false;
                     // static bool vSimulateNet = false;
 
@@ -1040,8 +1040,8 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     {
                         saveSettings = true;
 #ifdef SUPERMODEL_WIN32
-                        // Streaming ON → 仮想コントローラーを作成
-                        // Streaming OFF → 削除はしない（GUIからの削除は要求仕様外）
+                        // Streaming ON -> Create virtual controller
+                        // Streaming OFF -> Do not remove
                         if (vStreaming && pRemote != nullptr)
                         {
                             pRemote->AddVirtualController();
@@ -1053,7 +1053,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // --- テキスト入力項目 ---
+                    // --- Text input items ---
                     /*
                     static char bufPortIn[8] = "1970";
                     static char bufPortOut[8] = "1971";
@@ -1062,7 +1062,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     // PortIn
                     ImGui::Text("PortIn");
                     ImGui::SameLine(labelWidth);
-                    ImGui::PushItemWidth(100.0f * scale); // ポート番号用なので少し短めに
+                    ImGui::PushItemWidth(100.0f * scale); // Short width for port number
                     if (ImGui::InputText("##PortIn", bufPortIn, sizeof(bufPortIn), ImGuiInputTextFlags_CharsDecimal))
                     {
                         saveSettings = true;
@@ -1082,7 +1082,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     // AddressOut
                     ImGui::Text("AddressOut");
                     ImGui::SameLine(labelWidth);
-                    ImGui::PushItemWidth(-1); // アドレスは長い可能性があるので右端まで
+                    ImGui::PushItemWidth(-1); // Expand address input to right edge
                     if (ImGui::InputText("##AddressOut", bufAddressOut, sizeof(bufAddressOut)))
                     {
                         saveSettings = true;
@@ -1092,7 +1092,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::EndTabItem();
                 }
 
-                // --- Other タブ ---
+                // --- Other Tab ---
                 if (ImGui::BeginTabItem("Other"))
                 {
                     ImGui::SetWindowFontScale(scale);
@@ -1102,36 +1102,36 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // Replay用のChild Windowでひとまとめにする
-                    ImGui::BeginChild("ReplayControl", ImVec2(0, 150 * scale), true); // 少し高さを広げたぜ
+                    // Group into Child Window for Replay
+                    ImGui::BeginChild("ReplayControl", ImVec2(0, 150 * scale), true); // Slightly taller child window
                     {
                         ImGui::SetWindowFontScale(scale);
 
-                        // 1. .recファイルをスキャン
+                        // 1. Scan for .rec files
                         static std::vector<std::string> replayFiles;
                         static int selectedFileIdx = -1;
                         static float lastScanTime = 0;
 
-                        // 5秒ごとにフォルダを再スキャン
+                        // Re-scan folder every 5 seconds
                         float currentTime = (float)ImGui::GetTime();
                         if (currentTime - lastScanTime > 5.0f || (replayFiles.empty() && lastScanTime == 0))
                         {
                             std::string folderPath = "Replays";
 
-                            // 1. フォルダがなければ作成しておく（親切設計）
+                            // 1. Create folder if missing
                             if (!fs::exists(folderPath))
                             {
                                 fs::create_directory(folderPath);
                             }
 
-                            // 今選択しているファイル名を一時保存（スキャン後に位置を復元するため）
+                            // Save current selection name temporarily
                             std::string currentSelectedName = (selectedFileIdx >= 0 && selectedFileIdx < (int)replayFiles.size())
                                                                   ? replayFiles[selectedFileIdx]
                                                                   : "";
 
                             replayFiles.clear();
 
-                            // 2. "Replays" フォルダ内をスキャン
+                            // 2. Scan "Replays" folder
                             for (const auto &entry : fs::directory_iterator(folderPath))
                             {
                                 if (entry.path().extension() == ".rec")
@@ -1140,11 +1140,11 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                                 }
                             }
 
-                            // 3. 降順ソート（新しい日付＝数字が大きい方が上に来るようにする）
+                            // 3. Sort descending
 
                             std::sort(replayFiles.rbegin(), replayFiles.rend());
 
-                            // 4. 選択位置の復元
+                            // 4. Restore selection index
                             selectedFileIdx = -1;
                             for (int i = 0; i < (int)replayFiles.size(); i++)
                             {
@@ -1158,7 +1158,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                             lastScanTime = currentTime;
                         }
 
-                        // 2. コンボボックスでファイルを選択
+                        // 2. Select file via combo box
                         const char *preview = (selectedFileIdx >= 0) ? replayFiles[selectedFileIdx].c_str() : "Select Replay...";
                         if (ImGui::BeginCombo("Files", preview))
                         {
@@ -1180,20 +1180,20 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         }
                         ImGui::SameLine();
 
-                        // 1. 削除ボタンの見た目を少し赤っぽくして警告感を出す（任意）
+                        // 1. Apply reddish color for delete button warning
                         ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
                         if (ImGui::Button("Delete", ImVec2(80 * scale, 0)))
                         {
                             if (selectedFileIdx >= 0 && selectedFileIdx < (int)replayFiles.size())
                             {
-                                // ポップアップを開くフラグを立てる
+                                // Set flag to open popup
                                 ImGui::SetWindowFontScale(scale);
                                 ImGui::OpenPopup("Delete Confirmation");
                             }
                         }
                         ImGui::PopStyleColor();
 
-                        // 2. ポップアップの中身
+                        // 2. Popup content
                         if (ImGui::BeginPopupModal("Delete Confirmation", NULL, ImGuiWindowFlags_AlwaysAutoResize))
                         {
                             ImGui::SetWindowFontScale(scale);
@@ -1202,7 +1202,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
                             if (ImGui::Button("OK", ImVec2(120 * scale, 0)))
                             {
-                                // ここで物理削除とリスト更新
+                                // Physically delete and update list
                                 if (std::remove(replayFiles[selectedFileIdx].c_str()) == 0)
                                 {
                                     replayFiles.erase(replayFiles.begin() + selectedFileIdx);
@@ -1224,19 +1224,19 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
                         ImGui::Spacing();
 
-                        // 3. アクションボタン
+                        // 3. Action buttons
                         if (ImGui::Button("Record New", ImVec2(120 * scale, 0)))
                         {
                             std::string currentRomName = "";
 
-                            // 1. gamesマップを回して、selectedGameIndex 番目の名前を特定する
+                            // 1. Traverse games map to identify name
                             int idx = 0;
-                            // ここで pair を宣言してループを回すぜ
+                            // Loop through pairs
                             for (auto const &p : games)
                             {
                                 if (idx == selectedGameIndex)
                                 {
-                                    currentRomName = p.second.name; // ここでROM名をゲット！
+                                    currentRomName = p.second.name; // Get ROM name
                                     break;
                                 }
                                 idx++;
@@ -1244,23 +1244,23 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
                             if (!currentRomName.empty())
                             {
-                                // 2. 時刻を取得 (YYYYMMDDhhmmss)
+                                // 2. Get current time (YYYYMMDDhhmmss)
                                 time_t now = time(nullptr);
                                 struct tm *tm_now = localtime(&now);
                                 char timeStr[20];
                                 strftime(timeStr, sizeof(timeStr), "%Y%m%d%H%M%S", tm_now);
 
-                                // 3. ファイル名生成
+                                // 3. Generate filename
                                 std::string replayFolder = "Replays/";
                                 std::string newReplayFile = replayFolder + currentRomName + "@" + timeStr + ".rec";
 
                                 CreateDirectoryA(replayFolder.c_str(), NULL);
 
-                                // 4. 空ファイル作成
+                                // 4. Create empty file
                                 std::ofstream ofs(newReplayFile);
                                 ofs.close();
 
-                                // 5. プロセス起動処理へ（CreateProcessAなど）
+                                // 5. Proceed to process startup
                                 char szExePath[MAX_PATH];
                                 GetModuleFileNameA(NULL, szExePath, MAX_PATH);
 
@@ -1283,7 +1283,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         }
                         ImGui::SameLine();
 
-                        // ファイルが選択されている時だけPlayボタンを有効にする
+                        // Enable play button only when file is selected
                         bool hasSelection = (selectedFileIdx >= 0 && selectedFileIdx < replayFiles.size());
                         if (!hasSelection)
                             ImGui::BeginDisabled();
@@ -1295,27 +1295,27 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                                 char szExePath[MAX_PATH];
                                 GetModuleFileNameA(NULL, szExePath, MAX_PATH);
 
-                                // 1. replayFilename には既に "Replays/rom@time.rec" が入っている
+                                // 1. replayFilename contains filename
                                 std::string fullPath = replayFilename;
 
-                                // 2. ROM名を取り出すときは、"Replays/" の後ろから "@" の前までを抜く
-                                // まず最後の '/' を探して、ファイル名部分だけにする
+                                // 2. Extract ROM name
+                                // Find last '/'
                                 size_t lastSlash = fullPath.find_last_of("/\\");
                                 std::string pureFilename = (lastSlash != std::string::npos) ? fullPath.substr(lastSlash + 1) : fullPath;
 
-                                // その後、今までのやり方で "@" を探す
+                                // Find "@"
                                 size_t pos = pureFilename.find('@');
                                 std::string romName = (pos != std::string::npos) ? pureFilename.substr(0, pos) : "";
 
                                 if (!romName.empty())
                                 {
-                                    // 3. コマンドライン組み立て
-                                    // fullPath が "Replays/xxx.rec" なので、そのままぶち込む！
+                                    // 3. Assemble command line
+                                    // Pass fullPath
                                     std::string cmd = "\"" + std::string(szExePath) + "\"";
                                     cmd += " -play \"" + fullPath + "\"";
                                     cmd += " \"" + s_Dir + "/" + romName + ".zip\"";
 
-                                    // 4. プロセス起動
+                                    // 4. Start process
                                     STARTUPINFOA si = {sizeof(si)};
                                     PROCESS_INFORMATION pi;
                                     if (CreateProcessA(NULL, (LPSTR)cmd.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
@@ -1348,11 +1348,11 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
                     if (ImGui::Button("Reset All Settings", ImVec2(240 * scale, 0)))
                     {
-                        // まずは「本当にいいんだな？」と聞くためのポップアップを開く
+                        // Open confirmation popup
                         ImGui::OpenPopup("Reset Confirmation");
                     }
                     ImGui::PopStyleColor();
-                    // モーダルポップアップの設定
+                    // Modal popup settings
                     if (ImGui::BeginPopupModal("Reset Confirmation", NULL, ImGuiWindowFlags_AlwaysAutoResize))
                     {
                         ImGui::SetWindowFontScale(scale);
@@ -1360,14 +1360,14 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                                     "All your preferences will be lost. Are you sure?\n\n");
                         ImGui::Separator();
 
-                        // 「はい」に相当するボタン
+                        // "Yes" button
                         if (ImGui::Button("YES, Reset Everything", ImVec2(180 * scale, 0)))
                         {
-                            // 物理ファイルの削除（Config/Supermodel.ini）
-                            // 戻り値を気にしすぎず、とりあえず削除を試みるぜ
+                            // Physical deletion
+                            // Attempt deletion
                             std::remove("Config/Supermodel.ini");
 
-                            // 実行中の設定を保存せずに終了（これで初期化される）
+                            // Exit without saving
                             exitLaunch = false;
                             exit = true;
                             saveSettings = false;
@@ -1377,7 +1377,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
                         ImGui::SameLine();
 
-                        // 「いいえ」に相当するボタン
+                        // "No" button
                         if (ImGui::Button("Cancel", ImVec2(100 * scale, 0)))
                         {
                             ImGui::CloseCurrentPopup();
@@ -1386,7 +1386,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         ImGui::EndPopup();
                     }
                     ImGui::TextDisabled("Warning: This will delete Supermodel.ini and close the app.");
-                    // SettingsタブやAboutタブの最後に配置
+                    // Position at the end of tabs
 
                     ImGui::EndTabItem();
                 }
@@ -1395,16 +1395,16 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::SetWindowFontScale(scale);
                     float windowWidth = ImGui::GetContentRegionAvail().x;
 
-                    // 上部に少し余裕を持たせる
+                    // Margin top
                     ImGui::Dummy(ImVec2(0, 20.0f * scale));
 
-                    // --- 1. タイトルをセンター揃え ---
+                    // --- 1. Center Title ---
                     const char *title = "Supermodel-PonMi-Edition";
                     float titleWidth = ImGui::CalcTextSize(title).x;
                     ImGui::SetCursorPosX((windowWidth - titleWidth) * 0.5f);
                     ImGui::Text(title);
 
-                    // --- 2. バージョンをセンター揃え ---
+                    // --- 2. Center Version ---
                     const char *ver = "ver. 2026.06.06";
                     float verWidth = ImGui::CalcTextSize(ver).x;
                     ImGui::SetCursorPosX((windowWidth - verWidth) * 0.5f);
@@ -1414,36 +1414,36 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // --- 3. メッセージをセンター揃え ---
+                    // --- 3. Center Message ---
                     const char *credit = "Developed by BackPonBeauty";
                     float creditWidth = ImGui::CalcTextSize(credit).x;
                     ImGui::SetCursorPosX((windowWidth - creditWidth) * 0.5f);
                     ImGui::Text(credit);
 
-                    // --- 4. ボタンをセンターに置きたい場合 ---
+                    // --- 4. Center Buttons ---
                     float buttonWidth = 240.0f * scale;
                     ImGui::SetCursorPosX((windowWidth - buttonWidth) * 0.5f);
                     if (ImGui::Button("Visit GitHub Repository", ImVec2(buttonWidth, 40 * scale)))
                     {
                         ShellExecuteA(NULL, "open", "https://github.com/BackPonBeauty", NULL, NULL, SW_SHOWNORMAL);
                     }
-                    // --- Aboutタブ内の支援セクション ---
+                    // --- Supporters Section ---
                     ImGui::Spacing();
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // 1. 利用可能な横幅を取得
+                    // 1. Get available width
                     float availWidth = ImGui::GetContentRegionAvail().x;
 
-                    // 2. ラベルテキストをセンター揃え
+                    // 2. Center label text
                     const char *supportLabel = "Support the Developer:";
                     float labelSize = ImGui::CalcTextSize(supportLabel).x;
                     ImGui::SetCursorPosX((availWidth - labelSize) * 0.5f);
                     ImGui::Text(supportLabel);
 
-                    // 3. 説明文（TextWrapped）をセンターっぽく見せるためのダミー余白
-                    // TextWrappedは左詰め固定なので、ChildWindowを使って中央に寄せるのが一番綺麗だぜ
-                    float wrapWidth = 400.0f * scale; // 説明文の最大幅を指定
+                    // 3. Mock margins to center TextWrapped
+                    // Use ChildWindow to center
+                    float wrapWidth = 400.0f * scale; // Max wrap width
                     if (availWidth > wrapWidth)
                     {
                         ImGui::SetCursorPosX((availWidth - wrapWidth) * 0.5f);
@@ -1451,7 +1451,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
                     ImGui::Spacing();
 
-                    // 4. GitHubボタンをセンター揃え
+                    // 4. Center GitHub button
                     float btnWidth = 240.0f * scale;
                     ImGui::SetCursorPosX((availWidth - btnWidth) * 0.5f);
 
@@ -1467,31 +1467,31 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
                     ImGui::PopStyleColor(4);
 
-                    // ツールチップ
+                    // Tooltip
                     if (ImGui::IsItemHovered())
                     {
-                        // ツールチップ自体の描画を開始
+                        // Start rendering tooltip
                         ImGui::BeginTooltip();
 
-                        // ツールチップ内のフォントサイズをスケールに合わせて調整
+                        // Scale tooltip font size
                         ImGui::SetWindowFontScale(scale);
 
-                        // メッセージを表示
+                        // Display message
                         ImGui::Text("Fuel my development with some coffee!");
 
-                        // ツールチップの描画を終了
+                        // End rendering tooltip
                         ImGui::EndTooltip();
                     }
                     ImGui::Spacing();
                     ImGui::Separator();
                     ImGui::Spacing();
-                    // 1. セクションタイトル
+                    // 1. Section Title
                     const char *thanksTitle = "[ Special Thanks ]";
                     float thanksTitleWidth = ImGui::CalcTextSize(thanksTitle).x;
                     ImGui::SetCursorPosX((availWidth - thanksTitleWidth) * 0.5f);
                     ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.4f, 1.0f), thanksTitle);
 
-                    // 2. 感謝のリスト（構造体や配列で回すと綺麗だぜ）
+                    // 2. Supporters list
                     struct Gratitude
                     {
                         const char *category;
@@ -1502,20 +1502,20 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                         {"All Supermodel Developers", "and Fellow Fork Developers"},
                         {"Most Test Played", "@mygirl"},
                         {"Barrel Effect Inspired by", "@ikarugaginkei5744"},
-                        // 香港のSpikeout同好会の皆さん
+                        // Supporters
                         {"Network Tester", "Spikeout Community in Hong Kong"},
                         {"Special Shout-out to", "all the 'Anti-PonMi' folks"}};
 
                     for (const auto &item : thanksList)
                     {
-                        // カテゴリ（少し小さめ or 色変え）
+                        // Category
                         ImGui::SetWindowFontScale(scale);
                         float catWidth = ImGui::CalcTextSize(item.category).x;
                         ImGui::SetCursorPosX((availWidth - catWidth) * 0.5f);
                         // ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), item.category);
                         ImGui::Text(item.category);
 
-                        // 名前（通常サイズ）
+                        // Name
                         ImGui::SetWindowFontScale(scale);
                         float nameWidth = ImGui::CalcTextSize(item.name).x;
                         ImGui::SetCursorPosX((availWidth - nameWidth) * 0.5f);
@@ -1535,15 +1535,15 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
     }
     ImGui::EndGroup();
 
-    // --- 下段: 操作パネル ---
+    // --- Bottom: Control Panel ---
     ImGui::Separator();
     ImGui::Dummy(ImVec2(0, 5.0f * scale));
     if (ImGui::BeginChild("FooterBar", ImVec2(0, 0), false))
     {
-        ImGui::SetWindowFontScale(scale); // スケール再適用
+        ImGui::SetWindowFontScale(scale); // Re-apply scale
 
         float btnWidth = 220.0f * scale;
-        float btnHeight = -1.0f; // 高さいっぱいに広げる
+        float btnHeight = -1.0f; // Expand button height
         float spacing = 10.0f * scale;
 
         if (ImGui::Button("LAUNCH", ImVec2(btnWidth, btnHeight)))
@@ -1561,14 +1561,14 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
         }
         ImGui::SameLine(0, spacing);
         // std::string Dir = config["Dir"].ValueAs<std::string>();
-        //  --- 追加：ROMパス設定エリア ---
-        //  2. フォルダ選択ボタン
+        //  --- Add ROM path setting area ---
+        // 2. Folder selection button
         if (ImGui::Button("DIR...", ImVec2(80.0f * scale, -1)))
         {
             std::string pickedPath = "";
 
 #ifdef _WIN32
-            // --- Windows用処理 ---
+            // --- Windows Process ---
             BROWSEINFO bi = {0};
             bi.lpszTitle = "Select ROM Directory";
             bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
@@ -1583,14 +1583,14 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
             /*
     #else
 
-            // --- Linux用処理 (zenityを使用) ---
-            // zenityはほとんどのLinux配布版で標準搭載されているダイアログツールです
+            // --- Linux Process (Zenity) ---
+            // Zenity is standard on Linux
             FILE* f = popen("zenity --file-selection --directory --title=\"Select ROM Directory\"", "r");
             if (f) {
                 char buffer[1024];
                 if (fgets(buffer, sizeof(buffer), f)) {
                     pickedPath = buffer;
-                    // 末尾の改行コードを削除
+                    // Remove trailing newline
                     pickedPath.erase(pickedPath.find_last_not_of("\n\r") + 1);
                 }
                 pclose(f);
@@ -1599,7 +1599,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
 
             if (!pickedPath.empty())
             {
-                // 文字化け・区切り文字対策：すべて '/' に変換
+                // Convert to '/'
                 for (auto &c : pickedPath)
                 {
                     if (c == '\\')
@@ -1616,19 +1616,19 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
         // std::string Dir = config.Get("Supermodel3UI").Get("Dir").ValueAs<std::string>();
         std::replace(s_Dir.begin(), s_Dir.end(), '\\', '/');
 
-        // ImGuiで編集するための作業用バッファ
+        // Work buffer for ImGui edit
         char pathBuf[512];
         strncpy(pathBuf, s_Dir.c_str(), sizeof(pathBuf));
         pathBuf[sizeof(pathBuf) - 1] = '\0';
 
-        // テキストボックスの横幅を、残りのスペースに合わせて自動計算
+        // Calculate textbox width
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - btnWidth - spacing - 10.0f);
 
-        // 第2引数には std::string ではなく char配列(pathBuf) を渡す
+        // Pass char array
         if (ImGui::InputText("##RomPathStr", pathBuf, sizeof(pathBuf)))
         {
             std::string newPath = std::string(pathBuf);
-            // ユーザーが文字を入力した瞬間に config の "Dir" を更新
+            // Update config "Dir"
             std::replace(newPath.begin(), newPath.end(), '\\', '/');
             // config.Set("Dir", std::string(pathBuf));
             s_Dir = newPath;
@@ -1646,19 +1646,19 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
     }
     ImGui::EndChild();
 
-    // GUIのメインループ（毎フレーム通る場所）に記述
+    // Described in GUI main loop
     if (g_PreviewWindow)
     {
-        // プレビューウィンドウのIDを取得
+        // Get preview window ID
         uint32_t previewID = SDL_GetWindowID(g_PreviewWindow);
-        // 現在フォーカスされているウィンドウを取得
+        // Get currently focused window
         SDL_Window *focusWin = SDL_GetMouseFocus();
 
-        // マウスの左クリック状態を取得
+        // Get left click state
         if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT))
         {
-            // もしマウスがプレビューウィンドウの上にある、
-            // もしくは「どのウィンドウでもいいからクリックされたら消す」なら判定を緩くする
+            // If mouse is over preview window
+            // Dismiss popup
             if (focusWin == g_PreviewWindow)
             {
                 ClosePreviewWindow();
@@ -1681,11 +1681,11 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
     }
 
     ImGui::End();
-    // ★追加：設定した色を元に戻す（Pushした数だけPopする）
+    // Restore set colors
     ImGui::PopStyleColor(3);
 }
 
-// --- エントリポイント ---
+// --- Entry Point ---
 #ifdef SUPERMODEL_WIN32
 std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Node &config, RemoteSlotManager* pRemote)
 #else
@@ -1710,7 +1710,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         }
         else
         {
-            // ファイルがない場合のフォールバック
+            // Fallback when file is missing
             resolutions.push_back("640x480");
             resolutions.push_back("1920x1080");
         }
@@ -1719,7 +1719,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
         return {};
 
-    // --- [1] Supermodel.ini からの読み込み (ループ前) ---
+    // --- [1] Read from Supermodel.ini (Before loop) ---
 
     // Graphics
     int engineSelection = config["New3DEngine"].ValueAs<bool>() ? 0 : 1;
@@ -1769,7 +1769,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
     bool vFlipStereo = config["FlipStereo"].ValueAs<bool>();
     bool vLegacySoundDSP = config["LegacySoundDSP"].ValueAs<bool>();
 
-    // Control (文字列比較でインデックスを決定)
+    // Control (Select index by string comparison)
     std::string inSys = config["InputSystem"].ValueAs<std::string>();
     int selectedInputType = (inSys == "xinput") ? 0 : (inSys == "dinput") ? 1
                                                   : (inSys == "rawinput") ? 2
@@ -1786,7 +1786,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
     bool vSimulateNet = config["SimulateNet"].ValueAs<bool>();
     bool vStreaming = config["Streaming"].ValueAsDefault<bool>(false);
 
-    // Network 文字列（グローバル変数 bufPortIn, bufPortOut, bufAddressOut に初期化）
+    // Network strings
     strncpy(bufPortIn, config["PortIn"].ValueAs<std::string>().c_str(), sizeof(bufPortIn) - 1);
     bufPortIn[sizeof(bufPortIn) - 1] = '\0';
     strncpy(bufPortOut, config["PortOut"].ValueAs<std::string>().c_str(), sizeof(bufPortOut) - 1);
@@ -1824,7 +1824,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
 
     ImFontConfig font_cfg;
 
-    // --- ここから追加：SelectedGameIdx を自力で読み出す ---
+    // --- Add: Read SelectedGameIdx manually ---
     int selectedGame = -1;
     bool startMaximized = false;
     float fontSize = 16.0f;
@@ -1835,7 +1835,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
             std::string line;
             while (std::getline(ifs, line))
             {
-                // スペースを考慮せず、単純に "キー=値" を探す
+                // Find "Key=Value"
                 size_t sep = line.find('=');
                 if (sep == std::string::npos)
                     continue;
@@ -1849,7 +1849,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
                 }
                 else if (key == "Maximized")
                 {
-                    startMaximized = (val == "1"); // boolは 0 か 1 で保存されているため
+                    startMaximized = (val == "1"); // Check boolean value
                 }
                 else if (key == "FontSize")
                 {
@@ -1880,10 +1880,10 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         SDL_MaximizeWindow(window);
     }
 
-    // --- ここから追加：iniからサイズと位置を復元 ---
+    // --- Add: Restore size and position from ini ---
     ImGui::LoadIniSettingsFromDisk(io.IniFilename);
 
-    // LauncherCanvas の ID を直接計算して設定を探す
+    // Direct calculation
     ImGuiID canvasID = ImHashStr("LauncherCanvas");
     ImGuiWindowSettings *settings = ImGui::FindWindowSettingsByID(canvasID);
 
@@ -1894,13 +1894,13 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         int savedX = (int)settings->Pos.x;
         int savedY = (int)settings->Pos.y;
 
-        // サイズの適用
+        // Apply size
         if (savedW > 0 && savedH > 0)
         {
             SDL_SetWindowSize(window, savedW, savedH);
         }
 
-        // 位置の適用（マルチモニターで見失わないよう、ある程度妥当な値かチェック）
+        // Apply position
         if (savedX != 0 || savedY != 0)
         {
             SDL_SetWindowPosition(window, savedX, savedY);
@@ -1910,7 +1910,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         }
     }
-    // --- ここまで ---
+    // --- End ---
 
     GameLoader loader(config["GameXMLFile"].ValueAs<std::string>());
     auto &games = loader.GetGames();
@@ -1920,11 +1920,11 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
     SDL_ShowWindow(window);
 
     int selectedResIndex = 0;
-    // configから現在の解像度を "1280x720" のような形式の文字列にする
+    // Get resolution string
     std::string currentRes = std::to_string(config["XResolution"].ValueAs<int64_t>()) + "x" +
                              std::to_string(config["YResolution"].ValueAs<int64_t>());
 
-    // resolutionsリストの中から一致するものを探す
+    // Find match in resolutions list
     for (int i = 0; i < (int)resolutions.size(); i++)
     {
         if (resolutions[i] == currentRes)
@@ -1976,13 +1976,13 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    // --- 終了後の判定 ---
+    // --- Post-termination judgment ---
     std::vector<std::string> roms;
 
-    // LAUNCHボタン（exitLaunch）が押されている場合のみROMパスを取得して返り値にする
+    // Return ROM path on LAUNCH button click
     if (exitLaunch)
     {
-        // 通常のROMパスを取得（フォールバック用）
+        // Get default ROM path
         std::string path = GetRomPath(selectedGame, games, config);
         if (!path.empty())
         {
@@ -1990,7 +1990,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         }
     }
 
-    // 後片付け（テクスチャの破棄を追加）
+    // Cleanup
     if (g_GameTexture)
         glDeleteTextures(1, &g_GameTexture);
     ImGui_ImplOpenGL3_Shutdown();
@@ -2001,7 +2001,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
     {
         std::map<std::string, std::string> u;
 
-        // --- Video 設定 ---
+        // --- Video Settings ---
         u["New3DEngine"] = (engineSelection == 0 ? "1" : "0");
         u["VSync"] = (vVsync ? "1" : "0");
         u["QuadRendering"] = (vQuadRendering ? "1" : "0");
@@ -2021,31 +2021,31 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         u["true-ar"] = (vTrueAR ? "1" : "0");
         u["Overlay"] = (vOverlay ? "1" : "0");
 
-        // リフレッシュレート（精度指定が必要なため stringstream を使用）
+        // Refresh rate
         std::stringstream ss;
         ss << std::fixed << std::setprecision(6) << (vTrueHz ? 57.524158 : 60.0);
         u["RefreshRate"] = ss.str();
 
-        // --- 数値系 ---
-        // 1. 現在選択されている解像度文字列を取得 (例: "1920x1080")
+        // --- Numerical values ---
+        // 1. Get selected resolution string
         std::string resStr = resolutions[selectedResIndex];
         int resW = 0, resH = 0;
 
-        // 2. 文字列を w と h に分解
+        // 2. Split string to w and h
         if (sscanf(resStr.c_str(), "%dx%d", &resW, &resH) == 2)
         {
-            // 分解成功。これを保存用マップに入れる
+            // Insert into save map
             u["XResolution"] = std::to_string(resW);
             u["YResolution"] = std::to_string(resH);
         }
         else
         {
-            // 万が一パースに失敗した時のバックアップ（元の変数をそのまま使う）
+            // Fallback on parse failure
             u["XResolution"] = std::to_string(XResolution);
             u["YResolution"] = std::to_string(YResolution);
         }
 
-        u["WindowXPosition"] = bufPosX; // char[] はそのまま代入可
+        // Copy value
         u["WindowYPosition"] = bufPosY;
         u["Supersampling"] = std::to_string(superSampling);
         u["CRTcolors"] = std::to_string(selectedCRT);
@@ -2054,7 +2054,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         u["ScanlineStrength"] = std::to_string(Scanline);
         u["BarrelStrength"] = std::to_string(Barrel);
 
-        // --- Sound 設定 ---
+        // --- Sound Settings ---
         u["MusicVolume"] = std::to_string(musicVol);
         u["SoundVolume"] = std::to_string(sfxVol);
         u["Balance"] = std::to_string(balance);
@@ -2073,23 +2073,23 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         u["Network"] = (vNetwork ? "1" : "0");
         u["SimulateNet"] = (vSimulateNet ? "1" : "0");
         u["Streaming"] = (vStreaming ? "1" : "0");
-        // linkplay は変更しない（Main.cpp側で管理）
+        // Keep linkplay
         u["PortIn"] = bufPortIn;
         u["PortOut"] = bufPortOut;
         u["AddressOut"] = bufAddressOut;
         u["Dir"] = s_Dir;
 
-        // 最後に自作の更新関数を呼ぶ！
+        // Call custom update function
         SaveSupermodelConfig(configPath, u);
     }
 
     ImGui::DestroyContext();
-    // 設定保存の判定
-    // --- 終了後の判定内 ---
+    // Check settings save
+    // --- Inside post-termination judgment ---
     if (saveSettings)
     {
-        // ImGui標準設定は今まで通り imgui.ini へ（ImGuiが勝手にやります）
-        // それとは別に自分用の ponmi.ini を作成
+        // Save ImGui settings to imgui.ini
+        // Create ponmi.ini
         std::ofstream ofs("ponmi.ini", std::ios::trunc);
         uint32_t flags = SDL_GetWindowFlags(window);
         bool isMaximized = (flags & SDL_WINDOW_MAXIMIZED);
@@ -2101,7 +2101,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
             ofs << "FontSize=" << fontSize << "\n";
             ofs << "ImageAreaRatioW=" << uImageAreaRatioW << "\n";
             ofs << "ImageAreaRatioH=" << uImageAreaRatioH << "\n";
-            // 今後、他にも保存したいものがあればここに追記できる
+            // Expandable settings
             ofs.close();
             saveSettings = false;
         }

@@ -1,7 +1,7 @@
 /**
  * FirebaseMatchingCpp.cpp
  *
- * Firebase Realtime Database REST API 実装（WinHTTP使用）
+ * Firebase Realtime Database REST API implementation (using WinHTTP)
  */
 
 #ifdef SUPERMODEL_WIN32
@@ -13,11 +13,11 @@
 #include <cstdio>
 #include <chrono>
 
-constexpr int HEARTBEAT_INTERVAL_MS = 120000; // 2分
+constexpr int HEARTBEAT_INTERVAL_MS = 120000; // 2 minutes
 constexpr int TIMEOUT_MINUTES = 10;
 
 // ---------------------------------------------------------------------------
-// コンストラクタ / デストラクタ
+// Constructor / Destructor
 // ---------------------------------------------------------------------------
 FirebaseMatchingCpp::FirebaseMatchingCpp() {}
 
@@ -36,7 +36,7 @@ void FirebaseMatchingCpp::Shutdown()
 }
 
 // ---------------------------------------------------------------------------
-// 初期化（匿名認証）
+// Initialization (Anonymous Auth)
 // ---------------------------------------------------------------------------
 bool FirebaseMatchingCpp::Initialize(FirebaseStatusCallback statusCb)
 {
@@ -58,14 +58,13 @@ bool FirebaseMatchingCpp::Initialize(FirebaseStatusCallback statusCb)
 }
 
 // ---------------------------------------------------------------------------
-// Firebase Auth 匿名ログイン
+// Firebase Auth Anonymous Sign-In
 // ---------------------------------------------------------------------------
 bool FirebaseMatchingCpp::SignInAnonymously()
 {
     // POST https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=API_KEY
     std::string path = "/v1/accounts:signUp?key=";
     path += API_KEY; 
-    //"AIzaSyCjuWjnnKAPrIhe8LrzosuXcCuMSW9x7Zs";
 
     std::string body = "{\"returnSecureToken\":true}";
 
@@ -74,13 +73,10 @@ bool FirebaseMatchingCpp::SignInAnonymously()
         std::wstring(path.begin(), path.end()),
         body, true);
 
-  //  printf("[Firebase] SignIn response: %s\n", response.c_str());
-
     if (response.empty())
         return false;
 
-    // idToken を JSON から取得（軽量パース）
-    const std::string key = "\"idToken\":\"";
+    // Retrieve idToken from JSON (lightweight parse)
     const std::string key1 = "\"idToken\":\"";
     const std::string key2 = "\"idToken\": \"";
 
@@ -104,31 +100,40 @@ bool FirebaseMatchingCpp::SignInAnonymously()
 }
 
 // ---------------------------------------------------------------------------
-// ホスト登録
+// Host Registration
 // ---------------------------------------------------------------------------
 bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
                                        const bool availableSlots[5],
                                        int linkplay,
-                                       const std::string &gameTitle)
+                                       const std::string &gameTitle,
+                                       const std::string &serverName)
 {
-    // キー = IPをサニタイズ（ドット→'-'）
+    // Key = Sanitize IP (replace dot with '-')
     std::string key = SanitizeKeyFromIp(externalIp);
     m_currentHostId = key;
 
     std::wstring dbHost = L"supermodel3-8343f-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-    // GET でレコードが存在するか確認
+    // Verify record existence via GET
     std::string getPath = "/hosts/" + key + ".json?auth=" + m_idToken;
     std::string existing = HttpGet(dbHost, std::wstring(getPath.begin(), getPath.end()), m_idToken);
     bool exists = !existing.empty() && existing != "null";
 
     if (!exists)
     {
-        // ----- PUT: 新規レコード作成 -----
+        // ----- PUT: Create new record -----
         HostInfoCpp info;
         info.timestamp = GetUnixTimestamp();
         info.ip = externalIp;
-        info.gametitle = gameTitle; // ROM名（例: spikeofe）
+        info.gametitle = gameTitle; // ROM name (e.g., spikeofe)
+        if (linkplay == 0 || linkplay == 1)
+        {
+            info.servername = serverName;
+        }
+        else
+        {
+            info.servername = "";
+        }
 
         for (int slot = 1; slot <= 4; slot++)
         {
@@ -138,7 +143,7 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
             s.audioPort = SLOT_AUDIO_PORT[slot];
             if (linkplay == 0)
             {
-                // LinkPlay=0 の時はスロット1とスロット2の両方を開放
+                // LinkPlay=0 opens both Slot 1 and Slot 2
                 s.available = (slot == 1 || slot == 2) ? availableSlots[slot] : false;
             }
             else
@@ -159,12 +164,12 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
     }
     else
     {
-        // PATCH: 自スロットのavailableと timestamp のみ更新
+        // PATCH: Update only current slot available state and timestamp
         long long ts = GetUnixTimestamp();
 
         if (linkplay == 0)
         {
-            // LinkPlay=0 の時はスロット1とスロット2の両方をPATCH
+            // LinkPlay=0 patches both Slot 1 and Slot 2
             for (int slot = 1; slot <= 2; slot++)
             {
                 std::string slotKey = "slot" + std::to_string(slot);
@@ -186,7 +191,7 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
                    linkplay, availableSlots[linkplay] ? "true" : "false", key.c_str());
         }
 
-        // timestamp を別途PUT
+        // Put timestamp separately
         std::string tsPath = "/hosts/" + key + "/timestamp.json?auth=" + m_idToken;
         HttpPut(dbHost, std::wstring(tsPath.begin(), tsPath.end()), std::to_string(ts), m_idToken);
 
@@ -238,7 +243,7 @@ bool FirebaseMatchingCpp::PatchSlotAvailable(const std::string& hostId, int link
 }
 
 // ---------------------------------------------------------------------------
-// 古いホストのクリーンアップ（10分以上更新なし）
+// Cleanup Stale Hosts (no updates for 10+ minutes)
 // ---------------------------------------------------------------------------
 bool FirebaseMatchingCpp::CleanupStaleHosts()
 {
@@ -253,19 +258,19 @@ bool FirebaseMatchingCpp::CleanupStaleHosts()
     if (resp.empty() || resp == "null")
         return true;
 
-    long long now = GetUnixTimestamp();                                   // ミリ秒
-    long long threshold = now - (long long)(TIMEOUT_MINUTES * 60 * 1000); // 秒→ミリ秒
+    long long now = GetUnixTimestamp();                                   // milliseconds
+    long long threshold = now - (long long)(TIMEOUT_MINUTES * 60 * 1000); // sec -> milliseconds
 
-    // 簡易パース: "timestamp": 数値 を探してしきい値以下のホストIDを削除
+    // Simple parse: Find "timestamp": value and delete stale host IDs
     size_t pos = 0;
     while (true)
     {
-        // ホストIDを検索 ("xxxxxxxx": {)
+        // Search for host ID ("xxxxxxxx": {)
         pos = resp.find("\"timestamp\":", pos);
         if (pos == std::string::npos)
             break;
 
-        pos += 12; // "timestamp": の長さ
+        pos += 12; // Length of "timestamp":
         while (pos < resp.size() && (resp[pos] == ' ' || resp[pos] == '\t'))
             pos++;
 
@@ -280,7 +285,7 @@ bool FirebaseMatchingCpp::CleanupStaleHosts()
 
         if (ts > 0 && ts < threshold)
         {
-            // 対応するホストIDを逆向きに探す
+            // Search backwards for the corresponding host ID
             size_t braceOpen = resp.rfind('"', pos - 15);
             if (braceOpen != std::string::npos)
             {
@@ -306,7 +311,7 @@ bool FirebaseMatchingCpp::CleanupStaleHosts()
 }
 
 // ---------------------------------------------------------------------------
-// 外部IPアドレス取得
+// External IP Address Retrieval
 // ---------------------------------------------------------------------------
 std::string FirebaseMatchingCpp::GetExternalIp()
 {
@@ -339,7 +344,7 @@ std::string FirebaseMatchingCpp::GetExternalIp()
     std::string result;
     if (WinHttpSendRequest(req, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
                            WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
-        WinHttpReceiveResponse(req, nullptr))
+         WinHttpReceiveResponse(req, nullptr))
     {
         DWORD size = 0;
         char buf[64] = {};
@@ -359,7 +364,7 @@ std::string FirebaseMatchingCpp::GetExternalIp()
 }
 
 // ---------------------------------------------------------------------------
-// ハートビート
+// Heartbeat
 // ---------------------------------------------------------------------------
 void FirebaseMatchingCpp::StartHeartbeat(const std::string &hostId)
 {
@@ -387,9 +392,9 @@ void FirebaseMatchingCpp::HeartbeatThread(std::string hostId)
         if (!m_heartbeatRunning.load())
             break;
 
-        // 30分ごとにトークン再取得（有効期限1時間のため）
+        // Re-acquire token every 30 minutes (expires in 1 hour)
         heartbeatCount++;
-        if (heartbeatCount % 15 == 0)  // 2分 × 15 = 30分
+        if (heartbeatCount % 15 == 0)  // 2 minutes * 15 = 30 minutes
         {
             printf("[Firebase] Refreshing token...\n");
             if (!SignInAnonymously())
@@ -402,7 +407,7 @@ void FirebaseMatchingCpp::HeartbeatThread(std::string hostId)
             }
         }
 
-        // タイムスタンプを更新
+        // Update timestamp
         std::string path = "/hosts/" + hostId + "/timestamp.json?auth=" + m_idToken;
         std::wstring wpath(path.begin(), path.end());
         std::wstring dbHost = L"supermodel3-8343f-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -415,7 +420,7 @@ void FirebaseMatchingCpp::HeartbeatThread(std::string hostId)
 }
 
 // ---------------------------------------------------------------------------
-// WinHTTP ヘルパー関数
+// WinHTTP Helper Functions
 // ---------------------------------------------------------------------------
 std::string FirebaseMatchingCpp::HttpPost(const std::wstring &host, const std::wstring &path,
                                           const std::string &jsonBody, bool useHttps)
@@ -567,7 +572,6 @@ std::string FirebaseMatchingCpp::HttpPut(const std::wstring &host, const std::ws
     return result;
 }
 
-// PATCH
 std::string FirebaseMatchingCpp::HttpPatch(const std::wstring &host, const std::wstring &path,
                                            const std::string &jsonBody,
                                            const std::string & /*authToken*/, bool useHttps)
@@ -658,14 +662,14 @@ std::string FirebaseMatchingCpp::HttpDelete(const std::wstring &host, const std:
 }
 
 // ---------------------------------------------------------------------------
-// ユーティリティ
+// Utilities
 // ---------------------------------------------------------------------------
 long long FirebaseMatchingCpp::GetUnixTimestamp()
 {
     auto now = std::chrono::system_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(
                now.time_since_epoch())
-        .count();
+         .count();
 }
 
 std::string FirebaseMatchingCpp::EscapeJson(const std::string &s)
@@ -683,7 +687,7 @@ std::string FirebaseMatchingCpp::EscapeJson(const std::string &s)
     return out;
 }
 
-// IPアドレス→Firebaseキー変換（. # $ / [ ] を '-' に置換）
+// IP address -> Firebase key conversion (replaces '.', '#', '$', '/', '[', ']' with '-')
 std::string FirebaseMatchingCpp::SanitizeKeyFromIp(const std::string &ip)
 {
     std::string key = ip;
@@ -704,6 +708,8 @@ std::string FirebaseMatchingCpp::MakeHostJson(const HostInfoCpp &info)
     ss << "\"ip\":\"" << EscapeJson(info.ip) << "\",";
     if (!info.gametitle.empty())
         ss << "\"gametitle\":\"" << EscapeJson(info.gametitle) << "\",";
+    if (!info.servername.empty())
+        ss << "\"servername\":\"" << EscapeJson(info.servername) << "\",";
 
     for (const auto &kv : info.slots)
     {
@@ -716,7 +722,7 @@ std::string FirebaseMatchingCpp::MakeHostJson(const HostInfoCpp &info)
         ss << "},";
     }
 
-    // 末尾のカンマを除去
+    // Remove trailing comma
     std::string result = ss.str();
     if (result.back() == ',') result.pop_back();
     result += "}";

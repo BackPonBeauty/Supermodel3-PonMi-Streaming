@@ -1,9 +1,9 @@
 /**
  * RemoteSlotManager.h
  *
- * P1〜P4スロットの状態管理（ViGEm・UDP受信・Firebaseを統括する）
+ * State management for slots P1 to P4 (integrating ViGEm, UDP reception, and Firebase).
  *
- * VB.NET の Form1.vb の中核ロジックに相当する
+ * Corresponds to the core logic of Form1.vb on the VB.NET side.
  */
 #pragma once
 
@@ -18,20 +18,20 @@
 #include "FirebaseMatchingCpp.h"
 #include "UPnPHelper.h"
 
-// スロットモード
+// Slot modes
 enum class SlotMode
 {
-    LOCAL, // 物理コントローラー（またはエミュレーター直接入力）
-    REMOTE // UDP経由でリモートXInputを受信
+    LOCAL, // Physical controller (or direct emulator input)
+    REMOTE // Receive remote XInput via UDP
 };
 
-// スロット状態
+// Slot states
 struct SlotState
 {
     SlotMode mode = SlotMode::LOCAL;
-    bool isPhysical = false;  // 物理コントローラーが差さっている
-    bool isConnected = false; // リモート接続中（UDP受信中）
-    std::string label;        // 表示ラベル
+    bool isPhysical = false;  // Physical controller is plugged in
+    bool isConnected = false; // Remotely connected (receiving UDP)
+    std::string label;        // Display label
 };
 
 using SlotChangedCallback = std::function<void(int slot, const SlotState &state)>;
@@ -43,45 +43,45 @@ public:
     RemoteSlotManager();
     ~RemoteSlotManager();
 
-    // 初期化（ViGEm接続・物理コントローラー検出・Firebase初期化）
+    // Initialization (ViGEm connection, physical controller detection, Firebase initialization)
     bool Initialize(SlotChangedCallback slotCb = nullptr,
                     StatusCallback statusCb = nullptr);
     void Shutdown();
 
-    // スロットのモードを切り替え（LOCAL ⇔ REMOTE）
+    // Toggle slot mode (LOCAL <=> REMOTE)
     bool ToggleSlotMode(int slot);
 
-    // スロットをリモートモードに設定してUDP受信開始
+    // Set slot to remote mode and start receiving UDP
     bool SetRemote(int slot);
-    // スロットをローカルモードに設定してUDP受信停止
+    // Set slot to local mode and stop receiving UDP
     bool SetLocal(int slot);
 
-    // スロット状態を取得
+    // Get slot state
     const SlotState &GetSlotState(int slot) const;
 
-    // ホスト情報
+    // Host information
     const std::string &GetHostId() const { return m_hostId; }
     const std::string &GetExternalIp() const { return m_externalIp; }
 
-    // ViGEm・Firebase の状態
+    // ViGEm & Firebase state
     bool IsViGEmReady() const { return m_vigem.IsInitialized(); }
     bool IsFirebaseReady() const { return m_firebase.IsInitialized(); }
 
-    // --- 単独 ViGEm 操作（GUI連動・起動時使用）---
-    // ViGEmのみ初期化する（XInput受信は開始しない）
+    // --- Standalone ViGEm Operations (for GUI integration and startup) ---
+    // Initialize ViGEm only (does not start XInput receiving)
     bool InitViGEm();
-    // スロット1に仮想コントローラーを1個作成
+    // Create one virtual controller for Slot 1
     bool AddVirtualController();
-    // スロット1の仮想コントローラーを削除
+    // Remove the virtual controller for Slot 1
     void RemoveVirtualController();
-    // スロット1にUDP受信を開始する（port = 5000 + (linkplay-1)*4）
+    // Start UDP receiving for Slot 1 (port = 5000 + (linkplay-1)*4)
     bool StartListening(int linkplay);
-    // FirebaseスレッドをLaunch時に非同期で起動する
-    // gameTitle: ROM名（例: spikeofe）
-    void StartFirebaseAsync(const std::string &gameTitle = "");
+    // Start Firebase thread asynchronously on launch
+    // gameTitle: ROM name (e.g., spikeofe)
+    void StartFirebaseAsync(const std::string &gameTitle = "", const std::string &serverName = "");
 
-    // 物理XInputコントローラーの接続確認（xinput1_4.dll使用）
-    static bool IsXInputConnected(int userIndex); // userIndex: 0〜3
+    // Check physical XInput controller connection (uses xinput1_4.dll)
+    static bool IsXInputConnected(int userIndex); // userIndex: 0 to 3
 
     void SetSlotOccupied();
     void SetSlotAvailable();
@@ -98,19 +98,20 @@ private:
     XinputReceiver m_xinput;
     FirebaseMatchingCpp m_firebase;
 
-    std::array<SlotState, 5> m_slots; // インデックス 1〜4 を使用
+    std::array<SlotState, 5> m_slots; // Indexes 1 to 4 are used
     std::string m_hostId;
     std::string m_externalIp;
 
     SlotChangedCallback m_slotCb;
     StatusCallback m_statusCb;
 
-    // 仮想コントローラーが作成済みかどうか（スロット1固定）
+    // Whether the virtual controller has been added (fixed to Slot 1)
     bool m_virtualControllerAdded = false;
-    // INIから読み込んだlinkplay番号（1〜4）
+    // linkplay number read from INI (1 to 4)
     int m_linkplay = 0;
-    // 起動中のROM名（例: spikeofe）
+    // Name of the running ROM (e.g., spikeofe)
     std::string m_gameTitle;
+    std::string m_serverName;
 
     bool IsValidSlot(int slot) const { return slot >= 1 && slot <= 4; }
     void NotifySlotChanged(int slot);

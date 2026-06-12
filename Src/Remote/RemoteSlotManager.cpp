@@ -1,7 +1,7 @@
 /**
  * RemoteSlotManager.cpp
  *
- * P1〜P4スロット管理の実装
+ * Implementation of slots P1 to P4 management.
  */
 
 #ifdef SUPERMODEL_WIN32
@@ -38,7 +38,7 @@ static void LoadXInputForRemote()
 }
 
 // ---------------------------------------------------------------------------
-// XInput 物理コントローラー検出
+// XInput Physical Controller Detection
 // ---------------------------------------------------------------------------
 bool RemoteSlotManager::IsXInputConnected(int userIndex)
 {
@@ -51,7 +51,7 @@ bool RemoteSlotManager::IsXInputConnected(int userIndex)
 }
 
 // ---------------------------------------------------------------------------
-// コンストラクタ / デストラクタ
+// Constructor / Destructor
 // ---------------------------------------------------------------------------
 RemoteSlotManager::RemoteSlotManager()
 {
@@ -70,7 +70,7 @@ RemoteSlotManager::~RemoteSlotManager()
 }
 
 // ---------------------------------------------------------------------------
-// 初期化
+// Initialization
 // ---------------------------------------------------------------------------
 bool RemoteSlotManager::Initialize(SlotChangedCallback slotCb,
                                    StatusCallback statusCb)
@@ -78,29 +78,29 @@ bool RemoteSlotManager::Initialize(SlotChangedCallback slotCb,
     m_slotCb = slotCb;
     m_statusCb = statusCb;
 
-    NotifyStatus("初期化中...");
+    NotifyStatus("Initializing...");
 
-    // Winsock 初期化
+    // Initialize Winsock
     XinputReceiver::InitWinsock();
 
-    // ViGEm 初期化
+    // Initialize ViGEm
     if (!m_vigem.Initialize())
     {
         NotifyStatus("warning: " + m_vigem.GetStatusMessage());
-        // ViGEm失敗でも続行（ローカルモードのみ動作）
+        // Continue even if ViGEm fails (only local mode will work)
     }
     else
     {
         NotifyStatus(m_vigem.GetStatusMessage());
     }
 
-    // 物理コントローラー検出
+    // Detect physical controllers
     DetectPhysicalControllers();
 
-    // ホストID生成（8文字ランダム）
+    // Generate Host ID (8 random hex characters)
     m_hostId = GenerateHostId();
 
-    // 外部IPアドレス取得（別スレッドで非同期に）
+    // Get external IP address (asynchronously in a separate thread)
     std::thread([this]()
                 {
         m_externalIp = FirebaseMatchingCpp::GetExternalIp();
@@ -108,14 +108,14 @@ bool RemoteSlotManager::Initialize(SlotChangedCallback slotCb,
             NotifyStatus("output IP: " + m_externalIp); })
         .detach();
 
-    // Firebase 初期化（別スレッドで非同期に）
+    // Initialize Firebase (asynchronously in a separate thread)
     std::thread([this]()
                 {
         auto cb = [this](const std::string& msg) { NotifyStatus(msg); };
         if (m_firebase.Initialize(cb))
         {
             m_firebase.CleanupStaleHosts();
-            UpdateAvailableSlots(); // 初期登録
+            UpdateAvailableSlots(); // Initial registration
             m_firebase.StartHeartbeat(m_hostId);
         } })
         .detach();
@@ -144,14 +144,14 @@ void RemoteSlotManager::Shutdown()
 }
 
 // ---------------------------------------------------------------------------
-// 単独 ViGEm 操作（GUI連動・起動時使用）
+// Standalone ViGEm Operations (for GUI integration and startup)
 // ---------------------------------------------------------------------------
 bool RemoteSlotManager::InitViGEm()
 {
     if (m_vigem.IsInitialized())
-        return true; // 既に初期化済み
+        return true; // Already initialized
 
-    // Winsock は先に初期化
+    // Winsock initialized first
     XinputReceiver::InitWinsock();
 
     if (!m_vigem.Initialize())
@@ -204,22 +204,22 @@ bool RemoteSlotManager::StartListening(int linkplay)
         return false;
     }
 
-    m_linkplay = linkplay; // INI値を保存
+    m_linkplay = linkplay; // Save INI value
 
     if (linkplay == 0)
     {
-        // LinkPlay=0: P1 (slot 1) と P2 (slot 2) の両方をリモートとして立ち上げる
+        // LinkPlay=0: Set up both P1 (slot 1) and P2 (slot 2) as remote
         if (!m_vigem.IsInitialized())
         {
             if (!InitViGEm()) return false;
         }
 
-        // スロット1と2に仮想コントローラーを追加
+        // Add virtual controllers to slots 1 and 2
         m_vigem.AddController(1);
         m_vigem.AddController(2);
         m_virtualControllerAdded = true;
 
-        // UPnPポート開放（非同期）
+        // Open UPnP ports (asynchronous)
         std::thread([]()
                     {
                         UPnPHelper::OpenStreamingPorts(1);
@@ -230,7 +230,7 @@ bool RemoteSlotManager::StartListening(int linkplay)
         auto cb = [this](int s, const XInputPacket &p, const std::string &ip, int portVal)
         { OnXInputReceived(s, p, ip, portVal); };
 
-        // スロット1と2の両方でUDP受信開始
+        // Start UDP receiving on both slots 1 and 2
         m_xinput.StartListening(1, 5000, cb);
         m_xinput.StartListening(2, 5004, cb);
 
@@ -249,7 +249,7 @@ bool RemoteSlotManager::StartListening(int linkplay)
     }
     else
     {
-        // 従来通り単一スロット
+        // Traditional single slot
         if (!m_virtualControllerAdded)
         {
             printf("[RemoteSlotManager] StartListening: no virtual controller, call AddVirtualController first\n");
@@ -258,7 +258,7 @@ bool RemoteSlotManager::StartListening(int linkplay)
 
         int port = 5000 + (linkplay - 1) * 4;
 
-        // UPnPポート開放（非同期）
+        // Open UPnP ports (asynchronous)
         std::thread([linkplay]()
                     { UPnPHelper::OpenStreamingPorts(linkplay); })
             .detach();
@@ -278,29 +278,30 @@ bool RemoteSlotManager::StartListening(int linkplay)
 }
 
 // ---------------------------------------------------------------------------
-// Firebase スレッドを Launch 時に起動（Initialize() とは独立）
+// Start Firebase Thread on Launch (independent from Initialize())
 // ---------------------------------------------------------------------------
-void RemoteSlotManager::StartFirebaseAsync(const std::string &gameTitle)
+void RemoteSlotManager::StartFirebaseAsync(const std::string &gameTitle, const std::string &serverName)
 {
     if (m_hostId.empty())
         m_hostId = GenerateHostId();
 
-    m_gameTitle = gameTitle; // ROM名を保存
-    printf("[RemoteSlotManager] StartFirebaseAsync: hostId=%s gameTitle=%s\n",
-           m_hostId.c_str(), m_gameTitle.c_str());
+    m_gameTitle = gameTitle; // Save ROM name
+    m_serverName = serverName; // Save server name
+    printf("[RemoteSlotManager] StartFirebaseAsync: hostId=%s gameTitle=%s serverName=%s\n",
+           m_hostId.c_str(), m_gameTitle.c_str(), m_serverName.c_str());
 
-    // 外部IP取得 → Firebase初期化・登録・ハートビートを1スレッドで順番に実行
+    // Get external IP -> Initialize Firebase, register host, start heartbeat sequentially in one thread
     std::thread([this]()
                 {
-        // 外部IP取得を先に行う
+        // Get external IP first
         m_externalIp = FirebaseMatchingCpp::GetExternalIp();
         printf("[RemoteSlotManager] External IP: %s\n", m_externalIp.c_str());
 
         m_hostId = m_externalIp;
-for (char& c : m_hostId)
-    if (c == '.') c = '-';
+        for (char& c : m_hostId)
+            if (c == '.') c = '-';
 
-printf("[RemoteSlotManager] HostId: %s\n", m_hostId.c_str());
+        printf("[RemoteSlotManager] HostId: %s\n", m_hostId.c_str());
 
         if (m_externalIp.empty() || m_externalIp == "127.0.0.1")
         {
@@ -323,7 +324,7 @@ printf("[RemoteSlotManager] HostId: %s\n", m_hostId.c_str());
 }
 
 // ---------------------------------------------------------------------------
-// 物理コントローラー検出
+// Detect Physical Controllers
 // ---------------------------------------------------------------------------
 void RemoteSlotManager::DetectPhysicalControllers()
 {
@@ -359,14 +360,14 @@ void RemoteSlotManager::DetectPhysicalControllers()
 }
 
 // ---------------------------------------------------------------------------
-// スロットモード切り替え
+// Slot Mode Toggle
 // ---------------------------------------------------------------------------
 bool RemoteSlotManager::ToggleSlotMode(int slot)
 {
     if (!IsValidSlot(slot))
         return false;
     if (m_slots[slot].isPhysical)
-        return false; // 物理コントローラーは変更不可
+        return false; // Physical controllers cannot be changed
 
     if (m_slots[slot].mode == SlotMode::LOCAL)
         return SetRemote(slot);
@@ -379,17 +380,17 @@ bool RemoteSlotManager::SetRemote(int slot)
     if (!IsValidSlot(slot) || m_slots[slot].isPhysical)
         return false;
 
-    // ViGEm仮想コントローラー追加
+    // Add ViGEm virtual controller
     if (m_vigem.IsInitialized())
     {
         if (!m_vigem.AddController(slot))
         {
-            NotifyStatus("スロット" + std::to_string(slot) + ": Virtual controller failed to initialize");
+            NotifyStatus("Slot " + std::to_string(slot) + ": Virtual controller failed to initialize");
             return false;
         }
     }
 
-    // UDP受信開始
+    // Start UDP receiving
     int port = XinputReceiver::SlotToPort(slot);
     auto cb = [this](int s, const XInputPacket &p, const std::string &ip, int portVal)
     { OnXInputReceived(s, p, ip, portVal); };
@@ -411,10 +412,10 @@ bool RemoteSlotManager::SetLocal(int slot)
     if (!IsValidSlot(slot))
         return false;
 
-    // UDP受信停止
+    // Stop UDP receiving
     m_xinput.StopListening(slot);
 
-    // ViGEm仮想コントローラー削除
+    // Remove ViGEm virtual controller
     m_vigem.RemoveController(slot);
 
     m_slots[slot].mode = SlotMode::LOCAL;
@@ -429,14 +430,14 @@ bool RemoteSlotManager::SetLocal(int slot)
 }
 
 // ---------------------------------------------------------------------------
-// XInput受信コールバック（スレッドから呼ばれる）
+// XInput Receiving Callback (called from thread)
 // ---------------------------------------------------------------------------
 void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, const std::string &fromIP, int fromPort)
 {
     if (!IsValidSlot(slot) || !m_vigem.IsInitialized())
         return;
 
-    // LinkPlay=0 の時は、スロット1はg_handshake、スロット2はg_handshakeP2でIPを検証する
+    // When LinkPlay=0, Slot 1 uses g_handshake and Slot 2 uses g_handshakeP2 to verify the IP
     if (m_linkplay == 0)
     {
         if (slot == 1)
@@ -453,16 +454,16 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
         }
         else
         {
-            return; // LinkPlay=0ではP3/P4は受け付けない
+            return; // Slots P3/P4 are not accepted when LinkPlay=0
         }
     }
     else
     {
-        // 従来通り（単一スロット）の照合
+        // Verify for single slot (traditional)
         std::string controllerIP = g_handshake.GetControllerIP();
         if (fromIP != controllerIP)
         {
-            // 毎フレーム出すとログが埋まるため、状態が変わった時か、一定間隔で出す
+            // Output log on state change or at regular intervals to avoid flooding the log
             static uint32_t lastLogTime = 0;
             uint32_t now = GetTickCount();
             if (now - lastLogTime > 2000)
@@ -470,12 +471,12 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
                 printf("[RemoteSlotManager] XInput rejected: fromIP=%s controllerIP=%s\n", fromIP.c_str(), controllerIP.c_str());
                 lastLogTime = now;
             }
-            return; // 操作権限のないクライアントからの入力は無視
+            return; // Ignore inputs from clients without operational authority
         }
         g_handshake.NotifyControllerInput(fromIP, fromPort);
     }
 
-    // XInputPacket → XUSB_REPORT に変換
+    // Convert XInputPacket to XUSB_REPORT
     XUSB_REPORT report = {};
     report.wButtons = packet.wButtons;
     report.bLeftTrigger = packet.bLeftTrigger;
@@ -497,7 +498,7 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
 }
 
 // ---------------------------------------------------------------------------
-// Firebaseにスロット状態を更新
+// Update slot states on Firebase
 // ---------------------------------------------------------------------------
 void RemoteSlotManager::UpdateAvailableSlots()
 {
@@ -515,12 +516,12 @@ void RemoteSlotManager::UpdateAvailableSlots()
         available[m_linkplay] = true;
     }
 
-    // キー=サニタイズ済みIP、PUT/PATCHはlinkplay番号に基づく
-    m_firebase.RegisterHost(m_externalIp, available, m_linkplay, m_gameTitle);
+    // Key = sanitized IP, PUT/PATCH based on linkplay number
+    m_firebase.RegisterHost(m_externalIp, available, m_linkplay, m_gameTitle, m_serverName);
 }
 
 // ---------------------------------------------------------------------------
-// ユーティリティ
+// Utilities
 // ---------------------------------------------------------------------------
 const SlotState &RemoteSlotManager::GetSlotState(int slot) const
 {

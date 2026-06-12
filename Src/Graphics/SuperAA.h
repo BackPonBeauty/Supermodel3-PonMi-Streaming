@@ -7,8 +7,8 @@
 #include <sstream>
 #include <string>
 
-// NvencEncoder はストリーミング機能が有効な場合のみ使用
-// ENABLE_NVENC を定義してビルドする場合のみ有効
+// NvencEncoder is used only when the streaming feature is enabled.
+// Only valid when built with ENABLE_NVENC defined.
 #ifdef ENABLE_NVENC
 #include "NvencEncoder.h"
 #endif
@@ -90,18 +90,18 @@ private:
 	bool m_overlay;
 	std::string m_configFilePath;
 	void SaveToINI();
-	// フレーム遅延リングバッファ
+	// Frame delay ring buffer
 	static const int RING_BUFFER_SIZE = 10;
 	
-	GLuint m_frameRingBuffer[RING_BUFFER_SIZE]; // 2個のテクスチャ
-	int m_ringBufferIndex;						// 現在の書き込みインデックス
+	GLuint m_frameRingBuffer[RING_BUFFER_SIZE]; // 2 textures
+	int m_ringBufferIndex;						// Current write index
 
-	int m_frameCounter;		// フレームカウンタ
-	bool m_mixEnabled;		// mix有効フラグ
-	GLint m_locOldFrameTex1; // uOldFrameTex の location
+	int m_frameCounter;		// Frame counter
+	bool m_mixEnabled;		// Mix enable flag
+	GLint m_locOldFrameTex1; // Location of uOldFrameTex
 	//GLint m_locOldFrameTex2;
 	//GLint m_locOldFrameTex3;
-	GLint m_locMixEnabled;	// uMixEnabled の location
+	GLint m_locMixEnabled;	// Location of uMixEnabled
 #ifdef ENABLE_NVENC
     NvencEncoder m_nvencEncoder;
 #endif

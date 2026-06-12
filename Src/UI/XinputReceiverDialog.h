@@ -1,11 +1,11 @@
 /**
  * XinputReceiverDialog.h
  *
- * Win32 ダイアログ - XInput リモートコントローラー管理UI
- * VB.NET の Form1 に相当する別ウィンドウ
+ * Win32 Dialog - XInput Remote Controller Management UI
+ * A separate window equivalent to Form1 in VB.NET.
  *
- * エミュレーターと同時に表示され、P1〜P4スロットの
- * LOCAL/REMOTE 切り替えを行う
+ * Appears alongside the emulator to toggle LOCAL/REMOTE
+ * for slots P1 to P4.
  */
 #pragma once
 
@@ -22,39 +22,39 @@ public:
     XinputReceiverDialog();
     ~XinputReceiverDialog();
 
-    // エミュレーターと同時起動（別スレッドでウィンドウを作成）
+    // Start asynchronously alongside the emulator (creates window in a separate thread)
     bool StartAsync();
-    // ウィンドウを閉じてスレッドを停止
+    // Close the window and stop the thread
     void Stop();
 
     bool IsRunning() const { return m_running; }
 
-    // RemoteSlotManager へのアクセス（エミュレーター側から使用可能）
+    // Access to RemoteSlotManager (usable from the emulator side)
     RemoteSlotManager& GetSlotManager() { return m_slotManager; }
 
 private:
-    // ウィンドウスレッド本体
+    // Window thread body
     void WindowThread();
 
-    // Win32 コールバック
+    // Win32 Callbacks
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
     LRESULT HandleMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
-    // UI 作成・更新
+    // UI Creation and Updates
     void CreateControls(HWND hwnd);
     void UpdateSlotUI(int slot);
     void UpdateStatusBar(const std::string& msg);
 
-    // スロットボタン が押されたとき
+    // Triggered when a slot button is clicked
     void OnSlotButtonClicked(int slot);
 
-    // ウィンドウ定数
+    // Window constants
     static constexpr int WM_UPDATE_SLOT   = WM_USER + 1;
     static constexpr int WM_UPDATE_STATUS = WM_USER + 2;
 
-    // コントロールID
-    static constexpr int IDC_BTN_SLOT_BASE  = 100; // 100〜103: スロット1〜4ボタン
-    static constexpr int IDC_LBL_SLOT_BASE  = 110; // 110〜113: スロット1〜4ラベル
+    // Control IDs
+    static constexpr int IDC_BTN_SLOT_BASE  = 100; // 100 to 103: Slot 1 to 4 buttons
+    static constexpr int IDC_LBL_SLOT_BASE  = 110; // 110 to 113: Slot 1 to 4 labels
     static constexpr int IDC_LBL_HOSTID     = 120;
     static constexpr int IDC_LBL_IP         = 121;
     static constexpr int IDC_LBL_VIGEM      = 122;
@@ -62,8 +62,8 @@ private:
     static constexpr int IDC_LBL_STATUS     = 124;
 
     HWND m_hwnd = nullptr;
-    HWND m_btnSlot[5]  = {};  // インデックス 1〜4
-    HWND m_lblSlot[5]  = {};  // インデックス 1〜4
+    HWND m_btnSlot[5]  = {};  // Indexes 1 to 4
+    HWND m_lblSlot[5]  = {};  // Indexes 1 to 4
     HWND m_lblHostId   = nullptr;
     HWND m_lblIp       = nullptr;
     HWND m_lblViGEm    = nullptr;
@@ -77,7 +77,7 @@ private:
     std::string       m_pendingStatus;
 };
 
-// グローバルインスタンス（Main.cpp からアクセス）
+// Global instance (accessed from Main.cpp)
 extern XinputReceiverDialog* g_xinputDialog;
 
 #endif // SUPERMODEL_WIN32

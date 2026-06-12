@@ -28,7 +28,7 @@ SuperAA::SuperAA(int aaValue, CRTcolor CRTcolors, bool scanLine, int scanlineStr
                                                                                                                                                                                                                               m_locMixEnabled(-1)
 
 {
-    // リングバッファの初期化（テクスチャ生成は Init() で行う）
+    // Initialize ring buffer (texture generation is done in Init())
     for (int i = 0; i < RING_BUFFER_SIZE; i++)
     {
         m_frameRingBuffer[i] = 0;
@@ -52,7 +52,7 @@ void main() {
         static const char *vertexShader = R"glsl(
 #version 410 core
 	
-out vec2 vTexCoord; // フラグメントシェーダーへ渡すUV
+out vec2 vTexCoord; // UV coordinate passed to fragment shader
 
 void main(void)
 {
@@ -66,7 +66,7 @@ void main(void)
     vec4 v = vertices[gl_VertexID % 4];
     gl_Position = v;
     
-    // [-1, 1] を [0, 1] に変換してUV座標にする
+    // Map [-1, 1] range to [0, 1] for UV coordinates
     vTexCoord = (v.xy + 1.0) * 0.5;
 }
 )glsl";
@@ -86,7 +86,7 @@ void main(void)
         ccString += std::to_string((int)m_crtcolors);
         ccString += "\n";
 
-        // スキャンライン強度はUniformで制御するため、ここでのconst定義は削除
+        // Removed const definition here since scanline strength is controlled via Uniform
 
         std::string uhString = "const int uScreenHeight = ";
         uhString += std::to_string(m_totalYRes);
@@ -183,7 +183,7 @@ void main()
     float aspect = 1.33;
     if (uAspect > 0.0) aspect = uAspect;
 
-    // ===== 歪み計算 =====
+    // ===== Distortion calculation =====
     vec2 c = uv * 2.0 - 1.0;
     c.x *= aspect;
 
@@ -196,7 +196,7 @@ void main()
     c.x /= aspect;
     uv = (c + 1.0) * 0.5;
 
-    // ===== 範囲外チェック =====
+    // ===== Out of bounds check =====
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
         fragColor = vec4(0.0, 0.0, 0.0, 1.0);
         return;
@@ -205,7 +205,7 @@ void main()
     // ===== Fetch & 25-Frame Delay Interpolation =====
     vec3 color = texture(tex1, uv).rgb;
     
-    // ★ フレーム遅延 mix
+    // Frame delay mix
     if (uMixEnabled != 0)
     {
         vec3 oldColor1 = texture(uOldFrameTex1, uv).rgb;  
@@ -217,7 +217,7 @@ void main()
     }
 
 	
-    // ===== 色補正処理 =====
+    // ===== Color correction =====
     color = pow(color, vec3(cgamma));
     color *= colmatrix;
     color = vec3(sRGB(color.r), sRGB(color.g), sRGB(color.b));
@@ -239,7 +239,7 @@ void main()
 )glsl";
 
         std::string fs = fragmentShaderVersion + aaString + ccString + uhString + fragmentShaderBody;
-        // ★ デバッグ：シェーダソースに uOldFrameTex が含まれているか確認
+        // Debug: Verify if uOldFrameTex is present in shader source
         if (fs.find("uOldFrameTex") != std::string::npos)
         {
             printf("[DEBUG] uOldFrameTex found in shader source\n");
@@ -349,7 +349,7 @@ void SuperAA::Init(int width, int height, int port, bool streamingEnabled)
 void SuperAA::Draw()
 {
 
-    // ★ 初回初期化（リングバッファ）
+    // Initial initialization (ring buffer)
     static bool ringBufferInitialized = false;
     if (!ringBufferInitialized && m_width > 0 && m_height > 0)
     {
@@ -357,7 +357,7 @@ void SuperAA::Draw()
         ringBufferInitialized = true;
     }
 
-    // --- 1. ポストエフェクト（AA/CRT）の描画 ---
+    // --- 1. Post effect (AA/CRT) rendering ---
     if ((m_aa > 1) || (m_crtcolors != CRTcolor::None))
     {
         if (m_width > 0 && m_height > 0)
@@ -381,11 +381,11 @@ void SuperAA::Draw()
                 glUniform1f(m_locScanlineStrength, m_scanlineStrength);
             }
 
-            // barrelEffect 関連を送信
+            // Send barrelEffect variables
             if (m_locBarrelEffectEnable >= 0)
                 glUniform1i(m_locBarrelEffectEnable, m_barrelEffectEnable ? 1 : 0);
 
-            // barrelStrength を送信（動的な値を反映）
+            // Send barrelStrength (reflect dynamic values)
             if (m_locBarrelStrength >= 0)
                 glUniform1f(m_locBarrelStrength, m_barrelStrength);
 
@@ -395,11 +395,11 @@ void SuperAA::Draw()
             if (m_mixEnabled)
             {
 
-                // 1フレーム前
+                // 1 frame ago
                 int oldFrameIndex1 = (m_ringBufferIndex - 1 + RING_BUFFER_SIZE) % RING_BUFFER_SIZE;
-                // 2フレーム前
+                // 2 frames ago
                 // int oldFrameIndex2 = (m_ringBufferIndex - 2 + RING_BUFFER_SIZE) % RING_BUFFER_SIZE;
-                // 3フレーム前
+                // 3 frames ago
                 // int oldFrameIndex3 = (m_ringBufferIndex - 3 + RING_BUFFER_SIZE) % RING_BUFFER_SIZE;
 
                 glActiveTexture(GL_TEXTURE1);
@@ -414,7 +414,7 @@ void SuperAA::Draw()
                 glUniform1i(m_locMixEnabled, 0);
             }
 
-            // uAspect も送信
+            // Also send uAspect
             if (m_locUAspect >= 0)
                 glUniform1f(m_locUAspect, (float)m_width / (float)m_height);
 
@@ -424,7 +424,7 @@ void SuperAA::Draw()
             glBindVertexArray(0);
             m_shader.DisableShader();
 
-            // デフォルトFBOにもブリット
+            // Blit to default FBO as well
             glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo2.GetFBOID());
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
             glBlitFramebuffer(0, 0, m_width, m_height,
@@ -466,7 +466,7 @@ void SuperAA::Draw()
 
     glBindVertexArray(0);
 
-    // ★ 最後に古いフレームバッファを更新
+    // Update old frame buffer at the end
     UpdateFrameRingBuffer();
 }
 
@@ -494,7 +494,7 @@ void SuperAA::ToggleOverlay()
 
 void SuperAA::IncreaseScanlineStrength()
 {
-    const float STEP = 0.01f; // 5%ずつ変更
+    const float STEP = 0.01f; // Change by 1%
     m_scanlineStrength += STEP;
     if (m_scanlineStrength > 1.0f)
         m_scanlineStrength = 1.0f;
@@ -514,7 +514,7 @@ void SuperAA::DecreaseScanlineStrength()
 
 void SuperAA::IncreaseBarrelStrength()
 {
-    const float STEP = 0.001f; // 0.1%ずつ変更
+    const float STEP = 0.001f; // Change by 0.1%
     m_barrelStrength += STEP;
     if (m_barrelStrength > 0.100f)
         m_barrelStrength = 0.100f;
@@ -534,7 +534,7 @@ void SuperAA::DecreaseBarrelStrength()
 
 void SuperAA::IncreaseMixStrength()
 {
-    const float STEP = 0.1f; // 0.1%ずつ変更
+    const float STEP = 0.1f; // Change by 10%
     m_MixStrength += STEP;
     if (m_MixStrength > 1.0f)
         m_MixStrength = 1.0f;
@@ -551,7 +551,7 @@ void SuperAA::DecreaseMixStrength()
 }
 
 // ============================================================================
-// ★ 新規追加：ini ファイル即座保存関数
+// ===== Save to INI file immediately =====
 // ============================================================================
 void SuperAA::SaveToINI()
 {
@@ -561,15 +561,15 @@ void SuperAA::SaveToINI()
         return;
     }
 
-    // 現在の値を 0～100 の形式に変換
-    // ScanlineStrength: 内部は (1 - value) なので逆算
+    // Convert current value to 0-100 range
+    // ScanlineStrength: Internal is (1 - value), so reverse calculate
     int scanlineValue = static_cast<int>(m_scanlineStrength * 100.0f);
     if (scanlineValue < 0)
         scanlineValue = 0;
     if (scanlineValue > 100)
         scanlineValue = 100;
 
-    // BarrelStrength: 内部は value / 100.0f なので 100を掛ける
+    // BarrelStrength: Internal is value / 1000.0f, so multiply by 1000
     int barrelValue = static_cast<int>(m_barrelStrength * 1000.0f);
     if (barrelValue < 0)
         barrelValue = 0;
@@ -579,7 +579,7 @@ void SuperAA::SaveToINI()
     printf("[SuperAA] Saving to ini: ScanlineStrength=%d, BarrelStrength=%d\n",
            scanlineValue, barrelValue);
 
-    // ini ファイルを読み込む
+    // Read INI file
     std::ifstream infile(m_configFilePath);
     if (!infile.is_open())
     {
@@ -590,15 +590,15 @@ void SuperAA::SaveToINI()
     std::stringstream buffer;
     std::string line;
 
-    // ファイルの内容を処理
+    // Process file content
     while (std::getline(infile, line))
     {
-        // ScanlineStrength を検索・置換
+        // Find and replace ScanlineStrength
         if (line.find("ScanlineStrength") != std::string::npos && line.find('=') != std::string::npos)
         {
             buffer << "ScanlineStrength = " << scanlineValue << '\n';
         }
-        // BarrelStrength を検索・置換
+        // Find and replace BarrelStrength
         else if (line.find("BarrelStrength") != std::string::npos && line.find('=') != std::string::npos)
         {
             buffer << "BarrelStrength = " << barrelValue << '\n';
@@ -610,7 +610,7 @@ void SuperAA::SaveToINI()
     }
     infile.close();
 
-    // ファイルに書き込む
+    // Write to file
     std::ofstream outfile(m_configFilePath);
     if (!outfile.is_open())
     {
@@ -631,10 +631,10 @@ GLuint SuperAA::GetTargetID()
 GLuint LoadPNGTexture(const char *filename)
 {
     int width, height, channels;
-    // 上下反転が必要な場合は true に（OpenGLは左下が原点のため）
+    // Set to true if vertical flip is needed (since OpenGL origin is bottom-left)
     stbi_set_flip_vertically_on_load(true);
 
-    unsigned char *data = stbi_load(filename, &width, &height, &channels, 4); // 強制的にRGBAで読み込む
+    unsigned char *data = stbi_load(filename, &width, &height, &channels, 4); // Force load as RGBA
 
     if (!data)
     {
@@ -646,21 +646,21 @@ GLuint LoadPNGTexture(const char *filename)
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    // PNGテクスチャの設定（RGBAを指定）
+    // PNG texture settings (specify RGBA)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-    // フィルタリング設定（オーバーレイなので綺麗に見えるよう線形補間）
+    // Filtering settings (linear interpolation for cleaner overlay)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // 画面端の処理
+    // Screen edge wrapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     stbi_image_free(data);
     return textureID;
 }
-// --- ヘルパー関数: メモリから読み込む ---
+// --- Helper function: Load from memory ---
 GLuint LoadTextureFromMemory(const unsigned char *data, int len)
 {
     int width, height, channels;
@@ -682,22 +682,22 @@ GLuint LoadTextureFromMemory(const unsigned char *data, int len)
 }
 void SuperAA::LoadOverlayByTitle(const std::string &gameTitle)
 {
-    // 1. タイトル文字列の整形 (空白をハイフンに)
+    // 1. Format title string (replace spaces with hyphens)
     std::string processedTitle = gameTitle;
     std::replace(processedTitle.begin(), processedTitle.end(), ' ', '-');
 
-    // 2. 古いテクスチャの破棄
+    // 2. Destroy old texture
     if (m_overlayTex != 0)
     {
         glDeleteTextures(1, &m_overlayTex);
         m_overlayTex = 0;
     }
 
-    // 3. まずファイルを探す
+    // 3. Search for file first
     std::string path = "image/" + processedTitle + ".png";
     m_overlayTex = LoadPNGTexture(path.c_str());
 
-    // 4. ファイルがなければ、埋め込み画像を読み込む
+    // 4. If file not found, load embedded image
     if (m_overlayTex == 0)
     {
         printf("[SuperAA] Overlay file not found.\n");
@@ -713,7 +713,7 @@ void SuperAA::InitFrameRingBuffer(int width, int height)
 {
     printf("[SuperAA] InitFrameRingBuffer: %d x %d\n", width, height);
 
-    // 既存のテクスチャを削除
+    // Delete existing textures
     for (int i = 0; i < RING_BUFFER_SIZE; i++)
     {
         if (m_frameRingBuffer[i] != 0)
@@ -723,7 +723,7 @@ void SuperAA::InitFrameRingBuffer(int width, int height)
         }
     }
 
-    // 新しいテクスチャを生成
+    // Generate new textures
     for (int i = 0; i < RING_BUFFER_SIZE; i++)
     {
         glGenTextures(1, &m_frameRingBuffer[i]);
@@ -753,10 +753,10 @@ void SuperAA::UpdateFrameRingBuffer()
         return;
     }
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); // ★ 一度リセット
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); // Reset once
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo.GetFBOID());
 
-    glReadBuffer(GL_COLOR_ATTACHMENT0); // ★ 読み込み対象を明示的に指定
+    glReadBuffer(GL_COLOR_ATTACHMENT0); // Explicitly specify read source
 
     glBindTexture(GL_TEXTURE_2D, m_frameRingBuffer[m_ringBufferIndex]);
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, m_width, m_height);
@@ -771,7 +771,7 @@ void SuperAA::UpdateFrameRingBuffer()
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
     m_ringBufferIndex = (m_ringBufferIndex + 1) % RING_BUFFER_SIZE;
-    // NVENCエンコード（FBOテクスチャを直接渡す）
+    // NVENC encode (pass FBO texture directly)
     if (m_streamingEnabled)
         m_nvencEncoder.EncodeFrame(m_fbo2.GetTextureID());
 }
