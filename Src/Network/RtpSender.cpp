@@ -5,8 +5,9 @@
 #include <ctime>
 #include <mswsock.h>
 
-bool RtpSender::Init(const char *destIP, int destPort)
+bool RtpSender::Init(const char *destIP, int destPort, bool useH265)
 {
+    m_useH265 = useH265;
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
 
@@ -65,10 +66,40 @@ void RtpSender::Send(const uint8_t *nalData, int size)
     {
         SendRtpPacket(nal, nalSize, true);
     }
+    else if (m_useH265)
+    {
+        // HEVC FU fragmentation
+        uint8_t type = (nal[0] & 0x7E) >> 1;
+        uint8_t payloadHeader0 = (49 << 1) | (nal[0] & 0x01);
+        uint8_t payloadHeader1 = nal[1];
+        const uint8_t *payload = nal + 2;
+        int remaining = nalSize - 2;
+        bool first = true;
+
+        while (remaining > 0)
+        {
+            int fragSize = (remaining > RTP_MTU - 3) ? RTP_MTU - 3 : remaining;
+            bool last = (remaining <= RTP_MTU - 3);
+
+            uint8_t fuBuf[RTP_MTU + 3];
+            fuBuf[0] = payloadHeader0;
+            fuBuf[1] = payloadHeader1;
+            fuBuf[2] = (first ? 0x80 : 0) | (last ? 0x40 : 0) | type;
+            memcpy(fuBuf + 3, payload, fragSize);
+
+            SendRtpPacket(fuBuf, fragSize + 3, last);
+
+            payload += fragSize;
+            remaining -= fragSize;
+            first = false;
+        }
+    }
     else
     {
-        // FU-A fragmentation
-        uint8_t nalHeader = nal[0];
+        // H.264 FU-A fragmentation
+        uint8_t type = nal[0] & 0x1F;
+        uint8_t nri = nal[0] & 0x60;
+        uint8_t fuIndicator = nri | 28; // FU-A type is 28
         const uint8_t *payload = nal + 1;
         int remaining = nalSize - 1;
         bool first = true;
@@ -79,8 +110,8 @@ void RtpSender::Send(const uint8_t *nalData, int size)
             bool last = (remaining <= RTP_MTU - 2);
 
             uint8_t fuBuf[RTP_MTU + 2];
-            fuBuf[0] = (nalHeader & 0xE0) | 28;
-            fuBuf[1] = (nalHeader & 0x1F) | (first ? 0x80 : 0) | (last ? 0x40 : 0);
+            fuBuf[0] = fuIndicator;
+            fuBuf[1] = (first ? 0x80 : 0) | (last ? 0x40 : 0) | type;
             memcpy(fuBuf + 2, payload, fragSize);
 
             SendRtpPacket(fuBuf, fragSize + 2, last);

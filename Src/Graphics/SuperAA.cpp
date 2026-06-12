@@ -315,7 +315,7 @@ SuperAA::~SuperAA()
 // =========================
 // Init
 // =========================
-void SuperAA::Init(int width, int height, int port, bool streamingEnabled)
+void SuperAA::Init(int width, int height, int port, bool streamingEnabled, const std::string &codec)
 {
     if ((m_aa > 1) || (m_crtcolors != CRTcolor::None))
     {
@@ -330,7 +330,7 @@ void SuperAA::Init(int width, int height, int port, bool streamingEnabled)
 
     if (streamingEnabled)
     {
-        m_streamingEnabled = m_nvencEncoder.Init(width, height, 60, port,
+        m_streamingEnabled = m_nvencEncoder.Init(width, height, 60, port, codec,
                                                  [](const uint8_t *data, int size)
                                                  {
                                                  });

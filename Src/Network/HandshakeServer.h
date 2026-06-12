@@ -20,7 +20,7 @@ public:
     HandshakeServer() = default;
     ~HandshakeServer() { Stop(); }
 
-    bool Start(int port, int width, int height,
+    bool Start(int port, int width, int height, const std::string &codec,
                OnClientListChangedCallback onListChanged);
 
     void Stop();
@@ -52,6 +52,7 @@ private:
 
     OnClientListChangedCallback m_onListChanged;
     int m_port = 5001;
+    std::string m_codec;
 };
 
 extern HandshakeServer g_handshake;

@@ -1,4 +1,4 @@
-﻿#include "SDLIncludes.h"
+#include "SDLIncludes.h"
 #include <GL/glew.h>
 #include <cstring>
 #include <iostream>
@@ -291,7 +291,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
          int &musicVol, int &sfxVol, int &balance, bool &vEmulateSound,
          bool &vEmulateDSB, bool &vFlipStereo, bool &vLegacySoundDSP,
          int &selectedInputType, int &selectedCrosshair, int &selectedStyle,
-         bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet, bool &vStreaming, RemoteSlotManager* pRemote)
+          bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet, bool &vStreaming, std::string &vDecoder, RemoteSlotManager* pRemote)
 {
     // Calculate base scale
     float scale = io.DisplaySize.y / 600.0f;
@@ -1053,6 +1053,25 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Separator();
                     ImGui::Spacing();
 
+                    // Decoder selection combo
+                    {
+                        const char* decoders[] = { "H264", "H265" };
+                        int selectedDecoder = (vDecoder == "H264") ? 0 : 1;
+                        ImGui::Text("Decoder");
+                        ImGui::SameLine(labelWidth);
+                        ImGui::PushItemWidth(100.0f * scale);
+                        if (ImGui::Combo("##Decoder", &selectedDecoder, decoders, IM_ARRAYSIZE(decoders)))
+                        {
+                            vDecoder = decoders[selectedDecoder];
+                            saveSettings = true;
+                        }
+                        ImGui::PopItemWidth();
+                    }
+
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    ImGui::Spacing();
+
                     // --- Text input items ---
                     /*
                     static char bufPortIn[8] = "1970";
@@ -1785,6 +1804,12 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
     bool vNetwork = config["Network"].ValueAs<bool>();
     bool vSimulateNet = config["SimulateNet"].ValueAs<bool>();
     bool vStreaming = config["Streaming"].ValueAsDefault<bool>(false);
+    std::string vDecoder = "H265";
+    if (config.TryGet("Decoder") && !config["Decoder"].Empty()) {
+        vDecoder = config["Decoder"].ValueAs<std::string>();
+    } else if (config.TryGet("Decorder") && !config["Decorder"].Empty()) {
+        vDecoder = config["Decorder"].ValueAs<std::string>();
+    }
 
     // Network strings
     strncpy(bufPortIn, config["PortIn"].ValueAs<std::string>().c_str(), sizeof(bufPortIn) - 1);
@@ -1960,7 +1985,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
             vNoWhiteFlash, vHideCMD, vDefaultScanline, vTrueHz, superSampling, selectedCRT, selectedUpscale, ppcFreq, WindowXPosition, WindowYPosition, Scanline, Barrel,
             musicVol, sfxVol, balance, vEmulateSound, vEmulateDSB, vFlipStereo,
             vLegacySoundDSP, selectedInputType, selectedCrosshair, selectedStyle,
-            vForceFeedback, vNetwork, vSimulateNet, vStreaming, pRemote);
+            vForceFeedback, vNetwork, vSimulateNet, vStreaming, vDecoder, pRemote);
         if (exit)
         {
             running = false;
@@ -2073,6 +2098,8 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         u["Network"] = (vNetwork ? "1" : "0");
         u["SimulateNet"] = (vSimulateNet ? "1" : "0");
         u["Streaming"] = (vStreaming ? "1" : "0");
+        u["Decoder"] = vDecoder;
+        u["Decorder"] = vDecoder;
         // Keep linkplay
         u["PortIn"] = bufPortIn;
         u["PortOut"] = bufPortOut;

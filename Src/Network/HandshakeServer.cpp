@@ -9,12 +9,13 @@
 
 #define TO_SOCKET(p) (reinterpret_cast<SOCKET>(p))
 
-bool HandshakeServer::Start(int port, int width, int height,
+bool HandshakeServer::Start(int port, int width, int height, const std::string &codec,
                              OnClientListChangedCallback onListChanged)
 {
     m_port = port;
     m_width = width;
     m_height = height;
+    m_codec = codec;
     m_onListChanged = onListChanged;
 
     WSADATA wsa;
@@ -133,8 +134,8 @@ void HandshakeServer::ListenLoop()
 
             if (allowed)
             {
-                char ok[32];
-                snprintf(ok, sizeof(ok), "OK %d %d", m_width, m_height);
+                char ok[64];
+                snprintf(ok, sizeof(ok), "OK %d %d %s", m_width, m_height, m_codec.c_str());
                 sendto(TO_SOCKET(m_socket), ok, (int)strlen(ok), 0,
                        (sockaddr *)&client, clientLen);
 
@@ -204,12 +205,22 @@ void HandshakeServer::HeartbeatLoop()
                 }
             }
 
-            // コントローラー（先頭クライアント）の1分無操作判定
-            if (!m_clients.empty())
+            // コントローラー（先頭クライアント）の1分無操作判定 (P1スロットのみ対象)
+            if (this == &g_handshake && !m_clients.empty())
             {
                 if (now - m_controllerLastInputTime.load() > 60000)
                 {
                     printf("[Handshake] Controller client %s timed out (1 min inactivity). Kicking.\n", m_clients[0].ip.c_str());
+
+                    // クライアントへKICKパケットを送信
+                    sockaddr_in clientAddr = {};
+                    clientAddr.sin_family = AF_INET;
+                    clientAddr.sin_port = htons(m_clients[0].port);
+                    clientAddr.sin_addr.s_addr = inet_addr(m_clients[0].ip.c_str());
+                    const char *kickMsg = "KICK";
+                    sendto(TO_SOCKET(m_socket), kickMsg, (int)strlen(kickMsg), 0,
+                           (sockaddr *)&clientAddr, sizeof(clientAddr));
+
                     m_clients.erase(m_clients.begin());
                     listChanged = true;
 

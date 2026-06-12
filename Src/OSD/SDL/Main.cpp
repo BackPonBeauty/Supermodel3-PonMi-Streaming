@@ -1122,15 +1122,21 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
   bool m_Overlay = s_runtime_config["Overlay"].ValueAs<bool>();
   bool m_scanLine = s_runtime_config["DefaultScanline"].ValueAs<bool>();
   int videoPort = s_runtime_config["VideoPort"].ValueAs<int>();
+  std::string decoderCodec = "H265";
+  if (s_runtime_config.TryGet("Decoder") && !s_runtime_config["Decoder"].Empty())
+    decoderCodec = s_runtime_config["Decoder"].ValueAs<std::string>();
+  else if (s_runtime_config.TryGet("Decorder") && !s_runtime_config["Decorder"].Empty())
+    decoderCodec = s_runtime_config["Decorder"].ValueAs<std::string>();
+
   SuperAA *superAA = new SuperAA(aaValue, CRTcolors, m_scanLine, scanlineStrength, totalXRes, totalYRes, BarrelStrength, game.title.c_str(), m_wideScreen, m_Overlay, s_configFilePath.c_str());
-  superAA->Init(totalXRes, totalYRes, videoPort, streamingEnabled); // pass actual frame sizes here
+  superAA->Init(totalXRes, totalYRes, videoPort, streamingEnabled, decoderCodec); // pass actual frame sizes here
 
   int handshakePort = s_runtime_config["HandshakePort"].ValueAs<int>();
 
   int audioPort = s_runtime_config["AudioPort"].ValueAs<int>();
   
   streamingEnabled = superAA->IsStreamingEnabled();
-  printf("[Streaming] %s\n", streamingEnabled ? "true" : "false");
+  printf("[Streaming] %s (codec: %s)\n", streamingEnabled ? "true" : "false", decoderCodec.c_str());
   // Moved after superAA creation
   if (streamingEnabled)
   {
@@ -1172,11 +1178,11 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
     if (linkplay == 0)
     {
         printf("[Main] LinkPlay=0 -> Launching BOTH P1 (port %d) and P2 (port %d) handshake servers\n", handshakePort, handshakePortP2);
-        g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(),
+        g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), decoderCodec,
                           [UpdateStreamingDestinations](const std::vector<std::string> &/*clientIPs*/) {
                               UpdateStreamingDestinations();
                           });
-        g_handshakeP2.Start(handshakePortP2, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(),
+        g_handshakeP2.Start(handshakePortP2, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), decoderCodec,
                             [UpdateStreamingDestinations](const std::vector<std::string> &/*clientIPs*/) {
                                 UpdateStreamingDestinations();
                             });
@@ -1184,7 +1190,7 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
     else
     {
         printf("[Main] LinkPlay=%d -> Launching single handshake server on port %d\n", linkplay, handshakePort);
-        g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(),
+        g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), decoderCodec,
                           [UpdateStreamingDestinations](const std::vector<std::string> &/*clientIPs*/) {
                               UpdateStreamingDestinations();
                           });
@@ -1853,6 +1859,8 @@ Util::Config::Node DefaultConfig()
   config.Set("PortOut", unsigned(1971), "Network");
   config.Set<std::string>("AddressOut", "127.0.0.1", "Network", "", "");
   config.Set("Streaming", false, "Network");
+  config.Set<std::string>("Decoder", "H265", "Network", "", "");
+  config.Set<std::string>("Decorder", "H265", "Network", "", "");
   config.Set("HandshakePort", 5001, "Network");
   config.Set("VideoPort", 5002, "Network");
   config.Set("AudioPort", 5003, "Network");

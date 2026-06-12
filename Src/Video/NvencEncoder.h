@@ -32,7 +32,7 @@ public:
     ~NvencEncoder() { Shutdown(); }
 
     
-    bool Init(int width, int height, int fps, int port, OnEncodedCallback cb);
+    bool Init(int width, int height, int fps, int port, const std::string &codec, OnEncodedCallback cb);
     void EncodeFrame(unsigned int glTextureID);
     void SetDestIP(const std::string &ip);
     void SetDestIPs(const std::vector<std::string> &ips);
@@ -73,4 +73,5 @@ private:
     // RTP transmission
     RtpSender m_rtpSender;
     bool m_rtpEnabled = false;
+    std::string m_codec;
 };

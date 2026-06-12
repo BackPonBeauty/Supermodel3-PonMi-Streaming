@@ -95,6 +95,7 @@ static const char s_defaultConfigFileContents[] =
         "LinkPlay = 1\n"
         "ServerName = \"\"\n"
         "Streaming = false\n"
+        "Decoder = H265\n"
         "HandshakePort = 5001\n"
         "VideoPort = 5002\n"
         "AudioPort = 5003\n"

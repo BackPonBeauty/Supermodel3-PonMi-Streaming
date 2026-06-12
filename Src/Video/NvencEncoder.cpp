@@ -84,13 +84,16 @@ bool NvencEncoder::CreateEncoder()
         return false;
     }
 
+    bool useH265 = (m_codec != "H264");
+    GUID codecGuid = useH265 ? NV_ENC_CODEC_HEVC_GUID : NV_ENC_CODEC_H264_GUID;
+
     // Retrieve preset configurations
     NV_ENC_PRESET_CONFIG presetConfig = {};
     presetConfig.version = NV_ENC_PRESET_CONFIG_VER;
     presetConfig.presetCfg.version = NV_ENC_CONFIG_VER;
     m_nvenc.nvEncGetEncodePresetConfigEx(
         m_encoder,
-        NV_ENC_CODEC_H264_GUID,
+        codecGuid,
         NV_ENC_PRESET_P1_GUID,
         NV_ENC_TUNING_INFO_ULTRA_LOW_LATENCY,
         &presetConfig);
@@ -99,20 +102,29 @@ bool NvencEncoder::CreateEncoder()
 
     // Low-latency CBR configuration
     encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
-    encConfig.rcParams.averageBitRate = 3000000; // 4Mbps
+    encConfig.rcParams.averageBitRate = 3000000; // 3Mbps
     encConfig.rcParams.maxBitRate = 3000000;
     encConfig.rcParams.vbvBufferSize = 0;
     encConfig.rcParams.vbvInitialDelay = 0;
     encConfig.frameIntervalP = 1; // No B-frames
     encConfig.gopLength = m_fps;
 
-    encConfig.encodeCodecConfig.h264Config.idrPeriod = m_fps;
-    encConfig.encodeCodecConfig.h264Config.sliceMode = 0;
-    encConfig.encodeCodecConfig.h264Config.sliceModeData = 0;
+    if (useH265)
+    {
+        encConfig.encodeCodecConfig.hevcConfig.idrPeriod = m_fps;
+        encConfig.encodeCodecConfig.hevcConfig.sliceMode = 0;
+        encConfig.encodeCodecConfig.hevcConfig.sliceModeData = 0;
+    }
+    else
+    {
+        encConfig.encodeCodecConfig.h264Config.idrPeriod = m_fps;
+        encConfig.encodeCodecConfig.h264Config.sliceMode = 0;
+        encConfig.encodeCodecConfig.h264Config.sliceModeData = 0;
+    }
 
     NV_ENC_INITIALIZE_PARAMS initParams = {};
     initParams.version = NV_ENC_INITIALIZE_PARAMS_VER;
-    initParams.encodeGUID = NV_ENC_CODEC_H264_GUID;
+    initParams.encodeGUID = codecGuid;
     initParams.presetGUID = NV_ENC_PRESET_P1_GUID;
     initParams.encodeWidth = m_width;
     initParams.encodeHeight = m_height;
@@ -131,7 +143,7 @@ bool NvencEncoder::CreateEncoder()
         return false;
     }
 
-    printf("[NVENC] Encoder initialized %dx%d @%dfps\n", m_width, m_height, m_fps);
+    printf("[NVENC] Encoder initialized (%s) %dx%d @%dfps\n", useH265 ? "H265" : "H264", m_width, m_height, m_fps);
     return true;
 }
 
@@ -173,12 +185,13 @@ bool NvencEncoder::AllocateBuffers()
 }
 
 // ============================================================
-bool NvencEncoder::Init(int width, int height, int fps, int port, OnEncodedCallback cb)
+bool NvencEncoder::Init(int width, int height, int fps, int port, const std::string &codec, OnEncodedCallback cb)
 {
     m_width = width;
     m_height = height;
     m_fps = fps;
     m_callback = cb;
+    m_codec = codec;
 
     if (!LoadNvencDll())
         return false;
@@ -189,7 +202,7 @@ bool NvencEncoder::Init(int width, int height, int fps, int port, OnEncodedCallb
     if (!AllocateBuffers())
         return false;
 
-    m_rtpEnabled = m_rtpSender.Init("127.0.0.1", port);
+    m_rtpEnabled = m_rtpSender.Init("127.0.0.1", port, (codec != "H264"));
 
     printf("[NVENC] Init complete\n");
     return true;

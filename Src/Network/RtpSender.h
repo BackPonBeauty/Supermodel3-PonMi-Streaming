@@ -11,7 +11,7 @@ public:
     RtpSender() = default;
     ~RtpSender() { Shutdown(); }
 
-    bool Init(const char *destIP, int destPort);
+    bool Init(const char *destIP, int destPort, bool useH265 = true);
     void Send(const uint8_t *nalData, int size);
     void Shutdown();
     void SetDestPort(int port);
@@ -31,5 +31,5 @@ private:
     uint32_t m_ssrc = 0;
 
     static constexpr int RTP_MTU = 1400;
-
+    bool m_useH265 = true;
 };
