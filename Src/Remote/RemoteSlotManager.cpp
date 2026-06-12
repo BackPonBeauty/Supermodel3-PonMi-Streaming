@@ -14,6 +14,7 @@
 #include <random>
 #include "UPnPHelper.h"
 #include "Network/HandshakeServer.h"
+#include <cmath>
 
 // #pragma comment(lib, "xinput.lib")
 
@@ -437,6 +438,14 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
     if (!IsValidSlot(slot) || !m_vigem.IsInitialized())
         return;
 
+    bool hasActiveInput = (packet.wButtons != 0) ||
+                          (packet.bLeftTrigger > 20) ||
+                          (packet.bRightTrigger > 20) ||
+                          (std::abs(packet.sThumbLX) > 8000) ||
+                          (std::abs(packet.sThumbLY) > 8000) ||
+                          (std::abs(packet.sThumbRX) > 9000) ||
+                          (std::abs(packet.sThumbRY) > 9000);
+
     // When LinkPlay=0, Slot 1 uses g_handshake and Slot 2 uses g_handshakeP2 to verify the IP
     if (m_linkplay == 0)
     {
@@ -444,13 +453,15 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
         {
             std::string controllerIP = g_handshake.GetControllerIP();
             if (fromIP != controllerIP) return;
-            g_handshake.NotifyControllerInput(fromIP, fromPort);
+            if (hasActiveInput)
+                g_handshake.NotifyControllerInput(fromIP, fromPort);
         }
         else if (slot == 2)
         {
             std::string controllerIP = g_handshakeP2.GetControllerIP();
             if (fromIP != controllerIP) return;
-            g_handshakeP2.NotifyControllerInput(fromIP, fromPort);
+            if (hasActiveInput)
+                g_handshakeP2.NotifyControllerInput(fromIP, fromPort);
         }
         else
         {
@@ -473,7 +484,8 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
             }
             return; // Ignore inputs from clients without operational authority
         }
-        g_handshake.NotifyControllerInput(fromIP, fromPort);
+        if (hasActiveInput)
+            g_handshake.NotifyControllerInput(fromIP, fromPort);
     }
 
     // Convert XInputPacket to XUSB_REPORT
