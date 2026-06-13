@@ -33,6 +33,7 @@ public:
 
     
     bool Init(int width, int height, int fps, int port, const std::string &codec, OnEncodedCallback cb);
+    bool ReconfigureBitrate(int avgBitrate, int maxBitrate);
     void EncodeFrame(unsigned int glTextureID);
     void SetDestIP(const std::string &ip);
     void SetDestIPs(const std::vector<std::string> &ips);

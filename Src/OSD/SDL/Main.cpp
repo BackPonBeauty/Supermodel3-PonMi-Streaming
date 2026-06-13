@@ -1123,7 +1123,9 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
   bool m_scanLine = s_runtime_config["DefaultScanline"].ValueAs<bool>();
   int videoPort = s_runtime_config["VideoPort"].ValueAs<int>();
   std::string decoderCodec = "H265";
-  if (s_runtime_config.TryGet("Decoder") && !s_runtime_config["Decoder"].Empty())
+  if (s_runtime_config.TryGet("Codec") && !s_runtime_config["Codec"].Empty())
+    decoderCodec = s_runtime_config["Codec"].ValueAs<std::string>();
+  else if (s_runtime_config.TryGet("Decoder") && !s_runtime_config["Decoder"].Empty())
     decoderCodec = s_runtime_config["Decoder"].ValueAs<std::string>();
   else if (s_runtime_config.TryGet("Decorder") && !s_runtime_config["Decorder"].Empty())
     decoderCodec = s_runtime_config["Decorder"].ValueAs<std::string>();
@@ -1242,6 +1244,76 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
 #endif
   while (!quit)
   {
+    static uint32_t lastBitrateUpdate = 0;
+    uint32_t now = GetTickCount();
+    if (streamingEnabled && (now - lastBitrateUpdate > 1500))
+    {
+        lastBitrateUpdate = now;
+
+        const int BASE_AVG = 3000000;
+        const int BASE_MAX = 5000000;
+        const int MIN_AVG = 800000;
+        const int MIN_MAX = 1500000;
+
+        static int currentAvg = BASE_AVG;
+        static int currentMax = BASE_MAX;
+        static uint32_t lastLossTime = 0;
+
+        uint32_t statusTime = g_handshake.GetLastStatusTime();
+        float lossRate = g_handshake.GetLatestLossRate();
+
+        bool hasRecentStatus = (statusTime != 0 && (now - statusTime < 5000));
+        
+        if (!hasRecentStatus)
+        {
+            if (currentAvg != MIN_AVG)
+            {
+                currentAvg = MIN_AVG;
+                currentMax = MIN_MAX;
+                superAA->GetEncoder().ReconfigureBitrate(currentAvg, currentMax);
+                printf("[AdaptiveBitrate] No status from client for 5s. Dropping to fallback minimum bitrate.\n");
+            }
+        }
+        else
+        {
+            if (lossRate > 0.02f)
+            {
+                int newAvg = currentAvg - 500000;
+                if (newAvg < MIN_AVG) newAvg = MIN_AVG;
+                int newMax = (int)(newAvg * 1.6);
+                if (newMax < MIN_MAX) newMax = MIN_MAX;
+
+                lastLossTime = now;
+
+                if (newAvg != currentAvg)
+                {
+                    currentAvg = newAvg;
+                    currentMax = newMax;
+                    superAA->GetEncoder().ReconfigureBitrate(currentAvg, currentMax);
+                    printf("[AdaptiveBitrate] Loss rate %.2f%% > 2%%. Decreasing bitrate to avg=%d, max=%d\n", lossRate * 100.0f, currentAvg, currentMax);
+                }
+            }
+            else if (lossRate == 0.0f)
+            {
+                if (now - lastLossTime > 5000)
+                {
+                    int newAvg = currentAvg + 300000;
+                    if (newAvg > BASE_AVG) newAvg = BASE_AVG;
+                    int newMax = (int)(newAvg * 1.6);
+                    if (newMax > BASE_MAX) newMax = BASE_MAX;
+
+                    if (newAvg != currentAvg)
+                    {
+                        currentAvg = newAvg;
+                        currentMax = newMax;
+                        superAA->GetEncoder().ReconfigureBitrate(currentAvg, currentMax);
+                        printf("[AdaptiveBitrate] Clean stream. Increasing bitrate to avg=%d, max=%d\n", currentAvg, currentMax);
+                    }
+                }
+            }
+        }
+    }
+
     bool currentLoadStatePressed = Inputs->uiLoadState->Pressed();
     if (replayRequested && !replayStarted)
     {

@@ -32,6 +32,9 @@ public:
     int GetControllerPort();
     std::vector<std::string> GetClientIPs();
 
+    float GetLatestLossRate() const { return m_latestLossRate.load(); }
+    uint32_t GetLastStatusTime() const { return m_lastStatusTime.load(); }
+
 private:
     int m_width = 960;
     int m_height = 540;
@@ -49,6 +52,8 @@ private:
     std::vector<ClientInfo> m_clients;
     mutable std::mutex m_clientsMutex;
     std::atomic<uint32_t> m_controllerLastInputTime{0};
+    std::atomic<float> m_latestLossRate{0.0f};
+    std::atomic<uint32_t> m_lastStatusTime{0};
 
     OnClientListChangedCallback m_onListChanged;
     int m_port = 5001;

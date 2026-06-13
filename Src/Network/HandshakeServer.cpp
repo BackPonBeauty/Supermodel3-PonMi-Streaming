@@ -111,7 +111,7 @@ void HandshakeServer::ListenLoop()
                 }
                 else
                 {
-                    if (m_clients.size() < 3)
+                    if (m_clients.size() < 2)
                     {
                         ClientInfo newClient;
                         newClient.ip = clientIP;
@@ -166,6 +166,15 @@ void HandshakeServer::ListenLoop()
         {
             printf("[Handshake] HB received from %s:%d\n", clientIP.c_str(), clientPort);
             NotifyHeartbeat(clientIP, clientPort);
+        }
+        else if (strncmp(buf, "STAT ", 5) == 0)
+        {
+            float loss = 0.0f;
+            if (sscanf(buf + 5, "%f", &loss) == 1)
+            {
+                m_latestLossRate.store(loss);
+                m_lastStatusTime.store(GetTickCount());
+            }
         }
     }
 }

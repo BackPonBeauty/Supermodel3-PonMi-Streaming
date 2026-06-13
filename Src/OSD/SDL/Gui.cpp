@@ -291,7 +291,7 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
          int &musicVol, int &sfxVol, int &balance, bool &vEmulateSound,
          bool &vEmulateDSB, bool &vFlipStereo, bool &vLegacySoundDSP,
          int &selectedInputType, int &selectedCrosshair, int &selectedStyle,
-          bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet, bool &vStreaming, std::string &vDecoder, RemoteSlotManager* pRemote)
+          bool &vForceFeedback, bool &vNetwork, bool &vSimulateNet, bool &vStreaming, std::string &vCodec, RemoteSlotManager* pRemote)
 {
     // Calculate base scale
     float scale = io.DisplaySize.y / 600.0f;
@@ -1040,11 +1040,16 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     {
                         saveSettings = true;
 #ifdef SUPERMODEL_WIN32
-                        // Streaming ON -> Create virtual controller
-                        // Streaming OFF -> Do not remove
-                        if (vStreaming && pRemote != nullptr)
+                        if (pRemote != nullptr)
                         {
-                            pRemote->AddVirtualController();
+                            if (vStreaming)
+                            {
+                                pRemote->AddVirtualController();
+                            }
+                            else
+                            {
+                                pRemote->RemoveVirtualController();
+                            }
                         }
 #endif
                     }
@@ -1053,16 +1058,16 @@ void GUI(ImGuiIO &io, Util::Config::Node &config,
                     ImGui::Separator();
                     ImGui::Spacing();
 
-                    // Decoder selection combo
+                    // Codec selection combo
                     {
-                        const char* decoders[] = { "H264", "H265" };
-                        int selectedDecoder = (vDecoder == "H264") ? 0 : 1;
-                        ImGui::Text("Decoder");
+                        const char* codecs[] = { "H264", "H265" };
+                        int selectedCodec = (vCodec == "H264") ? 0 : 1;
+                        ImGui::Text("Codec");
                         ImGui::SameLine(labelWidth);
                         ImGui::PushItemWidth(100.0f * scale);
-                        if (ImGui::Combo("##Decoder", &selectedDecoder, decoders, IM_ARRAYSIZE(decoders)))
+                        if (ImGui::Combo("##Codec", &selectedCodec, codecs, IM_ARRAYSIZE(codecs)))
                         {
-                            vDecoder = decoders[selectedDecoder];
+                            vCodec = codecs[selectedCodec];
                             saveSettings = true;
                         }
                         ImGui::PopItemWidth();
@@ -1804,11 +1809,13 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
     bool vNetwork = config["Network"].ValueAs<bool>();
     bool vSimulateNet = config["SimulateNet"].ValueAs<bool>();
     bool vStreaming = config["Streaming"].ValueAsDefault<bool>(false);
-    std::string vDecoder = "H265";
-    if (config.TryGet("Decoder") && !config["Decoder"].Empty()) {
-        vDecoder = config["Decoder"].ValueAs<std::string>();
+    std::string vCodec = "H265";
+    if (config.TryGet("Codec") && !config["Codec"].Empty()) {
+        vCodec = config["Codec"].ValueAs<std::string>();
+    } else if (config.TryGet("Decoder") && !config["Decoder"].Empty()) {
+        vCodec = config["Decoder"].ValueAs<std::string>();
     } else if (config.TryGet("Decorder") && !config["Decorder"].Empty()) {
-        vDecoder = config["Decorder"].ValueAs<std::string>();
+        vCodec = config["Decorder"].ValueAs<std::string>();
     }
 
     // Network strings
@@ -1985,7 +1992,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
             vNoWhiteFlash, vHideCMD, vDefaultScanline, vTrueHz, superSampling, selectedCRT, selectedUpscale, ppcFreq, WindowXPosition, WindowYPosition, Scanline, Barrel,
             musicVol, sfxVol, balance, vEmulateSound, vEmulateDSB, vFlipStereo,
             vLegacySoundDSP, selectedInputType, selectedCrosshair, selectedStyle,
-            vForceFeedback, vNetwork, vSimulateNet, vStreaming, vDecoder, pRemote);
+            vForceFeedback, vNetwork, vSimulateNet, vStreaming, vCodec, pRemote);
         if (exit)
         {
             running = false;
@@ -2098,8 +2105,9 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         u["Network"] = (vNetwork ? "1" : "0");
         u["SimulateNet"] = (vSimulateNet ? "1" : "0");
         u["Streaming"] = (vStreaming ? "1" : "0");
-        u["Decoder"] = vDecoder;
-        u["Decorder"] = vDecoder;
+        u["Codec"] = vCodec;
+        u["Decoder"] = vCodec;
+        u["Decorder"] = vCodec;
         // Keep linkplay
         u["PortIn"] = bufPortIn;
         u["PortOut"] = bufPortOut;

@@ -397,3 +397,78 @@ void NvencEncoder::SetDestIPs(const std::vector<std::string> &ips)
 {
     m_rtpSender.SetDestIPs(ips);
 }
+
+bool NvencEncoder::ReconfigureBitrate(int avgBitrate, int maxBitrate)
+{
+    if (!m_encoder)
+        return false;
+
+    NV_ENC_RECONFIGURE_PARAMS reconfigParams = {};
+    reconfigParams.version = NV_ENC_RECONFIGURE_PARAMS_VER;
+    reconfigParams.reInitEncodeParams.version = NV_ENC_INITIALIZE_PARAMS_VER;
+
+    bool useH265 = (m_codec != "H264");
+    GUID codecGuid = useH265 ? NV_ENC_CODEC_HEVC_GUID : NV_ENC_CODEC_H264_GUID;
+
+    NV_ENC_PRESET_CONFIG presetConfig = {};
+    presetConfig.version = NV_ENC_PRESET_CONFIG_VER;
+    presetConfig.presetCfg.version = NV_ENC_CONFIG_VER;
+    NVENCSTATUS st = m_nvenc.nvEncGetEncodePresetConfigEx(
+        m_encoder,
+        codecGuid,
+        NV_ENC_PRESET_P1_GUID,
+        NV_ENC_TUNING_INFO_ULTRA_LOW_LATENCY,
+        &presetConfig);
+    if (st != NV_ENC_SUCCESS)
+    {
+        printf("[NVENC] nvEncGetEncodePresetConfigEx failed in reconfigure: %d\n", st);
+        return false;
+    }
+
+    NV_ENC_CONFIG encConfig = presetConfig.presetCfg;
+    encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_VBR;
+    encConfig.rcParams.averageBitRate = avgBitrate;
+    encConfig.rcParams.maxBitRate = maxBitrate;
+    encConfig.rcParams.vbvBufferSize = avgBitrate;
+    encConfig.rcParams.vbvInitialDelay = avgBitrate / 2;
+    encConfig.frameIntervalP = 1;
+    encConfig.gopLength = m_fps;
+
+    encConfig.rcParams.enableAQ = 1;
+    encConfig.rcParams.aqStrength = 8;
+    encConfig.rcParams.enableTemporalAQ = 1;
+    if (useH265)
+    {
+        encConfig.encodeCodecConfig.hevcConfig.idrPeriod = m_fps;
+        encConfig.encodeCodecConfig.hevcConfig.sliceMode = 0;
+        encConfig.encodeCodecConfig.hevcConfig.sliceModeData = 0;
+    }
+    else
+    {
+        encConfig.encodeCodecConfig.h264Config.idrPeriod = m_fps;
+        encConfig.encodeCodecConfig.h264Config.sliceMode = 0;
+        encConfig.encodeCodecConfig.h264Config.sliceModeData = 0;
+    }
+
+    reconfigParams.reInitEncodeParams.encodeGUID = codecGuid;
+    reconfigParams.reInitEncodeParams.presetGUID = NV_ENC_PRESET_P1_GUID;
+    reconfigParams.reInitEncodeParams.encodeWidth = m_width;
+    reconfigParams.reInitEncodeParams.encodeHeight = m_height;
+    reconfigParams.reInitEncodeParams.darWidth = m_width;
+    reconfigParams.reInitEncodeParams.darHeight = m_height;
+    reconfigParams.reInitEncodeParams.frameRateNum = m_fps;
+    reconfigParams.reInitEncodeParams.frameRateDen = 1;
+    reconfigParams.reInitEncodeParams.enablePTD = 1;
+    reconfigParams.reInitEncodeParams.encodeConfig = &encConfig;
+    reconfigParams.reInitEncodeParams.tuningInfo = NV_ENC_TUNING_INFO_ULTRA_LOW_LATENCY;
+
+    st = m_nvenc.nvEncReconfigureEncoder(m_encoder, &reconfigParams);
+    if (st != NV_ENC_SUCCESS)
+    {
+        printf("[NVENC] nvEncReconfigureEncoder failed: %d\n", st);
+        return false;
+    }
+
+    printf("[NVENC] Reconfigured bitrate dynamically: avg=%d, max=%d bps\n", avgBitrate, maxBitrate);
+    return true;
+}
