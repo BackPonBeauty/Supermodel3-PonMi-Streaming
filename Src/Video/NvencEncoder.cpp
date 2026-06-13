@@ -101,6 +101,7 @@ bool NvencEncoder::CreateEncoder()
     NV_ENC_CONFIG encConfig = presetConfig.presetCfg;
 
     // Low-latency VBR configuration
+/*
     encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_VBR;
     encConfig.rcParams.averageBitRate = 1500000; // 1.5Mbps
     encConfig.rcParams.maxBitRate = 3000000;
@@ -108,7 +109,20 @@ bool NvencEncoder::CreateEncoder()
     encConfig.rcParams.vbvInitialDelay = 0;
     encConfig.frameIntervalP = 1; // No B-frames
     encConfig.gopLength = m_fps;
+*/
+    // Low-latency VBR configuration
+    encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_VBR;
+    encConfig.rcParams.averageBitRate = 3000000; // 3Mbps (実測430Kbpsの余裕あり)
+    encConfig.rcParams.maxBitRate = 4000000;     // 3Mbps (動きの激しい場面用)
+    encConfig.rcParams.vbvBufferSize = 3000000;  // averageと同値推奨
+    encConfig.rcParams.vbvInitialDelay = 1500000;
+    encConfig.frameIntervalP = 1;    // No B-frames (低遅延維持)
+    encConfig.gopLength = m_fps;
 
+    // 追加推奨
+    encConfig.rcParams.enableAQ = 1;         // Adaptive Quantization ON (静止部分を綺麗に)
+    encConfig.rcParams.aqStrength = 8;       // 1-15、強めが画質良い
+    encConfig.rcParams.enableTemporalAQ = 1; // 時間方向AQも有効
     if (useH265)
     {
         encConfig.encodeCodecConfig.hevcConfig.idrPeriod = m_fps;
@@ -313,7 +327,7 @@ void NvencEncoder::ProcessOutput(int idx)
                 data[offset + 2] == 0 && data[offset + 3] == 1)
             {
                 int nalType = data[offset + 4] & 0x1F;
-                //printf("[NVENC] NAL type=%d at offset=%d\n", nalType, offset);
+                // printf("[NVENC] NAL type=%d at offset=%d\n", nalType, offset);
                 offset += 4;
             }
             else
@@ -373,13 +387,13 @@ void NvencEncoder::Shutdown()
 
     printf("[NVENC] Shutdown complete\n");
 }
-void NvencEncoder::SetDestIP(const std::string& ip)
+void NvencEncoder::SetDestIP(const std::string &ip)
 {
     m_rtpSender.SetDestIP(ip);
     printf("[NVENC] IP changed to %s\n", ip.c_str());
 }
 
-void NvencEncoder::SetDestIPs(const std::vector<std::string>& ips)
+void NvencEncoder::SetDestIPs(const std::vector<std::string> &ips)
 {
     m_rtpSender.SetDestIPs(ips);
 }

@@ -261,50 +261,71 @@ bool FirebaseMatchingCpp::CleanupStaleHosts()
     long long now = GetUnixTimestamp();                                   // milliseconds
     long long threshold = now - (long long)(TIMEOUT_MINUTES * 60 * 1000); // sec -> milliseconds
 
-    // Simple parse: Find "timestamp": value and delete stale host IDs
-    size_t pos = 0;
-    while (true)
+    int depth = 0;
+    std::string currentHostId = "";
+    long long currentTimestamp = 0;
+
+    for (size_t i = 0; i < resp.size(); i++)
     {
-        // Search for host ID ("xxxxxxxx": {)
-        pos = resp.find("\"timestamp\":", pos);
-        if (pos == std::string::npos)
-            break;
-
-        pos += 12; // Length of "timestamp":
-        while (pos < resp.size() && (resp[pos] == ' ' || resp[pos] == '\t'))
-            pos++;
-
-        long long ts = 0;
-        size_t numEnd = pos;
-        while (numEnd < resp.size() && isdigit(resp[numEnd]))
-            numEnd++;
-        if (numEnd > pos)
+        char c = resp[i];
+        if (c == '{')
         {
-            ts = std::stoll(resp.substr(pos, numEnd - pos));
+            depth++;
         }
-
-        if (ts > 0 && ts < threshold)
+        else if (c == '}')
         {
-            // Search backwards for the corresponding host ID
-            size_t braceOpen = resp.rfind('"', pos - 15);
-            if (braceOpen != std::string::npos)
+            if (depth == 2)
             {
-                size_t idEnd = resp.rfind('"', braceOpen - 1);
-                size_t idStart = resp.rfind('"', idEnd - 1);
-                if (idStart != std::string::npos)
+                if (!currentHostId.empty() && currentTimestamp > 0 && currentTimestamp < threshold)
                 {
-                    std::string staleId = resp.substr(idStart + 1, idEnd - idStart - 1);
-                    if (!staleId.empty())
+                    std::string delPath = "/hosts/" + currentHostId + ".json?auth=" + m_idToken;
+                    std::wstring wDelPath(delPath.begin(), delPath.end());
+                    HttpDelete(dbHost, wDelPath, m_idToken);
+                    printf("[Firebase] Stale host removed: %s (ts=%lld)\n", currentHostId.c_str(), currentTimestamp);
+                }
+                currentHostId = "";
+                currentTimestamp = 0;
+            }
+            depth--;
+        }
+        else if (c == '"' && depth == 1)
+        {
+            size_t start = i + 1;
+            size_t end = resp.find('"', start);
+            if (end != std::string::npos)
+            {
+                currentHostId = resp.substr(start, end - start);
+                i = end;
+            }
+        }
+        else if (c == '"' && depth == 2)
+        {
+            size_t start = i + 1;
+            size_t end = resp.find('"', start);
+            if (end != std::string::npos)
+            {
+                std::string key = resp.substr(start, end - start);
+                i = end;
+                if (key == "timestamp")
+                {
+                    size_t colon = resp.find(':', i + 1);
+                    if (colon != std::string::npos)
                     {
-                        std::string delPath = "/hosts/" + staleId + ".json?auth=" + m_idToken;
-                        std::wstring wDelPath(delPath.begin(), delPath.end());
-                        HttpDelete(dbHost, wDelPath, m_idToken);
-                        printf("[Firebase] Stale host removed: %s (ts=%lld)\n", staleId.c_str(), ts);
+                        size_t valStart = colon + 1;
+                        while (valStart < resp.size() && (resp[valStart] == ' ' || resp[valStart] == '\t'))
+                            valStart++;
+                        size_t valEnd = valStart;
+                        while (valEnd < resp.size() && isdigit(resp[valEnd]))
+                            valEnd++;
+                        if (valEnd > valStart)
+                        {
+                            currentTimestamp = std::stoll(resp.substr(valStart, valEnd - valStart));
+                            i = valEnd - 1;
+                        }
                     }
                 }
             }
         }
-        pos = numEnd;
     }
 
     return true;

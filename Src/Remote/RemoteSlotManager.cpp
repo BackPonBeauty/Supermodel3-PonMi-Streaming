@@ -437,14 +437,15 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
 {
     if (!IsValidSlot(slot) || !m_vigem.IsInitialized())
         return;
+    bool inputChanged = (packet.wButtons != m_slots[slot].lastPacket.wButtons) ||
+                        (packet.bLeftTrigger != m_slots[slot].lastPacket.bLeftTrigger) ||
+                        (packet.bRightTrigger != m_slots[slot].lastPacket.bRightTrigger) ||
+                        (packet.sThumbLX != m_slots[slot].lastPacket.sThumbLX) ||
+                        (packet.sThumbLY != m_slots[slot].lastPacket.sThumbLY) ||
+                        (packet.sThumbRX != m_slots[slot].lastPacket.sThumbRX) ||
+                        (packet.sThumbRY != m_slots[slot].lastPacket.sThumbRY);
 
-    bool hasActiveInput = (packet.wButtons != 0) ||
-                          (packet.bLeftTrigger > 20) ||
-                          (packet.bRightTrigger > 20) ||
-                          (std::abs(packet.sThumbLX) > 8000) ||
-                          (std::abs(packet.sThumbLY) > 8000) ||
-                          (std::abs(packet.sThumbRX) > 9000) ||
-                          (std::abs(packet.sThumbRY) > 9000);
+    m_slots[slot].lastPacket = packet;
 
     // When LinkPlay=0, Slot 1 uses g_handshake and Slot 2 uses g_handshakeP2 to verify the IP
     if (m_linkplay == 0)
@@ -453,14 +454,14 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
         {
             std::string controllerIP = g_handshake.GetControllerIP();
             if (fromIP != controllerIP) return;
-            if (hasActiveInput)
+            if (inputChanged)
                 g_handshake.NotifyControllerInput(fromIP, fromPort);
         }
         else if (slot == 2)
         {
             std::string controllerIP = g_handshakeP2.GetControllerIP();
             if (fromIP != controllerIP) return;
-            if (hasActiveInput)
+            if (inputChanged)
                 g_handshakeP2.NotifyControllerInput(fromIP, fromPort);
         }
         else
@@ -474,17 +475,9 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
         std::string controllerIP = g_handshake.GetControllerIP();
         if (fromIP != controllerIP)
         {
-            // Output log on state change or at regular intervals to avoid flooding the log
-            static uint32_t lastLogTime = 0;
-            uint32_t now = GetTickCount();
-            if (now - lastLogTime > 2000)
-            {
-                printf("[RemoteSlotManager] XInput rejected: fromIP=%s controllerIP=%s\n", fromIP.c_str(), controllerIP.c_str());
-                lastLogTime = now;
-            }
             return; // Ignore inputs from clients without operational authority
         }
-        if (hasActiveInput)
+        if (inputChanged)
             g_handshake.NotifyControllerInput(fromIP, fromPort);
     }
 

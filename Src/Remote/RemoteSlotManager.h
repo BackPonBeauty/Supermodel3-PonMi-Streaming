@@ -32,6 +32,7 @@ struct SlotState
     bool isPhysical = false;  // Physical controller is plugged in
     bool isConnected = false; // Remotely connected (receiving UDP)
     std::string label;        // Display label
+    XInputPacket lastPacket = {}; // Store last input packet for change detection
 };
 
 using SlotChangedCallback = std::function<void(int slot, const SlotState &state)>;
