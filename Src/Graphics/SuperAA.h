@@ -7,11 +7,10 @@
 #include <sstream>
 #include <string>
 
-// NvencEncoder is used only when the streaming feature is enabled.
-// Only valid when built with ENABLE_NVENC defined.
-#ifdef ENABLE_NVENC
+#include "IEncoder.h"
 #include "NvencEncoder.h"
-#endif
+#include "AmfEncoder.h"
+
 // This class just implements super sampling. Super sampling looks fantastic but is quite expensive.
 // 8x and beyond values can start to eat ridiculous amounts of memory / gpu time, for less and less noticable returns
 // 4x works and looks great
@@ -24,7 +23,7 @@ public:
 	SuperAA(int aaValue, CRTcolor CRTcolors, bool scanLine, int scanlineStrength, int totalXRes, int totalYRes, int barrelStrength, const char *gameTitle, bool wideScreen, bool overlay, const char *configFilePath);
 	~SuperAA();
 
-	void Init(int width, int height, int port, bool streamingEnabled = false, const std::string &codec = "H265");
+	void Init(int width, int height, int port, bool streamingEnabled = false, const std::string &codec = "H265", const std::string &encoderType = "AUTO");
 	void Draw();					  // this is a no-op if AA is 1 and CRTcolors 0, since we'll be drawing straight on the back buffer anyway
 
 	GLuint GetTargetID();
@@ -35,9 +34,7 @@ public:
 	GLint m_locMixStrength = -1;
 	GLint m_locTex1 = -1;				
 	GLint m_locUAspect = -1;
-#ifdef ENABLE_NVENC
-	NvencEncoder& GetEncoder() { return m_nvencEncoder; }		
-#endif
+	IEncoder& GetEncoder() { return *m_encoder; }
 
 	// ===== Toggle Methods (on/off) =====
 	void ToggleScanline();
@@ -102,8 +99,6 @@ private:
 	//GLint m_locOldFrameTex2;
 	//GLint m_locOldFrameTex3;
 	GLint m_locMixEnabled;	// Location of uMixEnabled
-#ifdef ENABLE_NVENC
-    NvencEncoder m_nvencEncoder;
-#endif
+    IEncoder* m_encoder = nullptr;
     bool m_streamingEnabled = false;
 };

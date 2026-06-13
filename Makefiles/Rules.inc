@@ -121,6 +121,7 @@ SRC_FILES = \
 	Src/Graphics/Render2D.cpp \
 	Src/Graphics/SuperAA.cpp \
 	Src/Video/NvencEncoder.cpp \
+	Src/Video/AmfEncoder.cpp \
 	Src/Network/RtpSender.cpp \
     Src/Network/UdpAudioSender.cpp \
 	Src/Network/HandshakeServer.cpp \

@@ -310,12 +310,19 @@ SuperAA::~SuperAA()
         glDeleteVertexArrays(1, &m_vao);
         m_vao = 0;
     }
+
+    if (m_encoder)
+    {
+        m_encoder->Shutdown();
+        delete m_encoder;
+        m_encoder = nullptr;
+    }
 }
 
 // =========================
 // Init
 // =========================
-void SuperAA::Init(int width, int height, int port, bool streamingEnabled, const std::string &codec)
+void SuperAA::Init(int width, int height, int port, bool streamingEnabled, const std::string &codec, const std::string &encoderType)
 {
     if ((m_aa > 1) || (m_crtcolors != CRTcolor::None))
     {
@@ -330,15 +337,58 @@ void SuperAA::Init(int width, int height, int port, bool streamingEnabled, const
 
     if (streamingEnabled)
     {
-        m_streamingEnabled = m_nvencEncoder.Init(width, height, 60, port, codec,
-                                                 [](const uint8_t *data, int size)
-                                                 {
-                                                 });
+        bool initSuccess = false;
+        std::string chosenEncoder = "";
+
+        if (encoderType == "NVENC" || encoderType == "AUTO")
+        {
+            printf("[Streaming] Attempting to initialize NVENC...\n");
+            m_encoder = new NvencEncoder();
+            if (m_encoder->Init(width, height, 60, port, codec, [](const uint8_t *data, size_t size, bool isKeyframe) {}))
+            {
+                initSuccess = true;
+                chosenEncoder = "NVENC";
+            }
+            else
+            {
+                delete m_encoder;
+                m_encoder = nullptr;
+                printf("[Streaming] NVENC initialization failed.\n");
+            }
+        }
+
+        if (!initSuccess && (encoderType == "AMF" || encoderType == "AUTO"))
+        {
+            printf("[Streaming] Attempting to initialize AMD AMF...\n");
+            m_encoder = new AmfEncoder();
+            if (m_encoder->Init(width, height, 60, port, codec, [](const uint8_t *data, size_t size, bool isKeyframe) {}))
+            {
+                initSuccess = true;
+                chosenEncoder = "AMF";
+            }
+            else
+            {
+                delete m_encoder;
+                m_encoder = nullptr;
+                printf("[Streaming] AMD AMF initialization failed.\n");
+            }
+        }
+
+        if (initSuccess)
+        {
+            m_streamingEnabled = true;
+            printf("[Streaming] Successfully initialized %s encoder\n", chosenEncoder.c_str());
+        }
+        else
+        {
+            m_streamingEnabled = false;
+            printf("[Streaming] Failed to initialize any hardware encoder. Streaming disabled.\n");
+        }
     }
     else
     {
         m_streamingEnabled = false;
-        printf("[Streaming] NVENC/RTP disabled\n");
+        printf("[Streaming] NVENC/AMF/RTP disabled\n");
     }
 }
 // m_fbo.Destroy();
@@ -772,6 +822,6 @@ void SuperAA::UpdateFrameRingBuffer()
 
     m_ringBufferIndex = (m_ringBufferIndex + 1) % RING_BUFFER_SIZE;
     // NVENC encode (pass FBO texture directly)
-    if (m_streamingEnabled)
-        m_nvencEncoder.EncodeFrame(m_fbo2.GetTextureID());
+    if (m_streamingEnabled && m_encoder)
+        m_encoder->EncodeFrame(m_fbo2.GetTextureID());
 }

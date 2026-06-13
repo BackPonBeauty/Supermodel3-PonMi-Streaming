@@ -1130,8 +1130,12 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
   else if (s_runtime_config.TryGet("Decorder") && !s_runtime_config["Decorder"].Empty())
     decoderCodec = s_runtime_config["Decorder"].ValueAs<std::string>();
 
+  std::string videoEncoder = "AUTO";
+  if (s_runtime_config.TryGet("VideoEncoder") && !s_runtime_config["VideoEncoder"].Empty())
+    videoEncoder = s_runtime_config["VideoEncoder"].ValueAs<std::string>();
+
   SuperAA *superAA = new SuperAA(aaValue, CRTcolors, m_scanLine, scanlineStrength, totalXRes, totalYRes, BarrelStrength, game.title.c_str(), m_wideScreen, m_Overlay, s_configFilePath.c_str());
-  superAA->Init(totalXRes, totalYRes, videoPort, streamingEnabled, decoderCodec); // pass actual frame sizes here
+  superAA->Init(totalXRes, totalYRes, videoPort, streamingEnabled, decoderCodec, videoEncoder); // pass actual frame sizes here
 
   int handshakePort = s_runtime_config["HandshakePort"].ValueAs<int>();
 

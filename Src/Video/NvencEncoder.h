@@ -15,6 +15,7 @@
 #include <cuda_gl_interop.h>
 #include "nvEncodeAPI.h"
 #include "Network/RtpSender.h" // Added
+#include "IEncoder.h"
 
 #ifdef CreateSemaphore
 #undef CreateSemaphore
@@ -23,24 +24,22 @@
 #undef CreateMutex
 #endif
 
-class NvencEncoder
+class NvencEncoder : public IEncoder
 {
 public:
-    using OnEncodedCallback = std::function<void(const uint8_t *data, int size)>;
-
     NvencEncoder() = default;
-    ~NvencEncoder() { Shutdown(); }
+    virtual ~NvencEncoder() { Shutdown(); }
 
     
-    bool Init(int width, int height, int fps, int port, const std::string &codec, OnEncodedCallback cb);
-    bool ReconfigureBitrate(int avgBitrate, int maxBitrate);
-    void EncodeFrame(unsigned int glTextureID);
-    void SetDestIP(const std::string &ip);
-    void SetDestIPs(const std::vector<std::string> &ips);
+    virtual bool Init(int width, int height, int fps, int port, const std::string &codec, OnEncodedCallback cb) override;
+    virtual bool ReconfigureBitrate(int avgBitrate, int maxBitrate) override;
+    virtual void EncodeFrame(unsigned int glTextureID) override;
+    virtual void Shutdown() override;
+    virtual void SetDestIP(const std::string &ip) override;
+    virtual void SetDestIPs(const std::vector<std::string> &ips) override;
     void SetDestPort(int port) { m_rtpSender.SetDestPort(port); }
-    void Shutdown();
-    int GetWidth() const { return m_width; }
-    int GetHeight() const { return m_height; }
+    virtual int GetWidth() const override { return m_width; }
+    virtual int GetHeight() const override { return m_height; }
    
 
 private:

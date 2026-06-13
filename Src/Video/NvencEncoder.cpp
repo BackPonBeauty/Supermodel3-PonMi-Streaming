@@ -335,10 +335,12 @@ void NvencEncoder::ProcessOutput(int idx)
             if (offset > 100)
                 break; // Inspect only near the head
         }
+        bool isKeyframe = (lockBitstream.pictureType == NV_ENC_PIC_TYPE_IDR || lockBitstream.pictureType == NV_ENC_PIC_TYPE_I);
         if (m_callback)
             m_callback(
                 (const uint8_t *)lockBitstream.bitstreamBufferPtr,
-                (int)lockBitstream.bitstreamSizeInBytes);
+                (size_t)lockBitstream.bitstreamSizeInBytes,
+                isKeyframe);
 
         // RTP transmission
         if (m_rtpEnabled)
