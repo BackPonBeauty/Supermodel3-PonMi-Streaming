@@ -100,9 +100,9 @@ bool NvencEncoder::CreateEncoder()
 
     NV_ENC_CONFIG encConfig = presetConfig.presetCfg;
 
-    // Low-latency CBR configuration
-    encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
-    encConfig.rcParams.averageBitRate = 3000000; // 3Mbps
+    // Low-latency VBR configuration
+    encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_VBR;
+    encConfig.rcParams.averageBitRate = 1500000; // 1.5Mbps
     encConfig.rcParams.maxBitRate = 3000000;
     encConfig.rcParams.vbvBufferSize = 0;
     encConfig.rcParams.vbvInitialDelay = 0;
