@@ -59,34 +59,30 @@ void UdpAudioSender::SendWithTimestamp(const int16_t *pcm, int samples, int ch)
     for (int i = 0; i < samples * ch; i++)
         m_inputAccum.push_back(pcm[i]);
 
-    // 44100→48000変換比率
-    // 960フレーム @ 48000Hz = 20ms
-    // 20ms @ 44100Hz = 882サンプル
-    const int srcFrameSize = 882; // 44100Hzでの20ms分
+    const int srcFrameSize = 882;
     const int frameBytes = srcFrameSize * OPUS_CHANNELS;
 
-    while ((int)m_inputAccum.size() >= frameBytes)
+    // 次フレームの先頭1サンプルも見えるように +1 余裕を持って判定
+    while ((int)m_inputAccum.size() >= frameBytes + OPUS_CHANNELS)
     {
-        // 882サンプル→960サンプルに線形補間
         for (int i = 0; i < OPUS_FRAME_SIZE; i++)
         {
             float srcPos = (float)i * srcFrameSize / OPUS_FRAME_SIZE;
             int s0 = (int)srcPos;
-            int s1 = s0 + 1;
+            int s1 = s0 + 1;  // 次フレーム先頭を参照できるので clamp 不要
             float f = srcPos - s0;
 
-            if (s1 >= srcFrameSize)
-                s1 = srcFrameSize - 1;
-
             m_resampleBuf[i * 2 + 0] = (int16_t)(m_inputAccum[s0 * 2 + 0] * (1.0f - f) +
-                                                 m_inputAccum[s1 * 2 + 0] * f);
+                                                  m_inputAccum[s1 * 2 + 0] * f);
             m_resampleBuf[i * 2 + 1] = (int16_t)(m_inputAccum[s0 * 2 + 1] * (1.0f - f) +
-                                                 m_inputAccum[s1 * 2 + 1] * f);
+                                                  m_inputAccum[s1 * 2 + 1] * f);
         }
 
+        // 消費するのは882サンプル分のみ（+1は次フレームに残す）
         m_inputAccum.erase(m_inputAccum.begin(),
                            m_inputAccum.begin() + frameBytes);
 
+        // 以降はエンコード・送信（変更なし）
         int encoded = opus_encode(m_encoder,
                                   m_resampleBuf.data(),
                                   OPUS_FRAME_SIZE,
@@ -98,8 +94,8 @@ void UdpAudioSender::SendWithTimestamp(const int16_t *pcm, int samples, int ch)
         std::vector<uint8_t> pkt(4 + encoded);
         pkt[0] = (m_timestamp >> 24) & 0xFF;
         pkt[1] = (m_timestamp >> 16) & 0xFF;
-        pkt[2] = (m_timestamp >> 8) & 0xFF;
-        pkt[3] = m_timestamp & 0xFF;
+        pkt[2] = (m_timestamp >> 8)  & 0xFF;
+        pkt[3] =  m_timestamp        & 0xFF;
         memcpy(pkt.data() + 4, m_opusBuf.data(), encoded);
 
         std::lock_guard<std::mutex> lock(m_destsMutex);
