@@ -131,7 +131,7 @@ static const std::string s_gameXMLFilePath = Util::Format() << FileSystemPath::G
 static const std::string s_musicXMLFilePath = Util::Format() << FileSystemPath::GetPath(FileSystemPath::Config) << "Music.xml";
 static const std::string s_logFilePath = Util::Format() << FileSystemPath::GetPath(FileSystemPath::Log) << "Supermodel.log";
 
-static Util::Config::Node s_runtime_config("Global");
+Util::Config::Node s_runtime_config("Global");
 
 /******************************************************************************
  Display Management
@@ -1325,7 +1325,10 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
       replayStarted = true;
     }
 
-    Inputs->Poll(&game, xOffset, yOffset, xRes, yRes);
+    if (!Inputs->Poll(&game, xOffset, yOffset, xRes, yRes))
+    {
+      quit = true;
+    }
     // Render if paused, otherwise run a frame
     if (paused)
       Model3->RenderFrame();
@@ -1677,6 +1680,11 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
         M->DumpTimings();
     }
   }
+
+#ifdef SUPERMODEL_WIN32
+  // Prioritize cleaning up network, Firebase and UPnP first before stopping threads/saving NVRAM
+  s_remoteSlotMgr.Shutdown();
+#endif
 
   // Make sure all threads are paused before shutting down
   Model3->PauseThreads();
@@ -2857,24 +2865,29 @@ int main(int argc, char **argv)
   {
     bool streaming = s_runtime_config["Streaming"].ValueAsDefault<bool>(false);
     int linkplay = (int)s_runtime_config["LinkPlay"].ValueAsDefault<int64_t>(0);
-    if (streaming && linkplay >= 0 && linkplay <= 4)
+    bool shouldPostFirebase = (linkplay >= 0 && linkplay <= 4) && streaming;
+
+    if (shouldPostFirebase)
     {
-      printf("[Main] Launch: streaming=true linkplay=%d -> StartListening\n", linkplay);
-      if (!s_remoteSlotMgr.IsViGEmReady())
-      {
-        s_remoteSlotMgr.InitViGEm();
-        s_remoteSlotMgr.AddVirtualController();
-      }
-      s_remoteSlotMgr.StartListening(linkplay);
-      std::string romPath = cmd_line.rom_files[0];
-      size_t sep = romPath.find_last_of("/\\");
-      if (sep != std::string::npos)
-        romPath = romPath.substr(sep + 1);
-      size_t dot = romPath.find_last_of('.');
-      if (dot != std::string::npos)
-        romPath = romPath.substr(0, dot);
-      std::string serverName = s_runtime_config["ServerName"].ValueAsDefault<std::string>("");
-      s_remoteSlotMgr.StartFirebaseAsync(game.name, serverName);
+        // 1. ストリーミングが有効な場合のみ、仮想コントローラの準備とUDP待機を開始
+        printf("[Main] Launch: streaming=true linkplay=%d -> StartListening\n", linkplay);
+        if (!s_remoteSlotMgr.IsViGEmReady())
+        {
+            s_remoteSlotMgr.InitViGEm();
+            s_remoteSlotMgr.AddVirtualController();
+        }
+        s_remoteSlotMgr.StartListening(linkplay);
+
+        // 2. メタデータ (gametitle, servername, timestamp, ip) のFirebase初回ポスト
+        std::string romPath = cmd_line.rom_files[0];
+        size_t sep = romPath.find_last_of("/\\");
+        if (sep != std::string::npos)
+            romPath = romPath.substr(sep + 1);
+        size_t dot = romPath.find_last_of('.');
+        if (dot != std::string::npos)
+            romPath = romPath.substr(0, dot);
+        std::string serverName = s_runtime_config["ServerName"].ValueAsDefault<std::string>("");
+        s_remoteSlotMgr.StartFirebaseAsync(game.name, serverName);
     }
   }
 #endif

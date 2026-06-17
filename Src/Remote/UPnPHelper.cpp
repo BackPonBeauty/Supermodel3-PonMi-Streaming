@@ -9,7 +9,7 @@
 bool UPnPHelper::OpenPort(int port, const std::string& description)
 {
     int error = 0;
-    UPNPDev* devList = upnpDiscover(2000, nullptr, nullptr, 0, 0, 2, &error);
+    UPNPDev* devList = upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &error);
     if (!devList)
     {
         printf("[UPnP] No devices found (error=%d)\n", error);
@@ -59,7 +59,7 @@ bool UPnPHelper::OpenPort(int port, const std::string& description)
 void UPnPHelper::ClosePort(int port)
 {
     int error = 0;
-    UPNPDev* devList = upnpDiscover(2000, nullptr, nullptr, 0, 0, 2, &error);
+    UPNPDev* devList = upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &error);
     if (!devList) return;
 
     UPNPUrls urls = {};
@@ -85,20 +85,96 @@ void UPnPHelper::ClosePort(int port)
 
 void UPnPHelper::OpenStreamingPorts(int linkplay)
 {
+    int error = 0;
+    printf("[UPnP] Discovering UPnP devices...\n");
+    UPNPDev* devList = upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &error);
+    if (!devList)
+    {
+        printf("[UPnP] No devices found during OpenStreamingPorts (error=%d)\n", error);
+        return;
+    }
+
+    UPNPUrls urls = {};
+    IGDdatas data = {};
+    char localIP[64] = {};
+    char wanIP[64] = {};
+
+    int ret = UPNP_GetValidIGD(devList, &urls, &data, localIP, sizeof(localIP), wanIP, sizeof(wanIP));
+    freeUPNPDevlist(devList);
+
+    if (ret <= 0)
+    {
+        printf("[UPnP] No valid IGD found during OpenStreamingPorts\n");
+        return;
+    }
+
     int base = 5000 + (linkplay - 1) * 4;
-    OpenPort(base,     "Supermodel XInput");
-    OpenPort(base + 1, "Supermodel Handshake");
-    OpenPort(base + 2, "Supermodel Video");
-    OpenPort(base + 3, "Supermodel Audio");
+    const char* descriptions[4] = {
+        "Supermodel XInput",
+        "Supermodel Handshake",
+        "Supermodel Video",
+        "Supermodel Audio"
+    };
+
+    for (int i = 0; i < 4; i++)
+    {
+        int port = base + i;
+        std::string portStr = std::to_string(port);
+        int r = UPNP_AddPortMapping(
+            urls.controlURL,
+            data.first.servicetype,
+            portStr.c_str(),
+            portStr.c_str(),
+            localIP,
+            descriptions[i],
+            "UDP",
+            nullptr,
+            "0");
+
+        if (r == UPNPCOMMAND_SUCCESS)
+        {
+            printf("[UPnP] Port %d opened (%s)\n", port, descriptions[i]);
+        }
+        else
+        {
+            printf("[UPnP] Port %d failed (err=%d)\n", port, r);
+        }
+    }
+
+    FreeUPNPUrls(&urls);
 }
 
 void UPnPHelper::CloseStreamingPorts(int linkplay)
 {
+    int error = 0;
+    printf("[UPnP] Discovering UPnP devices for close...\n");
+    UPNPDev* devList = upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &error);
+    if (!devList) return;
+
+    UPNPUrls urls = {};
+    IGDdatas data = {};
+    char localIP[64] = {};
+    char wanIP[64] = {};
+
+    int ret = UPNP_GetValidIGD(devList, &urls, &data, localIP, sizeof(localIP), wanIP, sizeof(wanIP));
+    freeUPNPDevlist(devList);
+    if (ret <= 0) return;
+
     int base = 5000 + (linkplay - 1) * 4;
-    ClosePort(base);
-    ClosePort(base + 1);
-    ClosePort(base + 2);
-    ClosePort(base + 3);
+    for (int i = 0; i < 4; i++)
+    {
+        int port = base + i;
+        std::string portStr = std::to_string(port);
+        UPNP_DeletePortMapping(
+            urls.controlURL,
+            data.first.servicetype,
+            portStr.c_str(),
+            "UDP",
+            nullptr);
+        printf("[UPnP] Port %d closed\n", port);
+    }
+
+    FreeUPNPUrls(&urls);
 }
 
 #endif // SUPERMODEL_WIN32

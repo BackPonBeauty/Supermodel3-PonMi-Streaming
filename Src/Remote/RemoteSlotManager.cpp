@@ -14,6 +14,7 @@
 #include <random>
 #include "UPnPHelper.h"
 #include "Network/HandshakeServer.h"
+#include "Util/NewConfig.h"
 #include <cmath>
 
 // #pragma comment(lib, "xinput.lib")
@@ -510,16 +511,25 @@ void RemoteSlotManager::UpdateAvailableSlots()
     if (!m_firebase.IsInitialized() || m_externalIp.empty())
         return;
 
+    // INI設定のStreaming有効・無効をリアルタイムに取得
+    // (s_runtime_config は Main.cpp で設定されるグローバル設定ノードです)
+    extern Util::Config::Node s_runtime_config;
+    bool streamingEnabled = s_runtime_config["Streaming"].ValueAsDefault<bool>(false);
+
     bool available[5] = {false};
-    if (m_linkplay == 0)
+    if (streamingEnabled)
     {
-        available[1] = true;
-        available[2] = true;
+        if (m_linkplay == 0)
+        {
+            available[1] = true;
+            available[2] = true;
+        }
+        else
+        {
+            available[m_linkplay] = true;
+        }
     }
-    else
-    {
-        available[m_linkplay] = true;
-    }
+    // streamingEnabled が false の場合は available は全て false のままになります
 
     // Key = sanitized IP, PUT/PATCH based on linkplay number
     m_firebase.RegisterHost(m_externalIp, available, m_linkplay, m_gameTitle, m_serverName);

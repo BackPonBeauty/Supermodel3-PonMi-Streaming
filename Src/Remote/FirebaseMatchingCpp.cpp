@@ -126,31 +126,31 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
         info.timestamp = GetUnixTimestamp();
         info.ip = externalIp;
         info.gametitle = gameTitle; // ROM name (e.g., spikeofe)
-        if (linkplay == 0 || linkplay == 1)
-        {
-            info.servername = serverName;
-        }
-        else
-        {
-            info.servername = "";
-        }
+        info.servername = serverName; // Register serverName for any linkplay number
 
         for (int slot = 1; slot <= 4; slot++)
         {
-            SlotInfoCpp s;
-            s.xinputPort = SLOT_XINPUT_PORT[slot];
-            s.videoPort = SLOT_VIDEO_PORT[slot];
-            s.audioPort = SLOT_AUDIO_PORT[slot];
+            bool isSlotAvailable = false;
             if (linkplay == 0)
             {
                 // LinkPlay=0 opens both Slot 1 and Slot 2
-                s.available = (slot == 1 || slot == 2) ? availableSlots[slot] : false;
+                isSlotAvailable = (slot == 1 || slot == 2) ? availableSlots[slot] : false;
             }
             else
             {
-                s.available = (slot == linkplay) ? availableSlots[slot] : false;
+                isSlotAvailable = (slot == linkplay) ? availableSlots[slot] : false;
             }
-            info.slots[slot] = s;
+
+            // ストリーミングが有効(available=true)なスロットのみ、Firebase上にスロットキーを作成
+            if (isSlotAvailable)
+            {
+                SlotInfoCpp s;
+                s.xinputPort = SLOT_XINPUT_PORT[slot];
+                s.videoPort = SLOT_VIDEO_PORT[slot];
+                s.audioPort = SLOT_AUDIO_PORT[slot];
+                s.available = true;
+                info.slots[slot] = s;
+            }
         }
 
         std::string putPath = "/hosts/" + key + ".json?auth=" + m_idToken;
@@ -175,7 +175,16 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
                 std::string slotKey = "slot" + std::to_string(slot);
                 std::string patchPath = "/hosts/" + key + "/" + slotKey + ".json?auth=" + m_idToken;
                 std::ostringstream ss;
-                ss << "{\"available\":" << (availableSlots[slot] ? "true" : "false") << "}";
+                if (availableSlots[slot])
+                {
+                    ss << "{\"available\":true,\"audio\":" << SLOT_AUDIO_PORT[slot]
+                       << ",\"video\":" << SLOT_VIDEO_PORT[slot]
+                       << ",\"xinput\":" << SLOT_XINPUT_PORT[slot] << "}";
+                }
+                else
+                {
+                    ss << "{\"available\":false}";
+                }
                 HttpPatch(dbHost, std::wstring(patchPath.begin(), patchPath.end()), ss.str(), m_idToken);
             }
             printf("[Firebase] PATCH slot1 and slot2 available key=%s\n", key.c_str());
@@ -185,7 +194,16 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
             std::string slotKey = "slot" + std::to_string(linkplay);
             std::string patchPath = "/hosts/" + key + "/" + slotKey + ".json?auth=" + m_idToken;
             std::ostringstream ss;
-            ss << "{\"available\":" << (availableSlots[linkplay] ? "true" : "false") << "}";
+            if (availableSlots[linkplay])
+            {
+                ss << "{\"available\":true,\"audio\":" << SLOT_AUDIO_PORT[linkplay]
+                   << ",\"video\":" << SLOT_VIDEO_PORT[linkplay]
+                   << ",\"xinput\":" << SLOT_XINPUT_PORT[linkplay] << "}";
+            }
+            else
+            {
+                ss << "{\"available\":false}";
+            }
             HttpPatch(dbHost, std::wstring(patchPath.begin(), patchPath.end()), ss.str(), m_idToken);
             printf("[Firebase] PATCH slot%d available=%s key=%s\n",
                    linkplay, availableSlots[linkplay] ? "true" : "false", key.c_str());
@@ -236,7 +254,17 @@ bool FirebaseMatchingCpp::PatchSlotAvailable(const std::string& hostId, int link
     std::wstring wpath(path.begin(), path.end());
     std::wstring dbHost = L"supermodel3-8343f-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-    std::string body = std::string("{\"available\":") + (available ? "true" : "false") + "}";
+    std::string body;
+    if (available)
+    {
+        body = "{\"available\":true,\"audio\":" + std::to_string(SLOT_AUDIO_PORT[linkplay])
+             + ",\"video\":" + std::to_string(SLOT_VIDEO_PORT[linkplay])
+             + ",\"xinput\":" + std::to_string(SLOT_XINPUT_PORT[linkplay]) + "}";
+    }
+    else
+    {
+        body = "{\"available\":false}";
+    }
     HttpPatch(dbHost, wpath, body, m_idToken);
     printf("[Firebase] PatchSlotAvailable slot%d=%s\n", linkplay, available ? "true" : "false");
     return true;
@@ -726,28 +754,26 @@ std::string FirebaseMatchingCpp::MakeHostJson(const HostInfoCpp &info)
     std::ostringstream ss;
     ss << "{";
     ss << "\"timestamp\":" << info.timestamp << ",";
-    ss << "\"ip\":\"" << EscapeJson(info.ip) << "\",";
+    ss << "\"ip\":\"" << EscapeJson(info.ip) << "\"";
+
     if (!info.gametitle.empty())
-        ss << "\"gametitle\":\"" << EscapeJson(info.gametitle) << "\",";
+        ss << ",\"gametitle\":\"" << EscapeJson(info.gametitle) << "\"";
     if (!info.servername.empty())
-        ss << "\"servername\":\"" << EscapeJson(info.servername) << "\",";
+        ss << ",\"servername\":\"" << EscapeJson(info.servername) << "\"";
 
     for (const auto &kv : info.slots)
     {
         const SlotInfoCpp &s = kv.second;
-        ss << "\"slot" << kv.first << "\":{";
+        ss << ",\"slot" << kv.first << "\":{";
         ss << "\"xinput\":" << s.xinputPort << ",";
         ss << "\"video\":" << s.videoPort << ",";
         ss << "\"audio\":" << s.audioPort << ",";
         ss << "\"available\":" << (s.available ? "true" : "false");
-        ss << "},";
+        ss << "}";
     }
 
-    // Remove trailing comma
-    std::string result = ss.str();
-    if (result.back() == ',') result.pop_back();
-    result += "}";
-    return result;
+    ss << "}";
+    return ss.str();
 }
 
 #endif // SUPERMODEL_WIN32
