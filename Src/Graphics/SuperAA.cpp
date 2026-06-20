@@ -34,7 +34,9 @@ SuperAA::SuperAA(int aaValue, CRTcolor CRTcolors, bool scanLine, int scanlineStr
         m_frameRingBuffer[i] = 0;
     }
 
-    if ((m_aa > 1) || (m_crtcolors != CRTcolor::None))
+    // Always initialize post-processing shaders and buffers to support scanlines and barrel effects
+    // even when AA = 1 and CRT colors = 0.
+    if (true)
     {
         // =========================
         // Vertex Shader
@@ -104,7 +106,7 @@ uniform int barrelEffectEnable;
 uniform int scanlineEnable;
 uniform float uAspect;
 uniform sampler2D uOldFrameTex1;      
-//uniform sampler2D uOldFrameTex2;      
+uniform sampler2D uOldFrameTex2;      
 //uniform sampler2D uOldFrameTex3;      
 uniform int uMixEnabled; 
 uniform float mixStrength;            
@@ -208,19 +210,19 @@ void main()
     // Frame delay mix
     if (uMixEnabled != 0)
     {
-        vec3 oldColor1 = texture(uOldFrameTex1, uv).rgb;  
-        color = mix(oldColor1, color, mixStrength);
-        //vec3 oldColor2 = texture(uOldFrameTex2, uv).rgb;  
-        //color = mix(oldColor2, color, 0.1);
-        //vec3 oldColor3 = texture(uOldFrameTex3, uv).rgb;  
-        //color = mix(oldColor3, color, 0.1);
+        vec3 oldColor1 = texture(uOldFrameTex1, uv).rgb;
+        vec3 oldColor2 = texture(uOldFrameTex2, uv).rgb;
+        vec3 blendedOld = (oldColor1 + oldColor2) * 0.5;
+        color = mix(blendedOld, color, mixStrength);
     }
 
 	
     // ===== Color correction =====
+#if (CRTCOLORS != 0)
     color = pow(color, vec3(cgamma));
     color *= colmatrix;
     color = vec3(sRGB(color.r), sRGB(color.g), sRGB(color.b));
+#endif
 	
     // ===== Scanline =====
     if (scanlineEnable != 0)
@@ -259,6 +261,7 @@ void main()
         m_locBarrelEffectEnable = m_shader.GetUniformLocation("barrelEffectEnable");
         m_locBarrelStrength = m_shader.GetUniformLocation("barrelStrength");
         m_locOldFrameTex1 = m_shader.GetUniformLocation("uOldFrameTex1");
+        m_locOldFrameTex2 = m_shader.GetUniformLocation("uOldFrameTex2");
         m_locMixEnabled = m_shader.GetUniformLocation("uMixEnabled");
         m_locMixStrength = m_shader.GetUniformLocation("mixStrength");
         m_locTex1 = m_shader.GetUniformLocation("tex1");
@@ -324,16 +327,13 @@ SuperAA::~SuperAA()
 // =========================
 void SuperAA::Init(int width, int height, int port, bool streamingEnabled, const std::string &codec, const std::string &encoderType)
 {
-    if ((m_aa > 1) || (m_crtcolors != CRTcolor::None))
-    {
-        if (width <= 0 || height <= 0)
-            return;
-        m_fbo.Destroy();
-        m_fbo.Create(width * m_aa, height * m_aa);
-        m_fbo2.Create(width * m_aa, height * m_aa);
-        m_width = width;
-        m_height = height;
-    }
+    if (width <= 0 || height <= 0)
+        return;
+    m_fbo.Destroy();
+    m_fbo.Create(width * m_aa, height * m_aa);
+    m_fbo2.Create(width * m_aa, height * m_aa);
+    m_width = width;
+    m_height = height;
 
     if (streamingEnabled)
     {
@@ -408,80 +408,82 @@ void SuperAA::Draw()
     }
 
     // --- 1. Post effect (AA/CRT) rendering ---
-    if ((m_aa > 1) || (m_crtcolors != CRTcolor::None))
+    if (m_width > 0 && m_height > 0)
     {
-        if (m_width > 0 && m_height > 0)
+        glBindFramebuffer(GL_FRAMEBUFFER, m_fbo2.GetFBOID());
+        m_shader.EnableShader();
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, m_fbo.GetTextureID());
+
+        if (m_locTex1 >= 0)
+            glUniform1i(m_locTex1, 0);
+
+        if (m_locScanlineEnable >= 0)
         {
-            glBindFramebuffer(GL_FRAMEBUFFER, m_fbo2.GetFBOID());
-            m_shader.EnableShader();
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, m_fbo.GetTextureID());
-
-            if (m_locTex1 >= 0)
-                glUniform1i(m_locTex1, 0);
-
-            if (m_locScanlineEnable >= 0)
-            {
-                glUniform1i(m_locScanlineEnable, m_scanlineEnable ? 1 : 0);
-            }
-
-            if (m_locScanlineStrength >= 0)
-            {
-                glUniform1f(m_locScanlineStrength, m_scanlineStrength);
-            }
-
-            // Send barrelEffect variables
-            if (m_locBarrelEffectEnable >= 0)
-                glUniform1i(m_locBarrelEffectEnable, m_barrelEffectEnable ? 1 : 0);
-
-            // Send barrelStrength (reflect dynamic values)
-            if (m_locBarrelStrength >= 0)
-                glUniform1f(m_locBarrelStrength, m_barrelStrength);
-
-            if (m_locMixStrength >= 0)
-                glUniform1f(m_locMixStrength, m_MixStrength);
-
-            if (m_mixEnabled)
-            {
-
-                // 1 frame ago
-                int oldFrameIndex1 = (m_ringBufferIndex - 1 + RING_BUFFER_SIZE) % RING_BUFFER_SIZE;
-                // 2 frames ago
-                // int oldFrameIndex2 = (m_ringBufferIndex - 2 + RING_BUFFER_SIZE) % RING_BUFFER_SIZE;
-                // 3 frames ago
-                // int oldFrameIndex3 = (m_ringBufferIndex - 3 + RING_BUFFER_SIZE) % RING_BUFFER_SIZE;
-
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, m_frameRingBuffer[oldFrameIndex1]);
-                glUniform1i(m_locOldFrameTex1, 1);
-                glActiveTexture(GL_TEXTURE0);
-
-                glUniform1i(m_locMixEnabled, 1);
-            }
-            else
-            {
-                glUniform1i(m_locMixEnabled, 0);
-            }
-
-            // Also send uAspect
-            if (m_locUAspect >= 0)
-                glUniform1f(m_locUAspect, (float)m_width / (float)m_height);
-
-            glBindVertexArray(m_vao);
-            glViewport(0, 0, m_width, m_height);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-            glBindVertexArray(0);
-            m_shader.DisableShader();
-
-            // Blit to default FBO as well
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo2.GetFBOID());
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-            glBlitFramebuffer(0, 0, m_width, m_height,
-                              0, 0, m_width, m_height,
-                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glUniform1i(m_locScanlineEnable, m_scanlineEnable ? 1 : 0);
         }
+
+        if (m_locScanlineStrength >= 0)
+        {
+            glUniform1f(m_locScanlineStrength, m_scanlineStrength);
+        }
+
+        // Send barrelEffect variables
+        if (m_locBarrelEffectEnable >= 0)
+            glUniform1i(m_locBarrelEffectEnable, m_barrelEffectEnable ? 1 : 0);
+
+        // Send barrelStrength (reflect dynamic values)
+        if (m_locBarrelStrength >= 0)
+            glUniform1f(m_locBarrelStrength, m_barrelStrength);
+
+        if (m_locMixStrength >= 0)
+            glUniform1f(m_locMixStrength, m_MixStrength);
+
+        if (m_mixEnabled)
+        {
+
+            // 1 frame ago
+            int oldFrameIndex1 = (m_ringBufferIndex - 1 + RING_BUFFER_SIZE) % RING_BUFFER_SIZE;
+            int oldFrameIndex2 = (m_ringBufferIndex - 2 + RING_BUFFER_SIZE) % RING_BUFFER_SIZE;
+
+            // Bind first old frame texture
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, m_frameRingBuffer[oldFrameIndex1]);
+            glUniform1i(m_locOldFrameTex1, 1);
+
+            // Bind second old frame texture
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, m_frameRingBuffer[oldFrameIndex2]);
+            glUniform1i(m_locOldFrameTex2, 2);
+
+            // Reset to default texture unit
+            glActiveTexture(GL_TEXTURE0);
+
+            glUniform1i(m_locMixEnabled, 1);
+        }
+        else
+        {
+            glUniform1i(m_locMixEnabled, 0);
+        }
+
+        // Also send uAspect
+        if (m_locUAspect >= 0)
+            glUniform1f(m_locUAspect, (float)m_width / (float)m_height);
+
+        glBindVertexArray(m_vao);
+        glViewport(0, 0, m_width, m_height);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindVertexArray(0);
+        m_shader.DisableShader();
+
+        // Blit to default FBO as well
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo2.GetFBOID());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0, m_width, m_height,
+                          0, 0, m_width, m_height,
+                          GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     if (m_overlayTex != 0 && m_wideScreen && m_overlay)

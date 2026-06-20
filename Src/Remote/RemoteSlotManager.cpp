@@ -233,21 +233,21 @@ bool RemoteSlotManager::StartListening(int linkplay)
         { OnXInputReceived(s, p, ip, portVal); };
 
         // Start UDP receiving on both slots 1 and 2
-        m_xinput.StartListening(1, 5000, cb);
-        m_xinput.StartListening(2, 5004, cb);
+        m_xinput.StartListening(1, 55000, cb);
+        m_xinput.StartListening(2, 55004, cb);
 
         m_slots[1].mode = SlotMode::REMOTE;
         m_slots[1].isConnected = false;
-        m_slots[1].label = "Standing by... (P1, port 5000)";
+        m_slots[1].label = "Standing by... (P1, port 55000)";
 
         m_slots[2].mode = SlotMode::REMOTE;
         m_slots[2].isConnected = false;
-        m_slots[2].label = "Standing by... (P2, port 5004)";
+        m_slots[2].label = "Standing by... (P2, port 55004)";
 
         NotifySlotChanged(1);
         NotifySlotChanged(2);
 
-        printf("[RemoteSlotManager] StartListening (LinkPlay=0): P1 (port 5000) & P2 (port 5004) ACTIVE\n");
+        printf("[RemoteSlotManager] StartListening (LinkPlay=0): P1 (port 55000) & P2 (port 55004) ACTIVE\n");
     }
     else
     {
@@ -258,7 +258,7 @@ bool RemoteSlotManager::StartListening(int linkplay)
             return false;
         }
 
-        int port = 5000 + (linkplay - 1) * 4;
+        int port = 55000 + (linkplay - 1) * 4;
 
         // Open UPnP ports (asynchronous)
         std::thread([linkplay]()

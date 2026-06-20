@@ -1,4 +1,4 @@
-#include "SDLIncludes.h"
+﻿#include "SDLIncludes.h"
 #include <GL/glew.h>
 #include <cstring>
 #include <iostream>
@@ -2078,6 +2078,7 @@ std::vector<std::string> RunGUI(const std::string &configPath, Util::Config::Nod
         }
 
         // Copy value
+        u["WindowXPosition"] = bufPosX;
         u["WindowYPosition"] = bufPosY;
         u["Supersampling"] = std::to_string(superSampling);
         u["CRTcolors"] = std::to_string(selectedCRT);

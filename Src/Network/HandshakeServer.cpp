@@ -167,6 +167,40 @@ void HandshakeServer::ListenLoop()
             printf("[Handshake] HB received from %s:%d\n", clientIP.c_str(), clientPort);
             NotifyHeartbeat(clientIP, clientPort);
         }
+        else if (strcmp(buf, "KICK") == 0 && (clientIP == "127.0.0.1" || clientIP == "localhost"))
+        {
+            printf("[Handshake] Local KICK request received. Kicking active controller.\n");
+            bool listChanged = false;
+            std::vector<std::string> currentIPs;
+            {
+                std::lock_guard<std::mutex> lock(m_clientsMutex);
+                if (!m_clients.empty())
+                {
+                    sockaddr_in clientAddr = {};
+                    clientAddr.sin_family = AF_INET;
+                    clientAddr.sin_port = htons(m_clients[0].port);
+                    clientAddr.sin_addr.s_addr = inet_addr(m_clients[0].ip.c_str());
+                    const char *kickMsg = "KICK";
+                    sendto(TO_SOCKET(m_socket), kickMsg, (int)strlen(kickMsg), 0,
+                           (sockaddr *)&clientAddr, sizeof(clientAddr));
+
+                    m_clients.erase(m_clients.begin());
+                    listChanged = true;
+
+                    if (!m_clients.empty())
+                    {
+                        m_controllerLastInputTime.store(GetTickCount());
+                        printf("[Handshake] Control passed to next client: %s\n", m_clients[0].ip.c_str());
+                    }
+                }
+            }
+            if (listChanged && m_onListChanged)
+            {
+                for (const auto &c : m_clients)
+                    currentIPs.push_back(c.ip);
+                m_onListChanged(currentIPs);
+            }
+        }
         else if (strncmp(buf, "STAT ", 5) == 0)
         {
             float loss = 0.0f;

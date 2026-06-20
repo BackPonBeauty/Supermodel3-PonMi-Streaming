@@ -1112,7 +1112,12 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
 
   // Frame timing
   s_perfCounterFrequency = SDL_GetPerformanceFrequency();
+  bool frameInterpolation120 = s_runtime_config["FrameInterpolation120"].ValueAsDefault<bool>(false);
   uint64_t perfCountPerFrame = s_perfCounterFrequency * 1000 / GetDesiredRefreshRateMilliHz();
+  if (frameInterpolation120)
+  {
+    perfCountPerFrame /= 2; // Target 120fps period (half of the 60fps frame period)
+  }
   uint64_t nextTime = 0;
 
   // Initialize the renderers
@@ -1329,11 +1334,31 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
     {
       quit = true;
     }
-    // Render if paused, otherwise run a frame
+    static bool frameFlip = false;
+    // Render if paused, otherwise run a frame (alternate every 2 loops if 120fps interpolation is active)
     if (paused)
+    {
       Model3->RenderFrame();
+    }
+    else if (frameInterpolation120)
+    {
+      if (frameFlip)
+      {
+        // Odd frame: Skip emulating PPC/game logic, just trigger a render pass
+        // to invoke SuperAA::Draw() and display the mixed intermediate frame
+        Model3->RenderFrame();
+      }
+      else
+      {
+        // Even frame: Emulate next game frame (PPC instruction execution & audio/video update)
+        Model3->RunFrame();
+      }
+      frameFlip = !frameFlip;
+    }
     else
+    {
       Model3->RunFrame();
+    }
 
 #ifdef SUPERMODEL_DEBUGGER
     bool processUI = true;
@@ -2375,6 +2400,8 @@ static ParsedCommandLine ParseCommandLine(int argc, char **argv)
 #endif
       {"-no-force-feedback", {"ForceFeedback", false}},
       {"-force-feedback", {"ForceFeedback", true}},
+      {"-frame-interpolation-120", {"FrameInterpolation120", true}},
+      {"-no-frame-interpolation-120", {"FrameInterpolation120", false}},
       {"-dump-memory", {"DumpMemory", true}},
       {"-dump-textures", {"DumpTextures", true}},
   };

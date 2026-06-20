@@ -108,7 +108,7 @@ void UPnPHelper::OpenStreamingPorts(int linkplay)
         return;
     }
 
-    int base = 5000 + (linkplay - 1) * 4;
+    int base = 55000 + (linkplay - 1) * 4;
     const char* descriptions[4] = {
         "Supermodel XInput",
         "Supermodel Handshake",
@@ -160,7 +160,7 @@ void UPnPHelper::CloseStreamingPorts(int linkplay)
     freeUPNPDevlist(devList);
     if (ret <= 0) return;
 
-    int base = 5000 + (linkplay - 1) * 4;
+    int base = 55000 + (linkplay - 1) * 4;
     for (int i = 0; i < 4; i++)
     {
         int port = base + i;

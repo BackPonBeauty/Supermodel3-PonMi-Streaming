@@ -18,7 +18,7 @@
 
 // Slot number -> XInput UDP port number
 // Must match SlotXInputPort in VB.NET (Form1.vb)
-static const int s_slotPorts[5] = {0, 5000, 5004, 5008, 5012};
+static const int s_slotPorts[5] = {0, 55000, 55004, 55008, 55012};
 
 // ---------------------------------------------------------------------------
 // Static Members: Winsock Initialization / Cleanup

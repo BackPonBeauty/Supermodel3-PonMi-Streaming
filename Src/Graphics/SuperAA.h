@@ -95,9 +95,9 @@ private:
 
 	int m_frameCounter;		// Frame counter
 	bool m_mixEnabled;		// Mix enable flag
-	GLint m_locOldFrameTex1; // Location of uOldFrameTex
-	//GLint m_locOldFrameTex2;
-	//GLint m_locOldFrameTex3;
+	GLint m_locOldFrameTex1; // Location of uOldFrameTex1
+    GLint m_locOldFrameTex2; // Location of uOldFrameTex2
+    //GLint m_locOldFrameTex3;
 	GLint m_locMixEnabled;	// Location of uMixEnabled
     IEncoder* m_encoder = nullptr;
     bool m_streamingEnabled = false;
