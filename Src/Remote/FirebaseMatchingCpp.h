@@ -53,10 +53,11 @@ public:
     static constexpr const char* DB_URL      = "DB_URL";
     static constexpr const char* AUTH_DOMAIN = "AUTH_DOMAIN";
 
+
     // Port definitions (matching SlotPorts in VB.NET)
-    static constexpr int SLOT_XINPUT_PORT[5] = { 0, 5000, 5004, 5008, 5012 };
-    static constexpr int SLOT_VIDEO_PORT[5]  = { 0, 5002, 5006, 5010, 5014 };
-    static constexpr int SLOT_AUDIO_PORT[5]  = { 0, 5003, 5007, 5011, 5015 };
+    static constexpr int SLOT_XINPUT_PORT[5] = { 0, 55000, 55004, 55008, 55012 };
+    static constexpr int SLOT_VIDEO_PORT[5]  = { 0, 55002, 55006, 55010, 55014 };
+    static constexpr int SLOT_AUDIO_PORT[5]  = { 0, 55003, 55007, 55011, 55015 };
 
     FirebaseMatchingCpp();
     ~FirebaseMatchingCpp();
