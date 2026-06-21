@@ -758,6 +758,11 @@ void SetAudioDestIPs(const std::vector<std::string> &ips)
     g_audioSender.SetDestIPs(ips);
 }
 
+void SetAudioDestEndpoints(const std::vector<std::pair<std::string, int>>& endpoints)
+{
+    g_audioSender.SetDestEndpoints(endpoints);
+}
+
 void SetAudioDestPort(int port)
 {
     g_audioSender.SetDestPort(port);

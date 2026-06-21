@@ -16,6 +16,78 @@
 constexpr int HEARTBEAT_INTERVAL_MS = 120000; // 2 minutes
 constexpr int TIMEOUT_MINUTES = 10;
 
+#include "Util/NewConfig.h"
+extern Util::Config::Node s_runtime_config;
+
+static int GetPortConfig(const std::string &primaryKey, const std::string &secondaryKey, int defaultValue)
+{
+    if (s_runtime_config.TryGet(primaryKey) && s_runtime_config[primaryKey].Exists())
+    {
+        return s_runtime_config[primaryKey].ValueAs<int>();
+    }
+    if (s_runtime_config.TryGet(secondaryKey) && s_runtime_config[secondaryKey].Exists())
+    {
+        return s_runtime_config[secondaryKey].ValueAs<int>();
+    }
+    return defaultValue;
+}
+
+int FirebaseMatchingCpp::GetSlotXInputPort(int slot)
+{
+    int base = GetPortConfig("XinputPort", "XInputPort", 55000);
+    int currentLinkPlay = s_runtime_config["LinkPlay"].ValueAsDefault<int>(1);
+    if (currentLinkPlay == 0)
+    {
+        return base + (slot - 1) * 4;
+    }
+    else
+    {
+        return base + (slot - currentLinkPlay) * 4;
+    }
+}
+
+int FirebaseMatchingCpp::GetSlotHandshakePort(int slot)
+{
+    int base = GetPortConfig("HandshakePort", "Handshakeport", 55001);
+    int currentLinkPlay = s_runtime_config["LinkPlay"].ValueAsDefault<int>(1);
+    if (currentLinkPlay == 0)
+    {
+        return base + (slot - 1) * 4;
+    }
+    else
+    {
+        return base + (slot - currentLinkPlay) * 4;
+    }
+}
+
+int FirebaseMatchingCpp::GetSlotVideoPort(int slot)
+{
+    int base = GetPortConfig("VideoPort", "Videoport", 55002);
+    int currentLinkPlay = s_runtime_config["LinkPlay"].ValueAsDefault<int>(1);
+    if (currentLinkPlay == 0)
+    {
+        return base + (slot - 1) * 4;
+    }
+    else
+    {
+        return base + (slot - currentLinkPlay) * 4;
+    }
+}
+
+int FirebaseMatchingCpp::GetSlotAudioPort(int slot)
+{
+    int base = GetPortConfig("AudioPort", "Audioport", 55003);
+    int currentLinkPlay = s_runtime_config["LinkPlay"].ValueAsDefault<int>(1);
+    if (currentLinkPlay == 0)
+    {
+        return base + (slot - 1) * 4;
+    }
+    else
+    {
+        return base + (slot - currentLinkPlay) * 4;
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Constructor / Destructor
 // ---------------------------------------------------------------------------
@@ -145,9 +217,10 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
             if (isSlotAvailable)
             {
                 SlotInfoCpp s;
-                s.xinputPort = SLOT_XINPUT_PORT[slot];
-                s.videoPort = SLOT_VIDEO_PORT[slot];
-                s.audioPort = SLOT_AUDIO_PORT[slot];
+                s.xinputPort = GetSlotXInputPort(slot);
+                s.handshakePort = GetSlotHandshakePort(slot);
+                s.videoPort = GetSlotVideoPort(slot);
+                s.audioPort = GetSlotAudioPort(slot);
                 s.available = true;
                 info.slots[slot] = s;
             }
@@ -177,9 +250,10 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
                 std::ostringstream ss;
                 if (availableSlots[slot])
                 {
-                    ss << "{\"available\":true,\"audio\":" << SLOT_AUDIO_PORT[slot]
-                       << ",\"video\":" << SLOT_VIDEO_PORT[slot]
-                       << ",\"xinput\":" << SLOT_XINPUT_PORT[slot] << "}";
+                    ss << "{\"available\":true,\"audio\":" << GetSlotAudioPort(slot)
+                       << ",\"video\":" << GetSlotVideoPort(slot)
+                       << ",\"handshake\":" << GetSlotHandshakePort(slot)
+                       << ",\"xinput\":" << GetSlotXInputPort(slot) << "}";
                 }
                 else
                 {
@@ -196,9 +270,10 @@ bool FirebaseMatchingCpp::RegisterHost(const std::string &externalIp,
             std::ostringstream ss;
             if (availableSlots[linkplay])
             {
-                ss << "{\"available\":true,\"audio\":" << SLOT_AUDIO_PORT[linkplay]
-                   << ",\"video\":" << SLOT_VIDEO_PORT[linkplay]
-                   << ",\"xinput\":" << SLOT_XINPUT_PORT[linkplay] << "}";
+                ss << "{\"available\":true,\"audio\":" << GetSlotAudioPort(linkplay)
+                   << ",\"video\":" << GetSlotVideoPort(linkplay)
+                   << ",\"handshake\":" << GetSlotHandshakePort(linkplay)
+                   << ",\"xinput\":" << GetSlotXInputPort(linkplay) << "}";
             }
             else
             {
@@ -257,9 +332,10 @@ bool FirebaseMatchingCpp::PatchSlotAvailable(const std::string& hostId, int link
     std::string body;
     if (available)
     {
-        body = "{\"available\":true,\"audio\":" + std::to_string(SLOT_AUDIO_PORT[linkplay])
-             + ",\"video\":" + std::to_string(SLOT_VIDEO_PORT[linkplay])
-             + ",\"xinput\":" + std::to_string(SLOT_XINPUT_PORT[linkplay]) + "}";
+        body = "{\"available\":true,\"audio\":" + std::to_string(GetSlotAudioPort(linkplay))
+             + ",\"video\":" + std::to_string(GetSlotVideoPort(linkplay))
+             + ",\"handshake\":" + std::to_string(GetSlotHandshakePort(linkplay))
+             + ",\"xinput\":" + std::to_string(GetSlotXInputPort(linkplay)) + "}";
     }
     else
     {
@@ -766,6 +842,7 @@ std::string FirebaseMatchingCpp::MakeHostJson(const HostInfoCpp &info)
         const SlotInfoCpp &s = kv.second;
         ss << ",\"slot" << kv.first << "\":{";
         ss << "\"xinput\":" << s.xinputPort << ",";
+        ss << "\"handshake\":" << s.handshakePort << ",";
         ss << "\"video\":" << s.videoPort << ",";
         ss << "\"audio\":" << s.audioPort << ",";
         ss << "\"available\":" << (s.available ? "true" : "false");

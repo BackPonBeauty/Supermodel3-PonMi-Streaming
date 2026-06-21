@@ -41,11 +41,13 @@ void XinputReceiver::CleanupWinsock()
     WSACleanup();
 }
 
+#include "FirebaseMatchingCpp.h"
+
 int XinputReceiver::SlotToPort(int slot)
 {
     if (slot < 1 || slot > 4)
         return 0;
-    return s_slotPorts[slot];
+    return FirebaseMatchingCpp::GetSlotXInputPort(slot);
 }
 
 // ---------------------------------------------------------------------------

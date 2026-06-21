@@ -1155,23 +1155,48 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
     int handshakePortP2 = handshakePort + 4; // Handshake port for P2 (usually 5005)
 
     // Common lambda to integrate and update destination IPs
-    auto UpdateStreamingDestinations = [superAA]() {
-        std::vector<std::string> ips;
-        // Add client IP for P1
-        for (const auto &ip : g_handshake.GetClientIPs())
+    auto UpdateStreamingDestinations = [superAA, linkplay, videoPort, audioPort]() {
+        if (linkplay == 0)
         {
-            if (std::find(ips.begin(), ips.end(), ip) == ips.end())
-                ips.push_back(ip);
-        }
-        // Add client IP for P2
-        for (const auto &ip : g_handshakeP2.GetClientIPs())
-        {
-            if (std::find(ips.begin(), ips.end(), ip) == ips.end())
-                ips.push_back(ip);
-        }
+            std::vector<std::pair<std::string, int>> videoEndpoints;
+            std::vector<std::pair<std::string, int>> audioEndpoints;
 
-        superAA->GetEncoder().SetDestIPs(ips);
-        SetAudioDestIPs(ips);
+            // P1: Client connects via g_handshake, stream video/audio to base ports
+            for (const auto &ip : g_handshake.GetClientIPs())
+            {
+                videoEndpoints.push_back({ip, videoPort});
+                audioEndpoints.push_back({ip, audioPort});
+            }
+
+            // P2: Client connects via g_handshakeP2, stream video/audio to base ports + 4
+            for (const auto &ip : g_handshakeP2.GetClientIPs())
+            {
+                videoEndpoints.push_back({ip, videoPort + 4});
+                audioEndpoints.push_back({ip, audioPort + 4});
+            }
+
+            superAA->GetEncoder().SetDestEndpoints(videoEndpoints);
+            SetAudioDestEndpoints(audioEndpoints);
+        }
+        else
+        {
+            std::vector<std::string> ips;
+            // Add client IP for P1
+            for (const auto &ip : g_handshake.GetClientIPs())
+            {
+                if (std::find(ips.begin(), ips.end(), ip) == ips.end())
+                    ips.push_back(ip);
+            }
+            // Add client IP for P2
+            for (const auto &ip : g_handshakeP2.GetClientIPs())
+            {
+                if (std::find(ips.begin(), ips.end(), ip) == ips.end())
+                    ips.push_back(ip);
+            }
+
+            superAA->GetEncoder().SetDestIPs(ips);
+            SetAudioDestIPs(ips);
+        }
 
 #ifdef SUPERMODEL_WIN32
         size_t totalClients = g_handshake.GetClientIPs().size() + g_handshakeP2.GetClientIPs().size();
@@ -1973,6 +1998,7 @@ Util::Config::Node DefaultConfig()
   config.Set("HandshakePort", 5001, "Network");
   config.Set("VideoPort", 5002, "Network");
   config.Set("AudioPort", 5003, "Network");
+  config.Set("XInputPort", 55000, "Network");
 #ifdef SUPERMODEL_WIN32
   config.Set<std::string>("Outputs", "none", "Misc", "", "", {"none", "win", "net"});
 #else

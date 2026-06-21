@@ -61,7 +61,9 @@ extern bool OutputAudio(unsigned numSamples, const float* leftFrontBuffer, const
  */
 extern void CloseAudio();
 #include <vector>
+#include <utility>
 void SetAudioDestIP(const std::string& ip);
 void SetAudioDestIPs(const std::vector<std::string>& ips);
+void SetAudioDestEndpoints(const std::vector<std::pair<std::string, int>>& endpoints);
 
 #endif	// INCLUDED_AUDIO_H

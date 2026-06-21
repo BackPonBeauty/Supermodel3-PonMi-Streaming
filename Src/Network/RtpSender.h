@@ -4,6 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <winsock2.h>
+#include <utility>
 
 class RtpSender
 {
@@ -17,6 +18,7 @@ public:
     void SetDestPort(int port);
     void SetDestIP(const std::string &ip);
     void SetDestIPs(const std::vector<std::string> &ips);
+    void SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints);
 
 private:
     void SendRtpPacket(const uint8_t *data, int size, bool marker);

@@ -17,6 +17,7 @@ public:
 
     virtual void SetDestIP(const std::string &ip) = 0;
     virtual void SetDestIPs(const std::vector<std::string> &ips) = 0;
+    virtual void SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints) = 0;
     virtual int GetWidth() const = 0;
     virtual int GetHeight() const = 0;
 };

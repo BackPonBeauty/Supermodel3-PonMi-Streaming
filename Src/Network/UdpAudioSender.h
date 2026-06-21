@@ -5,6 +5,7 @@
 #include <mutex>
 #include <winsock2.h>
 #include <opus/opus.h>
+#include <utility>
 
 class UdpAudioSender
 {
@@ -16,6 +17,7 @@ public:
     void SendWithTimestamp(const int16_t *pcm, int samples, int ch);
     void SetDestIP(const std::string &ip);
     void SetDestIPs(const std::vector<std::string> &ips);
+    void SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints);
     void Shutdown();
     void SetDestPort(int port);
 

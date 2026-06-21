@@ -140,6 +140,21 @@ void UdpAudioSender::SetDestIPs(const std::vector<std::string> &ips)
     printf("[AudioUDP] Destinations updated (%zu clients)\n", m_dests.size());
 }
 
+void UdpAudioSender::SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints)
+{
+    std::lock_guard<std::mutex> lock(m_destsMutex);
+    m_dests.clear();
+    for (const auto &ep : endpoints)
+    {
+        sockaddr_in dest = {};
+        dest.sin_family = AF_INET;
+        dest.sin_port = htons((u_short)ep.second);
+        dest.sin_addr.s_addr = inet_addr(ep.first.c_str());
+        m_dests.push_back(dest);
+    }
+    printf("[AudioUDP] Destinations updated (%zu endpoints)\n", m_dests.size());
+}
+
 void UdpAudioSender::SetDestPort(int port)
 {
     std::lock_guard<std::mutex> lock(m_destsMutex);
