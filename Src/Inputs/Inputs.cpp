@@ -100,6 +100,7 @@ CInputs::CInputs(std::shared_ptr<CInputSystem> system)
 #ifdef SUPERMODEL_DEBUGGER
 	uiEnterDebugger = AddSwitchInput("UIEnterDebugger", "Enter Debugger", Game::INPUT_UI, "KEY_ALT+KEY_B");
 #endif
+	uiToggleMultiView = AddSwitchInput("UIToggleMultiView", "ToggleMulti-View", Game::INPUT_COMMON, "KEY_F4");
 
 	// Common Controls
 	start[0] = AddSwitchInput("Start1", "P1 Start", Game::INPUT_COMMON, "NONE");

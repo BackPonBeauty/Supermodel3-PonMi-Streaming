@@ -119,6 +119,7 @@ public:
 #ifdef SUPERMODEL_DEBUGGER
   std::shared_ptr<CSwitchInput> uiEnterDebugger;
 #endif
+  std::shared_ptr<CSwitchInput> uiToggleMultiView;
 
   // Common controls between all games
   std::shared_ptr<CSwitchInput> coin[2];

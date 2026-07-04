@@ -1747,4 +1747,10 @@ bool CNew3D::ProcessLos(int priority)
 	return false;
 }
 
+void CNew3D::DumpTextureAtlas() const
+{
+	m_textureBank[0].DumpAtlas("texture_atlas_bank0.bmp");
+	m_textureBank[1].DumpAtlas("texture_atlas_bank1.bmp");
+}
+
 } // New3D

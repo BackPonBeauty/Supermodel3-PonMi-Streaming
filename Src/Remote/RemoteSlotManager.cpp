@@ -446,7 +446,12 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
                         (packet.sThumbRX != m_slots[slot].lastPacket.sThumbRX) ||
                         (packet.sThumbRY != m_slots[slot].lastPacket.sThumbRY);
 
+    WORD prevMeta = m_slots[slot].lastPacket.metaKeys;
     m_slots[slot].lastPacket = packet;
+
+    // Fire meta-key callback on any bit change
+    if (packet.metaKeys != prevMeta && m_metaKeyCb)
+        m_metaKeyCb(packet.metaKeys, prevMeta);
 
     // When LinkPlay=0, Slot 1 uses g_handshake and Slot 2 uses g_handshakeP2 to verify the IP
     if (m_linkplay == 0)
@@ -609,5 +614,41 @@ void RemoteSlotManager::SetSlotAvailable()
                 })
         .detach();
     printf("[RemoteSlotManager] SetSlotAvailable for linkplay=%d\n", m_linkplay);
+}
+
+void RemoteSlotManager::SetSlotState(int slot, bool occupied)
+{
+    if (!m_firebase.IsInitialized() || m_hostId.empty())
+        return;
+    std::thread([this, slot, occupied]()
+                {
+                    m_firebase.PatchSlotAvailable(m_hostId, slot, !occupied);
+                })
+        .detach();
+    printf("[RemoteSlotManager] SetSlotState slot%d=%s\n", slot, occupied ? "occupied" : "available");
+}
+
+void RemoteSlotManager::SetSlotClientCount(int slot, int count)
+{
+    if (!m_firebase.IsInitialized() || m_hostId.empty())
+        return;
+    std::thread([this, slot, count]()
+                {
+                    m_firebase.PatchSlotClientCount(m_hostId, slot, count);
+                })
+        .detach();
+    printf("[RemoteSlotManager] SetSlotClientCount slot%d count=%d\n", slot, count);
+}
+
+void RemoteSlotManager::SetSlotUser(int slot, const std::string &user)
+{
+    if (!m_firebase.IsInitialized() || m_hostId.empty())
+        return;
+    std::thread([this, slot, user]()
+                {
+                    m_firebase.PatchSlotUser(m_hostId, slot, user);
+                })
+        .detach();
+    printf("[RemoteSlotManager] SetSlotUser slot%d user=%s\n", slot, user.c_str());
 }
 #endif // SUPERMODEL_WIN32

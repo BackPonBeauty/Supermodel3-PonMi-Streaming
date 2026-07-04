@@ -112,16 +112,16 @@ bool NvencEncoder::CreateEncoder()
 */
     // Low-latency VBR configuration
     encConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_VBR;
-    encConfig.rcParams.averageBitRate = 3000000; // 3Mbps (実測430Kbpsの余裕あり)
-    encConfig.rcParams.maxBitRate = 4000000;     // 3Mbps (動きの激しい場面用)
-    encConfig.rcParams.vbvBufferSize = 3000000;  // averageと同値推奨
-    encConfig.rcParams.vbvInitialDelay = 1500000;
+    encConfig.rcParams.averageBitRate = 2500000; // 2.5Mbps (H.264想定)
+    encConfig.rcParams.maxBitRate = 3000000;     // 3Mbps (動きの激しい場面用)
+    encConfig.rcParams.vbvBufferSize = 2500000;  // averageと同値推奨
+    encConfig.rcParams.vbvInitialDelay = 0;
     encConfig.frameIntervalP = 1;    // No B-frames (低遅延維持)
     encConfig.gopLength = m_fps;
 
     // 追加推奨
     encConfig.rcParams.enableAQ = 1;         // Adaptive Quantization ON (静止部分を綺麗に)
-    encConfig.rcParams.aqStrength = 8;       // 1-15、強めが画質良い
+    encConfig.rcParams.aqStrength = 15;       // 1-15、強めが画質良い
     encConfig.rcParams.enableTemporalAQ = 1; // 時間方向AQも有効
     if (useH265)
     {
@@ -437,7 +437,7 @@ bool NvencEncoder::ReconfigureBitrate(int avgBitrate, int maxBitrate)
     encConfig.rcParams.averageBitRate = avgBitrate;
     encConfig.rcParams.maxBitRate = maxBitrate;
     encConfig.rcParams.vbvBufferSize = avgBitrate;
-    encConfig.rcParams.vbvInitialDelay = avgBitrate / 2;
+    encConfig.rcParams.vbvInitialDelay = 0;
     encConfig.frameIntervalP = 1;
     encConfig.gopLength = m_fps;
 

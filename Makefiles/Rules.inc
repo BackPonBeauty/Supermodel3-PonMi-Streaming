@@ -81,7 +81,7 @@ endif
 #
 # Construct the compiler (C and C++) and linker flags
 #
-COMMON_CFLAGS = -c $(ARCH) $(OPT) $(WARN) $(addprefix -I,$(sort $(INCLUDE_DIRS))) -DGLEW_STATIC $(SUPERMODEL_BUILD_FLAGS)
+COMMON_CFLAGS = -c $(ARCH) $(OPT) $(WARN) $(addprefix -I,$(sort $(INCLUDE_DIRS))) -DGLEW_STATIC -DBOOST_USE_WINDOWS_H -D_WIN32_WINNT=0x0A00 $(SUPERMODEL_BUILD_FLAGS)
 CFLAGS = $(COMMON_CFLAGS) $(CSTD)
 CXXFLAGS = $(PLATFORM_CXXFLAGS) $(COMMON_CFLAGS) $(CXXSTD)
 LDFLAGS = -o $(BIN_DIR)/$(SUPERMODEL_BINARY) $(PLATFORM_LDFLAGS) $(LDOPT)
@@ -185,6 +185,7 @@ SRC_FILES = \
 	Src/Network/TCPSend.cpp \
 	Src/Network/NetBoard.cpp \
 	Src/Network/SimNetBoard.cpp \
+	Src/Graphics/SharedMemManager.cpp \
 	$(PLATFORM_SRC_FILES)
 
 ifeq ($(strip $(ENABLE_DEBUGGER)),1)

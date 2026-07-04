@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <functional>
 
 #include "IEncoder.h"
 #include "NvencEncoder.h"
@@ -65,9 +67,19 @@ public:
 	void InitFrameRingBuffer(int width, int height);
 	void UpdateFrameRingBuffer();
 	bool IsStreamingEnabled() const { return m_streamingEnabled; }
+	void ToggleMultiView();
+	bool IsMultiViewEnabled() const { return m_multiViewEnabled; }
+	void WriteNicknames(const std::string& player, const std::string& spectator);
+	bool ReadNicknames(int playerIdx, std::string& outPlayer, std::string& outSpectator) const;
+
+	// Callback called just before EncodeFrame — render overlays into fbo2 here
+	using PreEncodeCallback = std::function<void(GLuint fboID, int width, int height)>;
+	void SetPreEncodeCallback(PreEncodeCallback cb) { m_preEncodeCallback = cb; }
+
 private:
 	FBO m_fbo;
 	FBO m_fbo2;
+	PreEncodeCallback m_preEncodeCallback;
 	GLSLShader m_shader;
 	GLSLShader m_overlayShader;
 	const int m_aa;
@@ -101,4 +113,14 @@ private:
 	GLint m_locMixEnabled;	// Location of uMixEnabled
     IEncoder* m_encoder = nullptr;
     bool m_streamingEnabled = false;
+
+	// LinkPlay Shared Memory Multi-View
+	bool m_multiViewEnabled = false;
+	int m_playerIndex = 0; // 0=P1, 1=P2, 2=P3, 3=P4
+	class SharedMemManager* m_shmManager = nullptr;
+	GLuint m_opponentTexs[4] = {0, 0, 0, 0};
+	std::vector<unsigned char> m_ownPixelBuffer;
+	std::vector<unsigned char> m_opponentPixelBuffers[4];
+	GLuint m_pboWrite = 0;
+	GLuint m_pboRead = 0;
 };

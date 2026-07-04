@@ -21,6 +21,7 @@ namespace New3D {
 		void Bind();
 		void UploadTextures(int level, int x, int y, int width, int height);
 		int GetNumberOfLevels() const;
+		void DumpAtlas(const char* filename) const;
 
 	private:
 		const UINT16* m_textureRam = nullptr;

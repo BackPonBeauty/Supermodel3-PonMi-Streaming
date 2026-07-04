@@ -1,4 +1,7 @@
 #include "TextureBank.h"
+#include <SDL.h>
+#include <vector>
+#include <cstdint>
 
 New3D::TextureBank::TextureBank()
 {
@@ -68,4 +71,26 @@ void New3D::TextureBank::UploadTextures(int level, int x, int y, int width, int 
 int New3D::TextureBank::GetNumberOfLevels() const
 {
 	return m_numLevels;
+}
+
+void New3D::TextureBank::DumpAtlas(const char* filename) const
+{
+	if (!m_textureRam) return;
+	const int W = 2048, H = 1024;
+	std::vector<uint8_t> rgba(W * H * 4);
+	for (int i = 0; i < W * H; i++) {
+		uint16_t v = m_textureRam[i];
+		rgba[i*4+0] = static_cast<uint8_t>(((v >> 10) & 0x1F) * 255 / 31); // R
+		rgba[i*4+1] = static_cast<uint8_t>(((v >>  5) & 0x1F) * 255 / 31); // G
+		rgba[i*4+2] = static_cast<uint8_t>(((v      ) & 0x1F) * 255 / 31); // B
+		rgba[i*4+3] = ((v >> 15) & 1) ? 0 : 255;                           // A (bit15=1 → transparent)
+	}
+	SDL_Surface* surf = SDL_CreateRGBSurfaceFrom(
+		rgba.data(), W, H, 32, W * 4,
+		0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+	if (surf) {
+		SDL_SaveBMP(surf, filename);
+		SDL_FreeSurface(surf);
+		printf("[TextureDump] Atlas saved: %s\n", filename);
+	}
 }

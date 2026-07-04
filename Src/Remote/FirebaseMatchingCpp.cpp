@@ -320,6 +320,36 @@ bool FirebaseMatchingCpp::UnregisterHost(const std::string &hostId)
     return true;
 }
 
+bool FirebaseMatchingCpp::PatchSlotClientCount(const std::string& hostId, int slot, int count)
+{
+    if (hostId.empty() || m_idToken.empty()) return false;
+
+    std::string slotKey = "slot" + std::to_string(slot);
+    std::string path = "/hosts/" + hostId + "/" + slotKey + ".json?auth=" + m_idToken;
+    std::wstring wpath(path.begin(), path.end());
+    std::wstring dbHost = L"supermodel3-8343f-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+    std::string body = "{\"clientCount\":" + std::to_string(count) + "}";
+    HttpPatch(dbHost, wpath, body, m_idToken);
+    printf("[Firebase] PatchSlotClientCount slot%d count=%d\n", slot, count);
+    return true;
+}
+
+bool FirebaseMatchingCpp::PatchSlotUser(const std::string& hostId, int slot, const std::string& user)
+{
+    if (hostId.empty() || m_idToken.empty()) return false;
+
+    std::string slotKey = "slot" + std::to_string(slot);
+    std::string path = "/hosts/" + hostId + "/" + slotKey + ".json?auth=" + m_idToken;
+    std::wstring wpath(path.begin(), path.end());
+    std::wstring dbHost = L"supermodel3-8343f-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+    std::string body = "{\"user\":\"" + EscapeJson(user) + "\"}";
+    HttpPatch(dbHost, wpath, body, m_idToken);
+    printf("[Firebase] PatchSlotUser slot%d user=%s\n", slot, user.c_str());
+    return true;
+}
+
 bool FirebaseMatchingCpp::PatchSlotAvailable(const std::string& hostId, int linkplay, bool available)
 {
     if (hostId.empty() || m_idToken.empty()) return false;

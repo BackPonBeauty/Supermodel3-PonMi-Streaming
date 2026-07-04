@@ -186,6 +186,7 @@ public:
 	*/
 	CNew3D(const Util::Config::Node &config, const std::string& gameName);
 	~CNew3D(void);
+	void DumpTextureAtlas() const;
 
 private:
 	/*

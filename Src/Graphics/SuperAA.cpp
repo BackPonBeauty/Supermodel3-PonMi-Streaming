@@ -1,4 +1,5 @@
 #include "SuperAA.h"
+#include "SharedMemManager.h"
 #include <string>
 #include <algorithm> // for std::max
 #define STB_IMAGE_IMPLEMENTATION
@@ -25,7 +26,12 @@ SuperAA::SuperAA(int aaValue, CRTcolor CRTcolors, bool scanLine, int scanlineStr
                                                                                                                                                                                                                               // m_locOldFrameTex2(-1),
                                                                                                                                                                                                                               // m_locOldFrameTex3(-1),
                                                                                                                                                                                                                               m_MixStrength(0.8),
-                                                                                                                                                                                                                              m_locMixEnabled(-1)
+                                                                                                                                                                                                                              m_locMixEnabled(-1),
+                                                                                                                                                                                                                              m_multiViewEnabled(false),
+                                                                                                                                                                                                                              m_playerIndex(0),
+                                                                                                                                                                                                                              m_shmManager(nullptr),
+                                                                                                                                                                                                                              m_pboWrite(0),
+                                                                                                                                                                                                                              m_pboRead(0)
 
 {
     // Initialize ring buffer (texture generation is done in Init())
@@ -320,6 +326,34 @@ SuperAA::~SuperAA()
         delete m_encoder;
         m_encoder = nullptr;
     }
+
+    if (m_shmManager)
+    {
+        m_shmManager->Cleanup();
+        delete m_shmManager;
+        m_shmManager = nullptr;
+    }
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (m_opponentTexs[i])
+        {
+            glDeleteTextures(1, &m_opponentTexs[i]);
+            m_opponentTexs[i] = 0;
+        }
+    }
+
+    if (m_pboWrite)
+    {
+        glDeleteBuffers(1, &m_pboWrite);
+        m_pboWrite = 0;
+    }
+
+    if (m_pboRead)
+    {
+        glDeleteBuffers(1, &m_pboRead);
+        m_pboRead = 0;
+    }
 }
 
 // =========================
@@ -389,6 +423,29 @@ void SuperAA::Init(int width, int height, int port, bool streamingEnabled, const
     {
         m_streamingEnabled = false;
         printf("[Streaming] NVENC/AMF/RTP disabled\n");
+    }
+
+    // Initialize LinkPlay MultiView Shared Memory
+    extern Util::Config::Node s_runtime_config;
+    int linkplay = (int)s_runtime_config["LinkPlay"].ValueAsDefault<int64_t>(0);
+    // We treat Server/P1 as Slot 1, client/P2 as Slot 2, P3 as Slot 3, P4 as Slot 4 based on videoPort.
+    // videoPorts: 55002 (P1), 55006 (P2), 55010 (P3), 55014 (P4)
+    int videoPort = s_runtime_config["VideoPort"].ValueAsDefault<int>(55002);
+    m_playerIndex = (videoPort - 55002) / 4;
+    if (m_playerIndex < 0 || m_playerIndex >= 4) {
+        m_playerIndex = 0; // Fallback
+    }
+
+    m_shmManager = new SharedMemManager(m_playerIndex, width, height);
+    if (m_shmManager->Init()) {
+        m_ownPixelBuffer.resize(width * height * 4);
+        for (int i = 0; i < 4; ++i) {
+            m_opponentPixelBuffers[i].resize(width * height * 4, 0); // initial black frames
+        }
+    } else {
+        delete m_shmManager;
+        m_shmManager = nullptr;
+        printf("[LinkPlay] Shared memory initialization failed!\n");
     }
 }
 // m_fbo.Destroy();
@@ -477,13 +534,141 @@ void SuperAA::Draw()
         glBindVertexArray(0);
         m_shader.DisableShader();
 
-        // Blit to default FBO as well
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo2.GetFBOID());
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0, 0, m_width, m_height,
-                          0, 0, m_width, m_height,
-                          GL_COLOR_BUFFER_BIT, GL_LINEAR);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // --- LinkPlay Shared Memory MultiView processing ---
+        if (m_shmManager)
+        {
+            // 1. Read own frame pixels from FBO2 texture back to memory
+            glBindTexture(GL_TEXTURE_2D, m_fbo2.GetTextureID());
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_ownPixelBuffer.data());
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            // 2. Write own frame to local shared memory
+            m_shmManager->WriteLocalFrame(m_ownPixelBuffer.data());
+
+            if (m_multiViewEnabled)
+            {
+                // 3. Read opponent frames from others
+                bool hasNewOpponentFrames[4] = {false, false, false, false};
+                for (int i = 0; i < 4; ++i)
+                {
+                    if (i != m_playerIndex)
+                    {
+                        hasNewOpponentFrames[i] = m_shmManager->ReadRemoteFrame(i, m_opponentPixelBuffers[i].data());
+                    }
+                }
+
+                // Create or update opponent textures
+                for (int i = 0; i < 4; ++i)
+                {
+                    if (i != m_playerIndex)
+                    {
+                        if (m_opponentTexs[i] == 0)
+                        {
+                            glGenTextures(1, &m_opponentTexs[i]);
+                            glBindTexture(GL_TEXTURE_2D, m_opponentTexs[i]);
+                            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_opponentPixelBuffers[i].data());
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                        }
+                        else if (hasNewOpponentFrames[i])
+                        {
+                            glBindTexture(GL_TEXTURE_2D, m_opponentTexs[i]);
+                            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, m_opponentPixelBuffers[i].data());
+                        }
+                    }
+                }
+
+                // Render views to the default screen FBO (ID: 0)
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+
+                // Multi-view layout (4 quadrants)
+                // Width/Height of each quadrant to maintain 16:9 ratio
+                // Half of 960x540 is 480x270. If window size is different, halve them (truncate odd pixels)
+                int maxQuadW = m_width / 2;
+                int maxQuadH = m_height / 2;
+
+                // Enforce strict 16:9 aspect ratio within each quadrant (integer division truncates automatically)
+                int quadW = maxQuadW;
+                int quadH = (quadW * 9) / 16;
+                if (quadH > maxQuadH)
+                {
+                    quadH = maxQuadH;
+                    quadW = (quadH * 16) / 9;
+                }
+
+                // Center each quadrant inside its maximum bounding box
+                int offsetX = (maxQuadW - quadW) / 2;
+                int offsetY = (maxQuadH - quadH) / 2;
+
+                auto RenderQuadrant = [this, quadW, quadH](int x, int y, int playerIdx) {
+                    glViewport(x, y, quadW, quadH);
+                    
+                    if (playerIdx == m_playerIndex)
+                    {
+                        // Direct own frame blit (0 delay)
+                        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo2.GetFBOID());
+                        glBlitFramebuffer(0, 0, m_width, m_height, x, y, x + quadW, y + quadH, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+                    }
+                    else
+                    {
+                        // Render opponent texture using overlay shader
+                        GLuint tex = m_opponentTexs[playerIdx];
+                        if (tex != 0)
+                        {
+                            m_overlayShader.EnableShader();
+                            glActiveTexture(GL_TEXTURE0);
+                            glBindTexture(GL_TEXTURE_2D, tex);
+                            glUniform1i(m_overlayShader.uniformLocMap["uOverlayTex"], 0);
+                            glBindVertexArray(m_vao);
+                            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                            m_overlayShader.DisableShader();
+                        }
+                    }
+                };
+
+                // P1: Top-Left
+                RenderQuadrant(offsetX, maxQuadH + offsetY, 0);
+
+                // P2: Top-Right
+                RenderQuadrant(maxQuadW + offsetX, maxQuadH + offsetY, 1);
+
+                // P3: Bottom-Right
+                RenderQuadrant(maxQuadW + offsetX, offsetY, 2);
+
+                // P4: Bottom-Left
+                RenderQuadrant(offsetX, offsetY, 3);
+
+                glBindVertexArray(0);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                // Copy default framebuffer back into m_fbo2 for streaming/video encoding
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo2.GetFBOID());
+                glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            }
+            else
+            {
+                // Single view mode: Normal blit
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo2.GetFBOID());
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+                glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            }
+        }
+        else
+        {
+            // Default Fallback
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo2.GetFBOID());
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
     }
 
     if (m_overlayTex != 0 && m_wideScreen && m_overlay)
@@ -823,7 +1008,43 @@ void SuperAA::UpdateFrameRingBuffer()
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
     m_ringBufferIndex = (m_ringBufferIndex + 1) % RING_BUFFER_SIZE;
+
+    // Allow caller to render overlays into fbo2 before encoding
+    if (m_preEncodeCallback)
+        m_preEncodeCallback(m_fbo2.GetFBOID(), m_width, m_height);
+
     // NVENC encode (pass FBO texture directly)
     if (m_streamingEnabled && m_encoder)
         m_encoder->EncodeFrame(m_fbo2.GetTextureID());
 }
+
+void SuperAA::ToggleMultiView()
+{
+    // If trying to enable and no other players are present, ignore the request
+    if (!m_multiViewEnabled && m_shmManager && !m_shmManager->HasAnyRemotePlayer())
+    {
+        printf("[LinkPlay] MultiView request ignored — no remote players in shared memory.\n");
+        return;
+    }
+
+    m_multiViewEnabled = !m_multiViewEnabled;
+    printf("[LinkPlay] MultiView toggled to %s\n", m_multiViewEnabled ? "ON" : "OFF");
+
+    // Force reconnection/retry by resetting handles when enabling MultiView
+    if (m_multiViewEnabled && m_shmManager)
+    {
+        m_shmManager->ResetConnections();
+    }
+}
+
+void SuperAA::WriteNicknames(const std::string& player, const std::string& spectator)
+{
+    if (m_shmManager) m_shmManager->WriteNicknames(player, spectator);
+}
+
+bool SuperAA::ReadNicknames(int playerIdx, std::string& outPlayer, std::string& outSpectator) const
+{
+    if (!m_shmManager) return false;
+    return m_shmManager->ReadNicknames(playerIdx, outPlayer, outSpectator);
+}
+

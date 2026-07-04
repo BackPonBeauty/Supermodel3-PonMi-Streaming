@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <atomic>
 #include <winsock2.h>
 #include <utility>
 
@@ -19,6 +20,7 @@ public:
     void SetDestIP(const std::string &ip);
     void SetDestIPs(const std::vector<std::string> &ips);
     void SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints);
+    float GetBitrateBps();
 
 private:
     void SendRtpPacket(const uint8_t *data, int size, bool marker);
@@ -34,4 +36,8 @@ private:
 
     static constexpr int RTP_MTU = 1400;
     bool m_useH265 = true;
+
+    std::atomic<uint64_t> m_bytesSentAcc{0};
+    std::atomic<float>    m_bitrateBps{0.0f};
+    std::atomic<uint32_t> m_lastBitrateTime{0};
 };

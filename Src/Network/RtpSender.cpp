@@ -145,12 +145,35 @@ void RtpSender::SendRtpPacket(const uint8_t *data, int size, bool marker)
     memcpy(buf + 12, data, size);
 
     std::lock_guard<std::mutex> lock(m_destsMutex);
+    int sent = 0;
     for (const auto &dest : m_dests)
     {
         sendto(m_socket, (char *)buf, size + 12, 0,
                (sockaddr *)&dest, sizeof(dest));
+        sent = size + 12;
     }
+    if (sent > 0)
+        m_bytesSentAcc.fetch_add((uint64_t)sent, std::memory_order_relaxed);
     m_seqNum++;
+}
+
+float RtpSender::GetBitrateBps()
+{
+    uint32_t now = GetTickCount();
+    uint32_t last = m_lastBitrateTime.load(std::memory_order_relaxed);
+    uint32_t elapsed = now - last;
+    if (elapsed >= 500 && last != 0)
+    {
+        uint64_t bytes = m_bytesSentAcc.exchange(0, std::memory_order_relaxed);
+        float bps = (float)bytes * 8.0f * 1000.0f / (float)elapsed;
+        m_bitrateBps.store(bps, std::memory_order_relaxed);
+        m_lastBitrateTime.store(now, std::memory_order_relaxed);
+    }
+    else if (last == 0)
+    {
+        m_lastBitrateTime.store(now, std::memory_order_relaxed);
+    }
+    return m_bitrateBps.load(std::memory_order_relaxed);
 }
 
 void RtpSender::Shutdown()

@@ -70,8 +70,8 @@ bool AmfEncoder::Init(int width, int height, int fps, int port, const std::strin
     if (useH265)
     {
         m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_USAGE, AMF_VIDEO_ENCODER_HEVC_USAGE_ULTRA_LOW_LATENCY);
-        m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_TARGET_BITRATE, amf_int64(3000000));
-        m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_PEAK_BITRATE, amf_int64(4000000));
+        m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_TARGET_BITRATE, amf_int64(2500000));
+        m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_PEAK_BITRATE, amf_int64(3000000));
         m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_FRAMESIZE, ::AMFConstructSize(width, height));
         m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_FRAMERATE, ::AMFConstructRate(fps, 1));
         m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_GOP_SIZE, amf_int64(fps));
@@ -81,8 +81,8 @@ bool AmfEncoder::Init(int width, int height, int fps, int port, const std::strin
     else
     {
         m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_USAGE, AMF_VIDEO_ENCODER_USAGE_ULTRA_LOW_LATENCY);
-        m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_TARGET_BITRATE, amf_int64(3000000));
-        m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_PEAK_BITRATE, amf_int64(4000000));
+        m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_TARGET_BITRATE, amf_int64(2500000));
+        m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_PEAK_BITRATE, amf_int64(3000000));
         m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_FRAMESIZE, ::AMFConstructSize(width, height));
         m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_FRAMERATE, ::AMFConstructRate(fps, 1));
         m_pEncoder->SetProperty(AMF_VIDEO_ENCODER_IDR_PERIOD, amf_int64(fps));

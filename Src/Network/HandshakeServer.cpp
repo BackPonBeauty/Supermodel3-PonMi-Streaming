@@ -83,9 +83,49 @@ void HandshakeServer::ListenLoop()
         std::string clientIP = inet_ntoa(client.sin_addr);
         int clientPort = ntohs(client.sin_port);
 
-        if (strcmp(buf, "HELLO") == 0)
+        if (strncmp(buf, "HELLO", 5) == 0 && (buf[5] == '\0' || buf[5] == ':'))
         {
-            printf("[Handshake] HELLO from %s:%d\n", clientIP.c_str(), clientPort);
+            std::string discordNick = "guest";
+            std::string chosenCodec = m_codec; // default: host's codec
+
+            if (buf[5] == ':' && buf[6] != '\0')
+            {
+                std::string payload = std::string(buf + 6);
+                // format: <nick>:<codec1>,<codec2>,...  (codec list is optional)
+                auto colonPos = payload.find(':');
+                if (colonPos != std::string::npos)
+                {
+                    discordNick = payload.substr(0, colonPos);
+                    std::string codecList = payload.substr(colonPos + 1);
+                    // Pick first codec in client's list that matches host's codec
+                    chosenCodec = m_codec; // fallback
+                    std::string token;
+                    bool matched = false;
+                    for (size_t i = 0; i <= codecList.size(); ++i)
+                    {
+                        if (i == codecList.size() || codecList[i] == ',')
+                        {
+                            if (token == m_codec) { chosenCodec = token; matched = true; break; }
+                            token.clear();
+                        }
+                        else token += codecList[i];
+                    }
+                    // If host's codec not in client list, use first entry client supports
+                    if (!matched && !codecList.empty())
+                    {
+                        chosenCodec = codecList.substr(0, codecList.find(','));
+                        printf("[Handshake] Host codec %s not supported by client. Falling back to %s\n",
+                               m_codec.c_str(), chosenCodec.c_str());
+                    }
+                }
+                else
+                {
+                    discordNick = payload;
+                }
+            }
+
+            printf("[Handshake] HELLO from %s:%d nick=%s codec=%s\n",
+                   clientIP.c_str(), clientPort, discordNick.c_str(), chosenCodec.c_str());
 
             bool alreadyConnected = false;
             bool allowed = false;
@@ -94,7 +134,7 @@ void HandshakeServer::ListenLoop()
 
             {
                 std::lock_guard<std::mutex> lock(m_clientsMutex);
-                
+
                 // 同じIPアドレスの接続がすでにあれば、ポートとハートビートを更新して上書き許可する（再接続対策）
                 auto it = std::find_if(m_clients.begin(), m_clients.end(),
                                        [&clientIP](const ClientInfo &c) { return c.ip == clientIP; });
@@ -106,6 +146,7 @@ void HandshakeServer::ListenLoop()
                         it->port = clientPort;
                     }
                     it->lastHeartbeat = GetTickCount();
+                    it->discordNick = discordNick;
                     alreadyConnected = true;
                     allowed = true;
                 }
@@ -117,6 +158,7 @@ void HandshakeServer::ListenLoop()
                         newClient.ip = clientIP;
                         newClient.port = clientPort;
                         newClient.lastHeartbeat = GetTickCount();
+                        newClient.discordNick = discordNick;
                         m_clients.push_back(newClient);
                         allowed = true;
                         listChanged = true;
@@ -135,7 +177,7 @@ void HandshakeServer::ListenLoop()
             if (allowed)
             {
                 char ok[64];
-                snprintf(ok, sizeof(ok), "OK %d %d %s", m_width, m_height, m_codec.c_str());
+                snprintf(ok, sizeof(ok), "OK %d %d %s", m_width, m_height, chosenCodec.c_str());
                 sendto(TO_SOCKET(m_socket), ok, (int)strlen(ok), 0,
                        (sockaddr *)&client, clientLen);
 
@@ -251,7 +293,7 @@ void HandshakeServer::HeartbeatLoop()
             // コントローラー（先頭クライアント）の1分無操作判定 (P1スロットのみ対象)
             if (this == &g_handshake && !m_clients.empty())
             {
-                if (now - m_controllerLastInputTime.load() > 60000)
+                if (now - m_controllerLastInputTime.load() > 300000)
                 {
                     printf("[Handshake] Controller client %s timed out (1 min inactivity). Kicking.\n", m_clients[0].ip.c_str());
 
@@ -376,6 +418,17 @@ std::vector<std::string> HandshakeServer::GetClientIPs()
     return ips;
 }
 
+std::string HandshakeServer::GetDiscordNick(const std::string &ip)
+{
+    std::lock_guard<std::mutex> lock(m_clientsMutex);
+    if (ip.empty())
+        return m_clients.empty() ? "" : m_clients[0].discordNick;
+    for (const auto &c : m_clients)
+        if (c.ip == ip)
+            return c.discordNick;
+    return "";
+}
+
 void HandshakeServer::Stop()
 {
     m_running.store(false);
@@ -403,4 +456,4 @@ void HandshakeServer::Stop()
     }
 
     printf("[Handshake] Stopped\n");
-}
+}
