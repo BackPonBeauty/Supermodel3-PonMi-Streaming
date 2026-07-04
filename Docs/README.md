@@ -76,7 +76,7 @@
 This package is configured for **Spikeout Final Edition (spikeofe) 4-link play**.
 
 ```
-Spikeofe_4links_Sample_20260613.zip
+Spikeofe_4links_Sample.zip
 ├── 01/
 │   ├── supermodel.exe
 │   └── Config/
@@ -85,9 +85,9 @@ Spikeofe_4links_Sample_20260613.zip
 ├── 03/                       ← Slot P3
 ├── 04/                       ← Slot P4
 ├── ROMs/                     ← Place your ROM files here
-├── 4lnkstart.bat             ← Launch all 4 instances
-├── 4lnkstart with cmd.bat    ← Launch all 4 instances (with console window)
-└── README.md
+├── PonLuncher.exe            ← Launch all 4 instances / manage host 
+└── 4lnkstart with cmd.bat    ← Launch all 4 instances (with console window)
+
 ```
 
 ### Streaming Configuration Patterns
