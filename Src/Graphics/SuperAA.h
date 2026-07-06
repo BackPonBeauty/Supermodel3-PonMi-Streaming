@@ -115,9 +115,12 @@ private:
     bool m_streamingEnabled = false;
 
 	// LinkPlay Shared Memory Multi-View
+	static constexpr int SHM_W = 960;
+	static constexpr int SHM_H = 540;
 	bool m_multiViewEnabled = false;
 	int m_playerIndex = 0; // 0=P1, 1=P2, 2=P3, 3=P4
 	class SharedMemManager* m_shmManager = nullptr;
+	FBO m_shmFbo;  // 960x540 downscale target for shared memory writes
 	GLuint m_opponentTexs[4] = {0, 0, 0, 0};
 	std::vector<unsigned char> m_ownPixelBuffer;
 	std::vector<unsigned char> m_opponentPixelBuffers[4];

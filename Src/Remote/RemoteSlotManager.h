@@ -13,6 +13,10 @@
 #include <array>
 #include <string>
 #include <functional>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 #include "ViGEmManager.h"
 #include "XinputReceiver.h"
 #include "FirebaseMatchingCpp.h"
@@ -101,6 +105,7 @@ private:
     void OnXInputReceived(int slot, const XInputPacket &packet, const std::string &fromIP, int fromPort);
     void UpdateAvailableSlots();
     std::string GenerateHostId();
+    void ViGEmUpdateThread();
 
     ViGEmManager m_vigem;
     XinputReceiver m_xinput;
@@ -121,6 +126,17 @@ private:
     // Name of the running ROM (e.g., spikeofe)
     std::string m_gameTitle;
     std::string m_serverName;
+
+    // ViGEm update thread
+    struct PendingReport {
+        XUSB_REPORT report = {};
+        bool hasNew = false;
+    };
+    std::array<PendingReport, 5> m_pending; // indexes 1-4
+    std::mutex m_pendingMtx;
+    std::condition_variable m_pendingCv;
+    std::thread m_vigemThread;
+    std::atomic<bool> m_vigemRunning{ false };
 
     bool IsValidSlot(int slot) const { return slot >= 1 && slot <= 4; }
     void NotifySlotChanged(int slot);

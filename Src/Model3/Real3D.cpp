@@ -227,8 +227,11 @@ uint32_t CReal3D::SyncSnapshots(void)
     return 0;
 
   // Update read-only queue
-  queuedUploadTexturesRO = queuedUploadTextures;
-  queuedUploadTextures.clear();
+  {
+    std::lock_guard<std::mutex> lk(m_uploadQueueMutex);
+    queuedUploadTexturesRO = queuedUploadTextures;
+    queuedUploadTextures.clear();
+  }
 
   Render3D->SetBlockCulling(m_blockCullingRO);
 
@@ -557,6 +560,7 @@ void CReal3D::StoreTexture(unsigned level, unsigned xPos, unsigned yPos, unsigne
     upl.y = yPos;
     upl.width = width;
     upl.height = height;
+    std::lock_guard<std::mutex> lk(m_uploadQueueMutex);
     queuedUploadTextures.push_back(upl);
   }
   else

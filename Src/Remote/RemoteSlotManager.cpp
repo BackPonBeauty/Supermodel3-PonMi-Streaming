@@ -8,6 +8,7 @@
 
 #include "RemoteSlotManager.h"
 #include <xinput.h>
+#include <chrono>
 #include <cstdio>
 #include <sstream>
 #include <iomanip>
@@ -136,12 +137,19 @@ void RemoteSlotManager::Shutdown()
         UPnPHelper::CloseStreamingPorts(m_linkplay);
 
     m_xinput.StopAll();
+
+    // Stop ViGEm update thread
+    m_vigemRunning.store(false);
+    m_pendingCv.notify_all();
+    if (m_vigemThread.joinable())
+        m_vigemThread.join();
+
     for (int i = 1; i <= 4; i++)
         m_vigem.RemoveController(i);
     m_virtualControllerAdded = false;
     m_firebase.Shutdown();
     m_vigem.Shutdown();
-    
+
     XinputReceiver::CleanupWinsock();
 }
 
@@ -207,6 +215,13 @@ bool RemoteSlotManager::StartListening(int linkplay)
     }
 
     m_linkplay = linkplay; // Save INI value
+
+    // Start ViGEm update thread (once)
+    if (!m_vigemRunning.load())
+    {
+        m_vigemRunning.store(true);
+        m_vigemThread = std::thread(&RemoteSlotManager::ViGEmUpdateThread, this);
+    }
 
     if (linkplay == 0)
     {
@@ -487,7 +502,7 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
             g_handshake.NotifyControllerInput(fromIP, fromPort);
     }
 
-    // Convert XInputPacket to XUSB_REPORT
+    // Build XUSB_REPORT and hand off to ViGEm update thread
     XUSB_REPORT report = {};
     report.wButtons = packet.wButtons;
     report.bLeftTrigger = packet.bLeftTrigger;
@@ -497,8 +512,12 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
     report.sThumbRX = packet.sThumbRX;
     report.sThumbRY = packet.sThumbRY;
 
-    m_vigem.UpdateController(slot, report);
-    m_vigem.UpdateController(slot, report);
+    {
+        std::lock_guard<std::mutex> lk(m_pendingMtx);
+        m_pending[slot].report = report;
+        m_pending[slot].hasNew = true;
+    }
+    m_pendingCv.notify_one();
 
     if (!m_slots[slot].isConnected)
     {
@@ -626,6 +645,35 @@ void RemoteSlotManager::SetSlotState(int slot, bool occupied)
                 })
         .detach();
     printf("[RemoteSlotManager] SetSlotState slot%d=%s\n", slot, occupied ? "occupied" : "available");
+}
+
+// ---------------------------------------------------------------------------
+// ViGEm Update Thread
+// ---------------------------------------------------------------------------
+void RemoteSlotManager::ViGEmUpdateThread()
+{
+    while (m_vigemRunning.load())
+    {
+        std::unique_lock<std::mutex> lk(m_pendingMtx);
+        m_pendingCv.wait_for(lk, std::chrono::milliseconds(16), [this] {
+            if (!m_vigemRunning.load()) return true;
+            for (int i = 1; i <= 4; i++)
+                if (m_pending[i].hasNew) return true;
+            return false;
+        });
+
+        for (int slot = 1; slot <= 4; slot++)
+        {
+            if (!m_pending[slot].hasNew) continue;
+            XUSB_REPORT report = m_pending[slot].report;
+            m_pending[slot].hasNew = false;
+            lk.unlock();
+
+            m_vigem.UpdateController(slot, report);
+
+            lk.lock();
+        }
+    }
 }
 
 void RemoteSlotManager::SetSlotClientCount(int slot, int count)

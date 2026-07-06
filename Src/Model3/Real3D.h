@@ -37,6 +37,7 @@
 #include "Util/NewConfig.h"
 
 #include <cstdint>
+#include <mutex>
 #include <unordered_map>
 
 /* 
@@ -521,6 +522,7 @@ private:
   // Queued texture uploads
   std::vector<QueuedUploadTextures> queuedUploadTextures;
   std::vector<QueuedUploadTextures> queuedUploadTexturesRO;  // Read-only copy of queue
+  std::mutex m_uploadQueueMutex;
   
   // Big endian bus object for DMA memory access
   IBus  *Bus = nullptr;

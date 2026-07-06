@@ -333,6 +333,7 @@ SuperAA::~SuperAA()
         delete m_shmManager;
         m_shmManager = nullptr;
     }
+    m_shmFbo.Destroy();
 
     for (int i = 0; i < 4; ++i)
     {
@@ -436,11 +437,16 @@ void SuperAA::Init(int width, int height, int port, bool streamingEnabled, const
         m_playerIndex = 0; // Fallback
     }
 
-    m_shmManager = new SharedMemManager(m_playerIndex, width, height);
+    // Shared memory always uses fixed 960x540 so all players agree on buffer size
+    // regardless of each player's actual render resolution.
+    m_shmFbo.Destroy();
+    m_shmFbo.Create(SHM_W, SHM_H);
+
+    m_shmManager = new SharedMemManager(m_playerIndex, SHM_W, SHM_H);
     if (m_shmManager->Init()) {
-        m_ownPixelBuffer.resize(width * height * 4);
+        m_ownPixelBuffer.resize(SHM_W * SHM_H * 4);
         for (int i = 0; i < 4; ++i) {
-            m_opponentPixelBuffers[i].resize(width * height * 4, 0); // initial black frames
+            m_opponentPixelBuffers[i].resize(SHM_W * SHM_H * 4, 0);
         }
     } else {
         delete m_shmManager;
@@ -537,12 +543,18 @@ void SuperAA::Draw()
         // --- LinkPlay Shared Memory MultiView processing ---
         if (m_shmManager)
         {
-            // 1. Read own frame pixels from FBO2 texture back to memory
-            glBindTexture(GL_TEXTURE_2D, m_fbo2.GetTextureID());
+            // 1. GPU downscale: blit fbo2 (render resolution) → m_shmFbo (960x540)
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo2.GetFBOID());
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_shmFbo.GetFBOID());
+            glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, SHM_W, SHM_H, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            // 2. Read downscaled pixels from m_shmFbo
+            glBindTexture(GL_TEXTURE_2D, m_shmFbo.GetTextureID());
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_ownPixelBuffer.data());
             glBindTexture(GL_TEXTURE_2D, 0);
 
-            // 2. Write own frame to local shared memory
+            // 3. Write own frame to local shared memory
             m_shmManager->WriteLocalFrame(m_ownPixelBuffer.data());
 
             if (m_multiViewEnabled)
@@ -566,7 +578,7 @@ void SuperAA::Draw()
                         {
                             glGenTextures(1, &m_opponentTexs[i]);
                             glBindTexture(GL_TEXTURE_2D, m_opponentTexs[i]);
-                            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_opponentPixelBuffers[i].data());
+                            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SHM_W, SHM_H, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_opponentPixelBuffers[i].data());
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -575,7 +587,7 @@ void SuperAA::Draw()
                         else if (hasNewOpponentFrames[i])
                         {
                             glBindTexture(GL_TEXTURE_2D, m_opponentTexs[i]);
-                            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, m_opponentPixelBuffers[i].data());
+                            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, SHM_W, SHM_H, GL_RGBA, GL_UNSIGNED_BYTE, m_opponentPixelBuffers[i].data());
                         }
                     }
                 }
