@@ -1203,7 +1203,7 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
   });
 
   // Register pre-encode callback: render debug panel into fbo2 so it appears in the stream
-  superAA->SetPreEncodeCallback([superAA](GLuint fboID, int w, int h) {
+  superAA->SetPreEncodeCallback([superAA, decoderCodec](GLuint fboID, int w, int h) {
     if (!s_debugPanelVisible || !ImGui::GetCurrentContext())
       return;
 
@@ -1231,6 +1231,7 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
       float mbps = s_debugEncoder->GetBitrateBps() / 1000000.0f;
       ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.8f, 1.0f), "UDP Video TX: %.2f Mbps", mbps);
     }
+    ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "Codec: %s", decoderCodec.c_str());
     ImGui::Separator();
     for (int pi = 0; pi < 4; ++pi)
     {
