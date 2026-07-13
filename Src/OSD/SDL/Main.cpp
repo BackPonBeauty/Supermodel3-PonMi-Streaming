@@ -1285,10 +1285,15 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
                                   s_remoteSlotMgr.SetSlotUser(1, "");
                                   s_currentAvgBitrate = 2500000;
                                   printf("[AdaptiveBitrate] No clients. Reset ceiling to 2.5Mbps.\n");
+                                  if (g_handshakeP2.GetClientIPs().empty()) {
+                                      superAA->GetEncoder().ClearDests();
+                                      ClearAudioDests();
+                                      printf("[Main] No clients on P1 or P2. Streaming destinations cleared.\n");
+                                  }
                               }
                           });
         g_handshakeP2.Start(handshakePortP2, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), decoderCodec,
-                            [](const std::vector<std::string> &clientIPs) {
+                            [superAA](const std::vector<std::string> &clientIPs) {
                                 s_remoteSlotMgr.SetSlotClientCount(2, (int)clientIPs.size());
                                 if (!clientIPs.empty()) {
                                     discordnick = g_handshakeP2.GetDiscordNick(clientIPs[0]);
@@ -1298,6 +1303,11 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
                                     s_remoteSlotMgr.SetSlotUser(2, "");
                                     s_currentAvgBitrate = 2000000;
                                     printf("[AdaptiveBitrate] No clients (P2). Reset ceiling to 2.0Mbps.\n");
+                                    if (g_handshake.GetClientIPs().empty()) {
+                                        superAA->GetEncoder().ClearDests();
+                                        ClearAudioDests();
+                                        printf("[Main] No clients on P1 or P2. Streaming destinations cleared.\n");
+                                    }
                                 }
                             });
     }
@@ -1318,6 +1328,9 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
                                   s_remoteSlotMgr.SetSlotUser(linkplay, "");
                                   s_currentAvgBitrate = 2500000;
                                   printf("[AdaptiveBitrate] No clients. Reset ceiling to 2.5Mbps.\n");
+                                  superAA->GetEncoder().ClearDests();
+                                  ClearAudioDests();
+                                  printf("[Main] No clients. Streaming destinations cleared.\n");
                               }
                           });
     }

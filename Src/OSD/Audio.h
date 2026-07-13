@@ -64,6 +64,7 @@ extern void CloseAudio();
 #include <utility>
 void SetAudioDestIP(const std::string& ip);
 void SetAudioDestIPs(const std::vector<std::string>& ips);
-void SetAudioDestEndpoints(const std::vector<std::pair<std::string, int>>& endpoints);
+void SetAudioDestEndpoints(const std::vector<std::string>& endpoints);
+void ClearAudioDests();
 
 #endif	// INCLUDED_AUDIO_H

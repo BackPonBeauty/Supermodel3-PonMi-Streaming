@@ -2,10 +2,12 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
 #include <mutex>
 #include <atomic>
 #include <winsock2.h>
 #include <utility>
+#include <windows.h>
 
 class RtpSender
 {
@@ -19,14 +21,24 @@ public:
     void SetDestPort(int port);
     void SetDestIP(const std::string &ip);
     void SetDestIPs(const std::vector<std::string> &ips);
-    void SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints);
+    // "IP:nick" 形式のリストから宛先更新（学習済みポートをnickで引き継ぐ）
+    void SetDestEndpoints(const std::vector<std::string> &ipNickList);
+    void ClearDests();
     float GetBitrateBps();
 
 private:
     void SendRtpPacket(const uint8_t *data, int size, bool marker);
+    void HelloRecvLoop();
+    static unsigned long __stdcall HelloRecvThreadProc(void *param);
+
+    struct DestEntry
+    {
+        std::string nick;
+        sockaddr_in addr = {};
+    };
 
     SOCKET m_socket = INVALID_SOCKET;
-    std::vector<sockaddr_in> m_dests;
+    std::vector<DestEntry> m_dests;
     std::mutex m_destsMutex;
     int m_destPort = 0;
 
@@ -40,4 +52,7 @@ private:
     std::atomic<uint64_t> m_bytesSentAcc{0};
     std::atomic<float>    m_bitrateBps{0.0f};
     std::atomic<uint32_t> m_lastBitrateTime{0};
+
+    HANDLE m_helloThread = nullptr;
+    std::atomic<bool> m_helloRunning{false};
 };
