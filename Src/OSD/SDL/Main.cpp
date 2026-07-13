@@ -1268,59 +1268,11 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
     int linkplay = (int)s_runtime_config["LinkPlay"].ValueAsDefault<int64_t>(0);
     int handshakePortP2 = handshakePort + 4; // Handshake port for P2 (usually 5005)
 
-    // Common lambda to integrate and update destination IPs
-    auto UpdateStreamingDestinations = [superAA, linkplay, videoPort, audioPort]() {
-        if (linkplay == 0)
-        {
-            std::vector<std::pair<std::string, int>> videoEndpoints;
-            std::vector<std::pair<std::string, int>> audioEndpoints;
-
-            // P1: Client connects via g_handshake, stream video/audio to base ports
-            for (const auto &ip : g_handshake.GetClientIPs())
-            {
-                videoEndpoints.push_back({ip, videoPort});
-                audioEndpoints.push_back({ip, audioPort});
-            }
-
-            // P2: Client connects via g_handshakeP2, stream video/audio to base ports + 4
-            for (const auto &ip : g_handshakeP2.GetClientIPs())
-            {
-                videoEndpoints.push_back({ip, videoPort + 4});
-                audioEndpoints.push_back({ip, audioPort + 4});
-            }
-
-            superAA->GetEncoder().SetDestEndpoints(videoEndpoints);
-            SetAudioDestEndpoints(audioEndpoints);
-        }
-        else
-        {
-            std::vector<std::string> ips;
-            // Add client IP for P1
-            for (const auto &ip : g_handshake.GetClientIPs())
-            {
-                if (std::find(ips.begin(), ips.end(), ip) == ips.end())
-                    ips.push_back(ip);
-            }
-            // Add client IP for P2
-            for (const auto &ip : g_handshakeP2.GetClientIPs())
-            {
-                if (std::find(ips.begin(), ips.end(), ip) == ips.end())
-                    ips.push_back(ip);
-            }
-
-            superAA->GetEncoder().SetDestIPs(ips);
-            SetAudioDestIPs(ips);
-        }
-
-        // Per-slot available state is updated directly in each handshake callback below.
-    };
-
     if (linkplay == 0)
     {
         printf("[Main] LinkPlay=0 -> Launching BOTH P1 (port %d) and P2 (port %d) handshake servers\n", handshakePort, handshakePortP2);
         g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), decoderCodec,
-                          [UpdateStreamingDestinations, superAA](const std::vector<std::string> &clientIPs) {
-                              UpdateStreamingDestinations();
+                          [superAA](const std::vector<std::string> &clientIPs) {
                               s_remoteSlotMgr.SetSlotClientCount(1, (int)clientIPs.size());
                               s_playerNick    = clientIPs.size() >= 1 ? g_handshake.GetDiscordNick(clientIPs[0]) : "";
                               s_spectatorNick = clientIPs.size() >= 2 ? g_handshake.GetDiscordNick(clientIPs[1]) : "";
@@ -1336,8 +1288,7 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
                               }
                           });
         g_handshakeP2.Start(handshakePortP2, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), decoderCodec,
-                            [UpdateStreamingDestinations](const std::vector<std::string> &clientIPs) {
-                                UpdateStreamingDestinations();
+                            [](const std::vector<std::string> &clientIPs) {
                                 s_remoteSlotMgr.SetSlotClientCount(2, (int)clientIPs.size());
                                 if (!clientIPs.empty()) {
                                     discordnick = g_handshakeP2.GetDiscordNick(clientIPs[0]);
@@ -1354,8 +1305,7 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
     {
         printf("[Main] LinkPlay=%d -> Launching single handshake server on port %d\n", linkplay, handshakePort);
         g_handshake.Start(handshakePort, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), decoderCodec,
-                          [UpdateStreamingDestinations, linkplay, superAA](const std::vector<std::string> &clientIPs) {
-                              UpdateStreamingDestinations();
+                          [linkplay, superAA](const std::vector<std::string> &clientIPs) {
                               s_remoteSlotMgr.SetSlotClientCount(linkplay, (int)clientIPs.size());
                               s_playerNick    = clientIPs.size() >= 1 ? g_handshake.GetDiscordNick(clientIPs[0]) : "";
                               s_spectatorNick = clientIPs.size() >= 2 ? g_handshake.GetDiscordNick(clientIPs[1]) : "";

@@ -13,6 +13,7 @@ public:
         int port;
         uint32_t lastHeartbeat;
         std::string discordNick;
+        std::string sessionId;
     };
 
     // クライアントリストが変更された時のコールバック
