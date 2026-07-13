@@ -255,7 +255,7 @@ void AmfEncoder::SetDestIPs(const std::vector<std::string> &ips)
     m_rtpSender.SetDestIPs(ips);
 }
 
-void AmfEncoder::SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints)
+void AmfEncoder::SetDestEndpoints(const std::vector<std::string> &endpoints)
 {
     m_rtpSender.SetDestEndpoints(endpoints);
 }

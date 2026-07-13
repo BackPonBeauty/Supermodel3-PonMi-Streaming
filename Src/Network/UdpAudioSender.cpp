@@ -95,11 +95,7 @@ void UdpAudioSender::HelloRecvLoop()
             std::string nick = "unknown";
 
             if (buf[5] == ':' && buf[6] != '\0')
-            {
-                std::string payload = std::string(buf + 6);
-                auto upos = payload.rfind('_');
-                nick = (upos != std::string::npos) ? payload.substr(0, upos) : payload;
-            }
+                nick = std::string(buf + 6);
 
             printf("[AudioUDP] HELLO from %s:%d (nick=%s) -> learning dest\n",
                    fromIP.c_str(), fromPort, nick.c_str());

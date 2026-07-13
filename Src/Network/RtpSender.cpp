@@ -83,14 +83,8 @@ void RtpSender::HelloRecvLoop()
             int fromPort = ntohs(from.sin_port);
             std::string nick = "unknown";
 
-            // ニックネームの抽出: "HELLO:nick_slotid" or "HELLO:nick"
             if (buf[5] == ':' && buf[6] != '\0')
-            {
-                std::string payload = std::string(buf + 6);
-                // スロットIDのアンダースコアより前がニックネーム
-                auto upos = payload.rfind('_');
-                nick = (upos != std::string::npos) ? payload.substr(0, upos) : payload;
-            }
+                nick = std::string(buf + 6);
 
             printf("[RTP] HELLO from %s:%d (nick=%s) -> learning dest\n",
                    fromIP.c_str(), fromPort, nick.c_str());

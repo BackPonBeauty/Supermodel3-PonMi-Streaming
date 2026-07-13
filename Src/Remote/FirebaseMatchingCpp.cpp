@@ -335,7 +335,7 @@ bool FirebaseMatchingCpp::PatchSlotClientCount(const std::string& hostId, int sl
     return true;
 }
 
-bool FirebaseMatchingCpp::PatchSlotUser(const std::string& hostId, int slot, const std::string& user)
+bool FirebaseMatchingCpp::PatchSlotPlayer(const std::string& hostId, int slot, const std::string& player)
 {
     if (hostId.empty() || m_idToken.empty()) return false;
 
@@ -344,9 +344,24 @@ bool FirebaseMatchingCpp::PatchSlotUser(const std::string& hostId, int slot, con
     std::wstring wpath(path.begin(), path.end());
     std::wstring dbHost = L"supermodel3-8343f-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-    std::string body = "{\"user\":\"" + EscapeJson(user) + "\"}";
+    std::string body = "{\"player\":\"" + EscapeJson(player) + "\"}";
     HttpPatch(dbHost, wpath, body, m_idToken);
-    printf("[Firebase] PatchSlotUser slot%d user=%s\n", slot, user.c_str());
+    printf("[Firebase] PatchSlotPlayer slot%d player=%s\n", slot, player.c_str());
+    return true;
+}
+
+bool FirebaseMatchingCpp::PatchSlotSpectator(const std::string& hostId, int slot, const std::string& spectator)
+{
+    if (hostId.empty() || m_idToken.empty()) return false;
+
+    std::string slotKey = "slot" + std::to_string(slot);
+    std::string path = "/hosts/" + hostId + "/" + slotKey + ".json?auth=" + m_idToken;
+    std::wstring wpath(path.begin(), path.end());
+    std::wstring dbHost = L"supermodel3-8343f-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+    std::string body = "{\"spectator\":\"" + EscapeJson(spectator) + "\"}";
+    HttpPatch(dbHost, wpath, body, m_idToken);
+    printf("[Firebase] PatchSlotSpectator slot%d spectator=%s\n", slot, spectator.c_str());
     return true;
 }
 

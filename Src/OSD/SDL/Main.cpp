@@ -170,6 +170,14 @@ static bool      s_debugPanelVisible = false;
 static IEncoder* s_debugEncoder      = nullptr;
 static std::string s_playerNick;
 static std::string s_spectatorNick;
+
+struct SlotNotification {
+    std::string message;
+    float expireTime; // SDL_GetTicks() / 1000.0f
+};
+static std::vector<SlotNotification> s_slotNotifications;
+static std::string s_prevNicks[4][2]; // [slot][0=player,1=spectator]
+
 static int       s_currentAvgBitrate = 2500000;  // initial avg bitrate (bps)
 static const int s_bitrateStep       = 500000;
 static const int s_bitrateMin        = 500000;
@@ -1204,8 +1212,52 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
 
   // Register pre-encode callback: render debug panel into fbo2 so it appears in the stream
   superAA->SetPreEncodeCallback([superAA, decoderCodec](GLuint fboID, int w, int h) {
-    if (!s_debugPanelVisible || !ImGui::GetCurrentContext())
+    if (!ImGui::GetCurrentContext())
       return;
+
+    // Nick変化検出（debug panel ON/OFFに関わらず常時チェック）
+    float now = SDL_GetTicks() / 1000.0f;
+    for (int pi = 0; pi < 4; ++pi)
+    {
+      std::string pNick, sNick;
+      superAA->ReadNicknames(pi, pNick, sNick);
+      bool playerChanged    = (pNick != s_prevNicks[pi][0]);
+      bool spectatorChanged = (sNick != s_prevNicks[pi][1]);
+
+      std::string slot = "P" + std::to_string(pi+1);
+      bool promoted = spectatorChanged && playerChanged &&
+                      !s_prevNicks[pi][1].empty() && pNick == s_prevNicks[pi][1];
+
+      if (playerChanged) {
+        if (!s_prevNicks[pi][0].empty())
+          s_slotNotifications.push_back({slot + " " + s_prevNicks[pi][0] + " : disconnected", now + 7.0f});
+        if (promoted)
+          s_slotNotifications.push_back({slot + " " + pNick + " : connected (promoted)", now + 7.0f});
+        else if (!pNick.empty())
+          s_slotNotifications.push_back({slot + " " + pNick + " : connected", now + 7.0f});
+        s_prevNicks[pi][0] = pNick;
+      }
+
+      if (spectatorChanged) {
+        bool silentlyCleared = sNick.empty() && playerChanged && pNick.empty();
+        if (!promoted && !silentlyCleared) {
+          if (!sNick.empty())
+            s_slotNotifications.push_back({slot + " " + sNick + " : spectating", now + 7.0f});
+          else if (!s_prevNicks[pi][1].empty())
+            s_slotNotifications.push_back({slot + " " + s_prevNicks[pi][1] + " : left", now + 7.0f});
+        }
+        s_prevNicks[pi][1] = sNick;
+      }
+    }
+    // 期限切れ通知を削除
+    s_slotNotifications.erase(
+      std::remove_if(s_slotNotifications.begin(), s_slotNotifications.end(),
+                     [now](const SlotNotification &n){ return now > n.expireTime; }),
+      s_slotNotifications.end());
+
+    bool hasNotify = !s_slotNotifications.empty();
+    bool needDraw  = s_debugPanelVisible || hasNotify;
+    if (!needDraw) return;
 
     GLint prevFBO = 0;
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevFBO);
@@ -1219,36 +1271,66 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(260.0f, 310.0f), ImGuiCond_Always);
-    ImGui::SetNextWindowBgAlpha(0.6f);
-    ImGui::Begin("##debugpanel_stream", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
-                 ImGuiWindowFlags_NoSavedSettings);
-    if (s_debugEncoder)
+    // --- デバッグパネル（Alt+D時のみ）---
+    if (s_debugPanelVisible)
     {
-      float mbps = s_debugEncoder->GetBitrateBps() / 1000000.0f;
-      ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.8f, 1.0f), "UDP Video TX: %.2f Mbps", mbps);
+      ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
+      ImGui::SetNextWindowSize(ImVec2(260.0f, 310.0f), ImGuiCond_Always);
+      ImGui::SetNextWindowBgAlpha(0.6f);
+      ImGui::Begin("##debugpanel_stream", nullptr,
+                   ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
+                   ImGuiWindowFlags_NoSavedSettings);
+      if (s_debugEncoder)
+      {
+        float mbps = s_debugEncoder->GetBitrateBps() / 1000000.0f;
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.8f, 1.0f), "UDP Video TX: %.2f Mbps", mbps);
+      }
+      ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "Codec: %s", decoderCodec.c_str());
+      ImGui::Separator();
+      for (int pi = 0; pi < 4; ++pi)
+      {
+        std::string pNick, sNick;
+        superAA->ReadNicknames(pi, pNick, sNick);
+        ImGui::TextColored(ImVec4(0.6f, 0.6f, 1.0f, 1.0f), "P%d", pi + 1);
+        if (!pNick.empty())
+          ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.4f, 1.0f), "  Player   : %s", pNick.c_str());
+        else
+          ImGui::TextDisabled("  Player   : ---");
+        if (!sNick.empty())
+          ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "  Spectator: %s", sNick.c_str());
+        else
+          ImGui::TextDisabled("  Spectator: ---");
+        if (pi < 3) ImGui::Spacing();
+      }
+      ImGui::End();
     }
-    ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "Codec: %s", decoderCodec.c_str());
-    ImGui::Separator();
-    for (int pi = 0; pi < 4; ++pi)
+
+    // --- 接続/切断通知overlay（常時、7秒で自動消去）---
+    if (hasNotify)
     {
-      std::string pNick, sNick;
-      superAA->ReadNicknames(pi, pNick, sNick);
-      ImGui::TextColored(ImVec4(0.6f, 0.6f, 1.0f, 1.0f), "P%d", pi + 1);
-      if (!pNick.empty())
-        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.4f, 1.0f), "  Player   : %s", pNick.c_str());
-      else
-        ImGui::TextDisabled("  Player   : ---");
-      if (!sNick.empty())
-        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "  Spectator: %s", sNick.c_str());
-      else
-        ImGui::TextDisabled("  Spectator: ---");
-      if (pi < 3) ImGui::Spacing();
+      float notifyH = s_slotNotifications.size() * 22.0f + 12.0f;
+      ImGui::SetNextWindowPos(ImVec2(10.0f, (float)h - notifyH - 10.0f), ImGuiCond_Always);
+      ImGui::SetNextWindowSize(ImVec2(320.0f, notifyH), ImGuiCond_Always);
+      ImGui::SetNextWindowBgAlpha(0.55f);
+      ImGui::Begin("##notify_overlay", nullptr,
+                   ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
+                   ImGuiWindowFlags_NoSavedSettings);
+      for (const auto &n : s_slotNotifications)
+      {
+        float remain = n.expireTime - now;
+        float alpha  = remain < 1.5f ? remain / 1.5f : 1.0f;
+        bool connected   = n.message.find(": connected")  != std::string::npos;
+        bool spectating  = n.message.find(": spectating") != std::string::npos;
+        ImVec4 col = connected  ? ImVec4(0.0f, 1.0f, 1.0f, alpha) :  // 水色
+                     spectating ? ImVec4(1.0f, 0.8f, 0.2f, alpha) :  // 黄色
+                                  ImVec4(0.7f, 0.7f, 0.7f, alpha);   // グレー
+        ImGui::TextColored(col, "%s", n.message.c_str());
+      }
+      ImGui::End();
     }
-    ImGui::End();
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -1277,12 +1359,12 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
                               s_playerNick    = clientIPs.size() >= 1 ? g_handshake.GetDiscordNick(clientIPs[0]) : "";
                               s_spectatorNick = clientIPs.size() >= 2 ? g_handshake.GetDiscordNick(clientIPs[1]) : "";
                               superAA->WriteNicknames(s_playerNick, s_spectatorNick);
+                              s_remoteSlotMgr.SetSlotPlayer(1, s_playerNick);
+                              s_remoteSlotMgr.SetSlotSpectator(1, s_spectatorNick);
                               if (!clientIPs.empty()) {
                                   discordnick = s_playerNick;
-                                  printf("[Main] discordnick(P1)=%s\n", discordnick.c_str());
-                                  s_remoteSlotMgr.SetSlotUser(1, discordnick);
+                                  printf("[Main] discordnick(P1)=%s spectator=%s\n", discordnick.c_str(), s_spectatorNick.c_str());
                               } else {
-                                  s_remoteSlotMgr.SetSlotUser(1, "");
                                   s_currentAvgBitrate = 2500000;
                                   printf("[AdaptiveBitrate] No clients. Reset ceiling to 2.5Mbps.\n");
                                   if (g_handshakeP2.GetClientIPs().empty()) {
@@ -1295,12 +1377,17 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
         g_handshakeP2.Start(handshakePortP2, superAA->GetEncoder().GetWidth(), superAA->GetEncoder().GetHeight(), decoderCodec,
                             [superAA](const std::vector<std::string> &clientIPs) {
                                 s_remoteSlotMgr.SetSlotClientCount(2, (int)clientIPs.size());
-                                if (!clientIPs.empty()) {
-                                    discordnick = g_handshakeP2.GetDiscordNick(clientIPs[0]);
-                                    printf("[Main] discordnick(P2)=%s\n", discordnick.c_str());
-                                    s_remoteSlotMgr.SetSlotUser(2, discordnick);
-                                } else {
-                                    s_remoteSlotMgr.SetSlotUser(2, "");
+                                {
+                                    std::string p2player    = clientIPs.size() >= 1 ? g_handshakeP2.GetDiscordNick(clientIPs[0]) : "";
+                                    std::string p2spectator = clientIPs.size() >= 2 ? g_handshakeP2.GetDiscordNick(clientIPs[1]) : "";
+                                    s_remoteSlotMgr.SetSlotPlayer(2, p2player);
+                                    s_remoteSlotMgr.SetSlotSpectator(2, p2spectator);
+                                    if (!clientIPs.empty()) {
+                                        discordnick = p2player;
+                                        printf("[Main] discordnick(P2)=%s spectator=%s\n", discordnick.c_str(), p2spectator.c_str());
+                                    }
+                                }
+                                if (clientIPs.empty()) {
                                     s_currentAvgBitrate = 2000000;
                                     printf("[AdaptiveBitrate] No clients (P2). Reset ceiling to 2.0Mbps.\n");
                                     if (g_handshake.GetClientIPs().empty()) {
@@ -1320,12 +1407,12 @@ int Supermodel(const Game &game, ROMSet *rom_set, IEmulator *Model3, CInputs *In
                               s_playerNick    = clientIPs.size() >= 1 ? g_handshake.GetDiscordNick(clientIPs[0]) : "";
                               s_spectatorNick = clientIPs.size() >= 2 ? g_handshake.GetDiscordNick(clientIPs[1]) : "";
                               superAA->WriteNicknames(s_playerNick, s_spectatorNick);
+                              s_remoteSlotMgr.SetSlotPlayer(linkplay, s_playerNick);
+                              s_remoteSlotMgr.SetSlotSpectator(linkplay, s_spectatorNick);
                               if (!clientIPs.empty()) {
                                   discordnick = s_playerNick;
-                                  printf("[Main] discordnick=%s\n", discordnick.c_str());
-                                  s_remoteSlotMgr.SetSlotUser(linkplay, discordnick);
+                                  printf("[Main] discordnick=%s spectator=%s\n", discordnick.c_str(), s_spectatorNick.c_str());
                               } else {
-                                  s_remoteSlotMgr.SetSlotUser(linkplay, "");
                                   s_currentAvgBitrate = 2500000;
                                   printf("[AdaptiveBitrate] No clients. Reset ceiling to 2.5Mbps.\n");
                                   superAA->GetEncoder().ClearDests();

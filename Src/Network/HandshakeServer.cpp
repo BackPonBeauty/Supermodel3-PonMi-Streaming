@@ -425,8 +425,10 @@ std::string HandshakeServer::GetDiscordNick(const std::string &ip)
     std::lock_guard<std::mutex> lock(m_clientsMutex);
     if (ip.empty())
         return m_clients.empty() ? "" : m_clients[0].discordNick;
+    // ip may be "IP:nick" format from GetClientIPs(); extract just the IP part
+    std::string ipOnly = ip.substr(0, ip.find(':'));
     for (const auto &c : m_clients)
-        if (c.ip == ip)
+        if (c.ip == ipOnly)
             return c.discordNick;
     return "";
 }

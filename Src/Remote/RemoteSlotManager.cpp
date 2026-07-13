@@ -464,11 +464,7 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
     WORD prevMeta = m_slots[slot].lastPacket.metaKeys;
     m_slots[slot].lastPacket = packet;
 
-    // Fire meta-key callback on any bit change
-    if (packet.metaKeys != prevMeta && m_metaKeyCb)
-        m_metaKeyCb(packet.metaKeys, prevMeta);
-
-    // When LinkPlay=0, Slot 1 uses g_handshake and Slot 2 uses g_handshakeP2 to verify the IP
+    // Verify sender is the controller (m_clients[0]), not a spectator — before processing any input
     if (m_linkplay == 0)
     {
         if (slot == 1)
@@ -492,15 +488,16 @@ void RemoteSlotManager::OnXInputReceived(int slot, const XInputPacket &packet, c
     }
     else
     {
-        // Verify for single slot (traditional)
         std::string controllerIP = g_handshake.GetControllerIP();
         if (fromIP != controllerIP)
-        {
-            return; // Ignore inputs from clients without operational authority
-        }
+            return; // Ignore inputs from spectator or unknown clients
         if (inputChanged)
             g_handshake.NotifyControllerInput(fromIP, fromPort);
     }
+
+    // Fire meta-key callback on any bit change (only reaches here if sender is the controller)
+    if (packet.metaKeys != prevMeta && m_metaKeyCb)
+        m_metaKeyCb(packet.metaKeys, prevMeta);
 
     // Build XUSB_REPORT and hand off to ViGEm update thread
     XUSB_REPORT report = {};
@@ -688,15 +685,27 @@ void RemoteSlotManager::SetSlotClientCount(int slot, int count)
     printf("[RemoteSlotManager] SetSlotClientCount slot%d count=%d\n", slot, count);
 }
 
-void RemoteSlotManager::SetSlotUser(int slot, const std::string &user)
+void RemoteSlotManager::SetSlotPlayer(int slot, const std::string &player)
 {
     if (!m_firebase.IsInitialized() || m_hostId.empty())
         return;
-    std::thread([this, slot, user]()
+    std::thread([this, slot, player]()
                 {
-                    m_firebase.PatchSlotUser(m_hostId, slot, user);
+                    m_firebase.PatchSlotPlayer(m_hostId, slot, player);
                 })
         .detach();
-    printf("[RemoteSlotManager] SetSlotUser slot%d user=%s\n", slot, user.c_str());
+    printf("[RemoteSlotManager] SetSlotPlayer slot%d player=%s\n", slot, player.c_str());
+}
+
+void RemoteSlotManager::SetSlotSpectator(int slot, const std::string &spectator)
+{
+    if (!m_firebase.IsInitialized() || m_hostId.empty())
+        return;
+    std::thread([this, slot, spectator]()
+                {
+                    m_firebase.PatchSlotSpectator(m_hostId, slot, spectator);
+                })
+        .detach();
+    printf("[RemoteSlotManager] SetSlotSpectator slot%d spectator=%s\n", slot, spectator.c_str());
 }
 #endif // SUPERMODEL_WIN32

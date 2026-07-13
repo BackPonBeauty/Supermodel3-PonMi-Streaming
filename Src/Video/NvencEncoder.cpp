@@ -400,7 +400,7 @@ void NvencEncoder::SetDestIPs(const std::vector<std::string> &ips)
     m_rtpSender.SetDestIPs(ips);
 }
 
-void NvencEncoder::SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints)
+void NvencEncoder::SetDestEndpoints(const std::vector<std::string> &endpoints)
 {
     m_rtpSender.SetDestEndpoints(endpoints);
 }

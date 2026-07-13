@@ -94,7 +94,8 @@ public:
     void SetSlotAvailable();
     void SetSlotState(int slot, bool occupied);
     void SetSlotClientCount(int slot, int count);
-    void SetSlotUser(int slot, const std::string &user);
+    void SetSlotPlayer(int slot, const std::string &player);
+    void SetSlotSpectator(int slot, const std::string &spectator);
 
     void SetMetaKeyCallback(MetaKeyCallback cb) { m_metaKeyCb = cb; }
 
