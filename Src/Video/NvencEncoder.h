@@ -37,7 +37,8 @@ public:
     virtual void Shutdown() override;
     virtual void SetDestIP(const std::string &ip) override;
     virtual void SetDestIPs(const std::vector<std::string> &ips) override;
-    virtual void SetDestEndpoints(const std::vector<std::pair<std::string, int>> &endpoints) override;
+    virtual void SetDestEndpoints(const std::vector<std::string> &endpoints) override;
+    virtual void ClearDests() override { m_rtpSender.ClearDests(); }
     void SetDestPort(int port) { m_rtpSender.SetDestPort(port); }
     virtual int GetWidth() const override { return m_width; }
     virtual int GetHeight() const override { return m_height; }
